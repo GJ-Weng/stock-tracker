@@ -242,22 +242,11 @@ const calc=()=>{
 };
 
 async function fetchYahoo(sym){
-  const base="https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(sym)+"?interval=1d&range=1d";
-  const proxies=["",
-    "https://corsproxy.io/?",
-    "https://api.allorigins.win/raw?url="+encodeURIComponent(base)
-  ];
-  for(let i=0;i<proxies.length;i++){
-    try{
-      const url=i===2?proxies[i]:proxies[i]+base;
-      const r=await fetch(url,{headers:{Accept:"application/json"}});
-      if(!r.ok)continue;
-      const d=await r.json(),meta=d.chart?.result?.[0]?.meta;
-      if(!meta?.regularMarketPrice)continue;
-      return{price:meta.regularMarketPrice,chg:meta.regularMarketPrice-meta.previousClose};
-    }catch{}
-  }
-  throw new Error("Yahoo all failed");
+  const r=await fetch("/api/quote?sym="+encodeURIComponent(sym));
+  if(!r.ok)throw new Error("API "+r.status);
+  const d=await r.json();
+  if(!d[sym]||d[sym].error)throw new Error(d[sym]?.error||"no data");
+  return{price:d[sym].price,chg:d[sym].chg};
 }
 async function fetchAnthropic(syms){
   if(!S.apiKey)throw new Error("no key");

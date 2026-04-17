@@ -242,11 +242,22 @@ const calc=()=>{
 };
 
 async function fetchYahoo(sym){
-  const r=await fetch("https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(sym)+"?interval=1d&range=1d",{headers:{Accept:"application/json"}});
-  if(!r.ok)throw new Error("Yahoo "+r.status);
-  const d=await r.json(),meta=d.chart?.result?.[0]?.meta;
-  if(!meta?.regularMarketPrice)throw new Error("no price");
-  return{price:meta.regularMarketPrice,chg:meta.regularMarketPrice-meta.previousClose};
+  const base="https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(sym)+"?interval=1d&range=1d";
+  const proxies=["",
+    "https://corsproxy.io/?",
+    "https://api.allorigins.win/raw?url="+encodeURIComponent(base)
+  ];
+  for(let i=0;i<proxies.length;i++){
+    try{
+      const url=i===2?proxies[i]:proxies[i]+base;
+      const r=await fetch(url,{headers:{Accept:"application/json"}});
+      if(!r.ok)continue;
+      const d=await r.json(),meta=d.chart?.result?.[0]?.meta;
+      if(!meta?.regularMarketPrice)continue;
+      return{price:meta.regularMarketPrice,chg:meta.regularMarketPrice-meta.previousClose};
+    }catch{}
+  }
+  throw new Error("Yahoo all failed");
 }
 async function fetchAnthropic(syms){
   if(!S.apiKey)throw new Error("no key");
@@ -266,7 +277,7 @@ async function updatePrices(){
   let n=0;
   S.H=S.H.map(h=>{const r=results[h.sym];if(r){n++;return{...h,price:parseFloat(r.price.toFixed(2)),chg:parseFloat((r.chg||0).toFixed(2))}}return h});
   sv("H");S.updating=false;
-  toast(n>0?"✅ 已更新 "+n+" 支股票（"+new Date().toLocaleTimeString()+"）":"❌ Yahoo 更新失敗（CORS），請在設定頁輸入 API Key 使用 Anthropic 備援");
+  toast(n>0?"✅ 已更新 "+n+" 支股票（"+new Date().toLocaleTimeString()+"）":S.apiKey?"❌ 全部管道失敗，請稍後再試":"❌ 更新失敗，請在設定頁輸入 Anthropic API Key");
   render();
 }
 

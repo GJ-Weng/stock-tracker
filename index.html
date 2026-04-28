@@ -397,11 +397,15 @@ function applyTx(tx){
 }
 
 function recalcCash(){
-  // Sum ALL amounts directly from FSV - no classification needed
-  // XFER/TFR pairs cancel each other out naturally (+25 and -25 = 0)
+  // Sum ALL amounts, except positive XFER CASH TO MARGIN
+  // (those are internal tax counter-entries, not real cash flows)
   var cash=0;
   S.T.forEach(function(t){
-    cash+=(t.amt||0);
+    var d=(t.desc||"").toUpperCase();
+    var amt=t.amt||0;
+    // Exclude positive XFER CASH TO MARGIN (tax withholding counter-entry)
+    if(d.includes("XFER CASH TO MARGIN")&&amt>0)return;
+    cash+=amt;
   });
   S.acc.cash=parseFloat(cash.toFixed(2));
   sv("acc");
@@ -521,13 +525,13 @@ function fsvConfirmMap(){
 function fsvBuildRows(){
   return S.imp.rows.map(function(r){
     var type=classifyFSV(r);
-    if(type==="其他")return{skip:true,type:type,date:r.date,desc:r.desc};
     var sym="",shares=0,price=0;
     if(r.action==="BUY"||r.action==="SELL"||r.action==="DIV"){
       var co=cleanName(r.desc);
       sym=S.imp.symMap[co]||"";
       shares=Math.abs(r.qty);price=r.price;
     }
+    // Never skip - include all transactions so XFER/TFR pairs cancel correctly in cash calc
     return{date:r.date,type:type,sym:sym,shares:shares,price:price,
       fee:Math.abs(r.commission)+Math.abs(r.fee),amt:r.amount,wire:0,skip:false};
   });
@@ -811,10 +815,10 @@ function rFSVPanel(){
   }
   if(imp.step===2){
     var rows=fsvBuildRows();
-    var ok=rows.filter(function(r){return!r.skip;});
-    var skip=rows.filter(function(r){return r.skip;});
+    var ok=rows;
+    var skip=[];
     var html="<div class='sb' id='fsv-panel'><h3>📥 步驟 2／2：預覽匯入（"+ok.length+" 筆）</h3>";
-    if(skip.length)html+="<div class='wb'>⚠️ 略過 "+skip.length+" 筆（類型為「其他」或無法識別）</div>";
+    // No skipped rows anymore
     html+="<div class='sx' style='max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);margin:10px 0'><table><thead><tr><th>日期</th><th>類別</th><th>代號</th><th class='num'>股數</th><th class='num'>成交價</th><th class='num'>金額</th></tr></thead><tbody>";
     ok.forEach(function(r){
       html+="<tr><td style='font-size:12px;color:var(--text2)'>"+r.date+"</td><td>"+rBadge(r.type)+"</td>";

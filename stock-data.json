@@ -53,19 +53,6 @@
       "acct": "Schwab"
     },
     {
-      "id": "1777363576136-76b8",
-      "sym": "GGR",
-      "shares": 0,
-      "cost": 0,
-      "price": 0,
-      "chg": 0,
-      "div": 0,
-      "realized": 0,
-      "note": "",
-      "fd": "2023-06-14",
-      "acct": "Schwab"
-    },
-    {
       "id": "1777363576136-w27s",
       "sym": "INTC",
       "shares": 0,
@@ -76,32 +63,6 @@
       "realized": 0,
       "note": "",
       "fd": "2023-06-15",
-      "acct": "Schwab"
-    },
-    {
-      "id": "1777363576136-un44",
-      "sym": "META",
-      "shares": 0,
-      "cost": 0,
-      "price": 0,
-      "chg": 0,
-      "div": 0,
-      "realized": 0,
-      "note": "",
-      "fd": "2023-10-12",
-      "acct": "Schwab"
-    },
-    {
-      "id": "1777363576136-a584",
-      "sym": "AMD",
-      "shares": 0,
-      "cost": 0,
-      "price": 0,
-      "chg": 0,
-      "div": 0,
-      "realized": 0,
-      "note": "",
-      "fd": "2023-12-08",
       "acct": "Schwab"
     },
     {

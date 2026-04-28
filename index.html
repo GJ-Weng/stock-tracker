@@ -88,7 +88,7 @@ tr:hover td{background:var(--bg3)}
 <body>
 <div id="header">
   <h1><span class="live-dot"></span> Firstrade 美股追蹤</h1>
-  <div class="header-right">
+  <div class="header-right"><span id="sync-status"></span>
     <div class="acc-inp"><span>USD/TWD</span><input type="number" id="inp-rate" step="0.001" onchange="onAcc('rate',this.value)"></div>
     <div class="acc-inp"><span>現金(USD)</span><input type="number" id="inp-cash" onchange="onAcc('cash',this.value)"></div>
     <button class="btn" onclick="doExport()">⬇ 匯出</button>
@@ -231,8 +231,10 @@ const INIT_E=[
   {id:"e49",twd:31585,usd:1000,rate:31.585},{id:"e50",twd:31638,usd:1000,rate:31.638},{id:"e51",twd:9999.96,usd:317.58,rate:31.488},
 ];
 
-let S={tab:"dash",H:null,T:null,E:null,acc:null,apiKey:"",showForm:null,filterType:"全部",txSearch:"",sortHCol:"",sortHDir:1,editTxId:null,editPriceId:null,editPriceVal:"",updating:false,chartInst:null};
-const sv=k=>localStorage.setItem("ft_"+k,JSON.stringify(S[k]));
+let S={tab:"dash",H:null,T:null,E:null,acc:null,apiKey:"",showForm:null,filterType:"全部",txSearch:"",sortHCol:"",sortHDir:1,editTxId:null,editPriceId:null,editPriceVal:"",updating:false,syncing:false,chartInst:null,ghToken:"",ghUser:"",ghRepo:"",ghSHA:""};
+const sv=k=>{localStorage.setItem("ft_"+k,JSON.stringify(S[k]));scheduleSync()};
+let syncTimer;
+function scheduleSync(){clearTimeout(syncTimer);syncTimer=setTimeout(syncToGitHub,1800)}
 const ld=k=>{try{const v=localStorage.getItem("ft_"+k);return v?JSON.parse(v):null}catch{return null}};
 const avgFx=()=>{const tu=S.E.reduce((s,e)=>s+e.usd,0),tt=S.E.reduce((s,e)=>s+e.twd,0);return tu>0?tt/tu:S.acc.rate};
 const calc=()=>{
@@ -253,6 +255,53 @@ async function fetchAnthropic(syms){
   const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":S.apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:600,tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:"查詢以下美股最新收盤價和今日漲跌，只回傳純 JSON，不要 markdown，格式：{\"TSLA\":{\"price\":384.34,\"chg\":-7.62},...} 股票："+syms.join(",")}]})});
   const d=await r.json(),text=d.content.filter(b=>b.type==="text").map(b=>b.text).join("");
   return JSON.parse(text.replace(/```json|```/g,"").trim());
+}
+const GH_FILE="stock-data.json";
+async function ghHeaders(){return{"Authorization":"token "+S.ghToken,"Accept":"application/vnd.github.v3+json","Content-Type":"application/json"}}
+async function loadFromGitHub(){
+  if(!S.ghToken||!S.ghUser||!S.ghRepo)return false;
+  try{
+    const r=await fetch("https://api.github.com/repos/"+S.ghUser+"/"+S.ghRepo+"/contents/"+GH_FILE,{headers:await ghHeaders()});
+    if(r.status===404)return false;
+    if(!r.ok)throw new Error("GitHub "+r.status);
+    const d=await r.json();
+    S.ghSHA=d.sha;localStorage.setItem("ft_ghSHA",S.ghSHA);
+    const data=JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/
+/g,"")))));
+    if(data.H)S.H=data.H;if(data.T)S.T=data.T;if(data.E)S.E=data.E;if(data.acc)S.acc=data.acc;
+    ["H","T","E","acc"].forEach(k=>localStorage.setItem("ft_"+k,JSON.stringify(S[k])));
+    return true;
+  }catch(e){console.error("GitHub load:",e);return false}
+}
+async function syncToGitHub(){
+  if(!S.ghToken||!S.ghUser||!S.ghRepo)return;
+  S.syncing=true;updateSyncIcon();
+  try{
+    const data=JSON.stringify({H:S.H,T:S.T,E:S.E,acc:S.acc},null,2);
+    const content=btoa(unescape(encodeURIComponent(data)));
+    const body={message:"sync "+new Date().toISOString().slice(0,16),content};
+    if(S.ghSHA)body.sha=S.ghSHA;
+    const r=await fetch("https://api.github.com/repos/"+S.ghUser+"/"+S.ghRepo+"/contents/"+GH_FILE,{method:"PUT",headers:await ghHeaders(),body:JSON.stringify(body)});
+    if(!r.ok){const e=await r.json();throw new Error(e.message||"sync failed")}
+    const d=await r.json();S.ghSHA=d.content.sha;localStorage.setItem("ft_ghSHA",S.ghSHA);
+    updateSyncIcon(true);
+  }catch(e){console.error("GitHub sync:",e);updateSyncIcon(false,e.message)}
+  S.syncing=false;
+}
+function updateSyncIcon(ok,err){
+  const el=document.getElementById("sync-status");if(!el)return;
+  if(S.syncing)el.innerHTML="<span style='font-size:11px;color:var(--text2)'>☁️ 同步中…</span>";
+  else if(ok===true)el.innerHTML="<span style='font-size:11px;color:var(--green)'>☁️ 已同步 "+new Date().toLocaleTimeString()+"</span>";
+  else if(ok===false)el.innerHTML="<span style='font-size:11px;color:var(--red)' title='"+err+"'>☁️ 同步失敗</span>";
+  else el.innerHTML="";
+}
+function saveGHConfig(){
+  S.ghToken=document.getElementById("gh-token").value.trim();
+  S.ghUser=document.getElementById("gh-user").value.trim();
+  S.ghRepo=document.getElementById("gh-repo").value.trim();
+  localStorage.setItem("ft_ghToken",S.ghToken);localStorage.setItem("ft_ghUser",S.ghUser);localStorage.setItem("ft_ghRepo",S.ghRepo);
+  toast("✅ GitHub 設定已儲存，正在載入雲端資料…");
+  loadFromGitHub().then(ok=>{if(ok){toast("✅ 已從 GitHub 載入資料");render()}else toast("⚠️ 找不到雲端資料，將在下次儲存時建立")});
 }
 async function updatePrices(){
   if(S.updating)return;
@@ -365,10 +414,11 @@ function rFX(){
 }
 
 function rSettings(){
-  return "<div style='max-width:540px'><div class='settings-box'><h3>🔄 自動報價更新說明</h3><p style='font-size:12px;color:var(--text2);margin-bottom:8px'>點「更新報價」時優先用 <strong>Yahoo Finance</strong>（免費，不需 key）。若從本機 file:// 開啟會因 CORS 失敗，改用 Anthropic API 備援。</p><div class='info-box'>💡 建議用 VS Code Live Server 等工具開啟此檔，Yahoo Finance 即可正常運作，相當於 GOOGLEFINANCE 的效果，完全不需 API Key。</div><div class='warn-box' style='margin-top:8px'>⚠️ Excel 中的 GOOGLEFINANCE 是 Google Sheets 專屬函數，無法在獨立 HTML 中直接使用。Yahoo Finance API 提供同等功能。</div></div>"
+  return "<div style='max-width:540px'><div class='settings-box'><h3>☁️ GitHub 雲端同步</h3><p style='font-size:12px;color:var(--text2);margin-bottom:10px'>資料儲存在你的 GitHub repo，換電腦或手機開網址自動同步。</p><div class='form-grid' style='grid-template-columns:1fr 1fr 1fr'><div><div class='form-label'>GitHub 帳號</div><input id='gh-user' placeholder='你的帳號' value='"+esc(S.ghUser)+"'></div><div><div class='form-label'>Repo 名稱</div><input id='gh-repo' placeholder='stock-tracker' value='"+esc(S.ghRepo)+"'></div><div><div class='form-label'>Personal Token</div><input id='gh-token' type='password' placeholder='ghp_xxxx' value='"+esc(S.ghToken)+"'></div></div><div style='display:flex;gap:8px;margin-top:10px'><button class='btn btn-blue' onclick='saveGHConfig()'>儲存設定</button><button class='btn' onclick='loadFromGitHub().then(ok=>{if(ok){toast("✅ 已載入最新雲端資料");render()}else toast("❌ 載入失敗，請確認設定")})'>⬇ 從雲端載入</button><button class='btn' onclick='syncToGitHub()'>⬆ 立即同步</button></div><div class='info-box' style='margin-top:10px'>💡 Token 申請：GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → 只需開 <strong>Contents: Read and Write</strong> 權限，指定你的 stock-tracker repo 即可。</div></div>"
+  +"<div class='settings-box'><h3>🔄 自動報價更新說明</h3><p style='font-size:12px;color:var(--text2);margin-bottom:8px'>點「更新報價」時優先用 <strong>Yahoo Finance</strong>（免費，不需 key）。若從本機 file:// 開啟會因 CORS 失敗，改用 Anthropic API 備援。</p><div class='info-box'>💡 建議用 VS Code Live Server 等工具開啟此檔，Yahoo Finance 即可正常運作，相當於 GOOGLEFINANCE 的效果，完全不需 API Key。</div><div class='warn-box' style='margin-top:8px'>⚠️ Excel 中的 GOOGLEFINANCE 是 Google Sheets 專屬函數，無法在獨立 HTML 中直接使用。Yahoo Finance API 提供同等功能。</div></div>"
   +"<div class='settings-box'><h3>🔑 Anthropic API Key（Yahoo 失敗時備援）</h3><div class='key-row'><input type='password' id='api-key-inp' placeholder='sk-ant-api03-…' value='"+esc(S.apiKey)+"'><button class='btn btn-blue' onclick='saveApiKey()'>儲存</button></div><p style='font-size:11px;color:var(--text2);margin-top:8px'>申請：<a href='https://console.anthropic.com' target='_blank' style='color:var(--blue)'>console.anthropic.com</a></p></div>"
   +"<div class='settings-box'><h3>📦 資料管理</h3><div style='display:flex;gap:8px;flex-wrap:wrap;margin-top:8px'><button class='btn' onclick='exportJSON()'>📤 備份 JSON</button><button class='btn' onclick='document.getElementById(\"imp\").click()'>📥 還原 JSON</button><button class='btn-danger' onclick='resetData()'>🗑 清除重置</button></div><input type='file' id='imp' accept='.json' style='display:none' onchange='importJSON(this)'><p style='font-size:11px;color:var(--text2);margin-top:10px'>備份 JSON 可在不同電腦/瀏覽器間同步資料。</p></div>"
-  +"<div class='settings-box'><h3>📋 功能更新說明</h3><ul style='font-size:12px;color:var(--text2);padding-left:16px;line-height:2.1'><li>買入交易 → 自動合併持倉，加權均成本</li><li>賣出交易 → 自動扣股數、算已實現損益，賣超會警告</li><li>配息交易 → 自動更新持倉累積股息</li><li>🔁 從交易重建 → 重算所有持倉數據（現價保留）</li><li>持倉表點欄位標題可排序</li><li>年化報酬率自動由首次買入日計算</li><li>台幣成本用換匯加權均匯率換算</li><li>交易紀錄支援搜尋和編輯</li></ul></div></div>";
+  +renderFSVPanel()+"<div class='settings-box'><h3>📋 功能更新說明</h3><ul style='font-size:12px;color:var(--text2);padding-left:16px;line-height:2.1'><li>買入交易 → 自動合併持倉，加權均成本</li><li>賣出交易 → 自動扣股數、算已實現損益，賣超會警告</li><li>配息交易 → 自動更新持倉累積股息</li><li>🔁 從交易重建 → 重算所有持倉數據（現價保留）</li><li>持倉表點欄位標題可排序</li><li>年化報酬率自動由首次買入日計算</li><li>台幣成本用換匯加權均匯率換算</li><li>交易紀錄支援搜尋和編輯</li></ul></div></div>";
 }
 
 function render(){
@@ -429,10 +479,172 @@ function exportJSON(){const a=document.createElement("a");a.href="data:applicati
 function importJSON(inp){const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(d.H)S.H=d.H;if(d.T)S.T=d.T;if(d.E)S.E=d.E;if(d.acc)S.acc=d.acc;["H","T","E","acc"].forEach(k=>sv(k));toast("✅ 資料還原成功");render()}catch{toast("❌ JSON 格式錯誤")}};r.readAsText(inp.files[0])}
 function resetData(){if(!confirm("確定清除所有資料恢復初始值？"))return;S.H=INIT_H;S.T=INIT_T;S.E=INIT_E;S.acc={cash:9853.5,rate:31.5665};["H","T","E","acc"].forEach(k=>sv(k));toast("✅ 已重置");render()}
 
-S.H=ld("H")||INIT_H;S.T=ld("T")||INIT_T;S.E=ld("E")||INIT_E;S.acc=ld("acc")||{cash:9853.5,rate:31.5665};S.apiKey=localStorage.getItem("ft_apikey")||"";
+
+// ─── FSV IMPORT ───────────────────────────────────────────────────────────────
+let importState={rows:[],symMap:{},step:0};
+
+function parseFSV(text){
+  const lines=text.trim().split(/\r?\n/);
+  const delim=lines[0].includes('\t')?'\t':',';
+  const headers=lines[0].split(delim).map(h=>h.trim().replace(/^"|"$/g,'').toLowerCase());
+  const idx=h=>headers.indexOf(h);
+  const rows=[];
+  for(let i=1;i<lines.length;i++){
+    const cells=lines[i].split(delim).map(c=>c.trim().replace(/^"|"$/g,''));
+    if(cells.length<5)continue;
+    rows.push({
+      qty:parseFloat(cells[idx('quantity')])||0,
+      price:parseFloat(cells[idx('price')])||0,
+      action:(cells[idx('action')]||'').trim(),
+      desc:(cells[idx('description')]||'').trim(),
+      date:(cells[idx('tradedate')]||cells[idx('date')]||'').trim(),
+      amount:parseFloat(cells[idx('amount')])||0,
+      commission:parseFloat(cells[idx('commission')])||0,
+      fee:parseFloat(cells[idx('fee')])||0,
+      cusip:(cells[idx('cusip')]||'').trim(),
+      recType:(cells[idx('recordtype')]||'').trim(),
+    });
+  }
+  return rows;
+}
+
+function classifyRow(r){
+  const d=r.desc.toUpperCase();
+  if(r.action==='BUY')return'買入';
+  if(r.action==='SELL')return'賣出';
+  if(r.action==='Interest')return'現金利息';
+  if(r.action==='DIV'||d.includes('DIVIDEND'))return'配息';
+  if(d.includes('WIRE FUNDS')||d.includes('TRANSFER FROM')||d.match(/^TFR CASH FROM/))return'入金';
+  if(d.includes('REBATE')||d.includes('rebate'))return'匯費補貼';
+  if(r.action==='Other'&&r.amount>0&&r.recType==='Financial')return'入金';
+  return'其他';
+}
+
+function extractCompanyName(desc){
+  return desc.replace(/\s+(COMMON STOCK|UNSOLICITED|INC\b|CORP\b|LTD\b|ETF\b|ADR\b|CLASS [AB]\b)/gi,'').replace(/\s+/g,' ').trim();
+}
+
+function openFSVImport(){
+  document.getElementById('fsv-file').click();
+}
+
+function onFSVFile(input){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      importState.rows=parseFSV(e.target.result);
+      // Find unique company names for Trade rows
+      const companies={};
+      importState.rows.forEach(row=>{
+        if((row.action==='BUY'||row.action==='SELL'||row.action==='DIV')&&row.desc){
+          const co=extractCompanyName(row.desc);
+          if(!companies[co])companies[co]=row.cusip||'';
+        }
+      });
+      // Pre-fill known symbols
+      const knownMap={
+        'AMAZON.COM':'AMZN','ASTERA LABS':'ALAB','ONDAS HOLDINGS':'ONDS',
+        'SOFI TECHNOLOGIES':'SOFI','KIORA BIOPHARMA':'KBSX','TESLA':'TSLA',
+        'RAMBUS':'RMBS','NVIDIA':'NVDA','APPLE':'AAPL','MICROSOFT':'MSFT',
+        'ALPHABET':'GOOGL','META PLATFORMS':'META','AMAZON':'AMZN',
+      };
+      importState.symMap={};
+      Object.keys(companies).forEach(co=>{
+        let sym='';
+        Object.keys(knownMap).forEach(k=>{if(co.toUpperCase().includes(k))sym=knownMap[k]});
+        importState.symMap[co]=sym;
+      });
+      importState.step=1;
+      S.tab='settings';render();
+      requestAnimationFrame(()=>document.getElementById('fsv-import-panel')?.scrollIntoView({behavior:'smooth',block:'nearest'}));
+    }catch(err){toast('❌ 解析失敗：'+err.message)}
+  };
+  r.readAsText(f,'UTF-8');
+}
+
+function renderFSVPanel(){
+  if(!importState.step)return "<div class='settings-box'><h3>📥 匯入 Firstrade 交易紀錄 (FSV)</h3><p style='font-size:12px;color:var(--text2);margin-bottom:10px'>從 Firstrade 帳戶下載 FSV/CSV 格式的對帳單，一鍵匯入所有交易並自動計算持倉。</p><button class='btn btn-blue' onclick='openFSVImport()'>選擇 FSV / CSV 檔案</button><input type='file' id='fsv-file' accept='.fsv,.csv,.txt' style='display:none' onchange='onFSVFile(this)'></div>";
+
+  if(importState.step===1){
+    const companies=Object.keys(importState.symMap);
+    return "<div class='settings-box' id='fsv-import-panel'><h3>📥 步驟 1／2：確認股票代號對應</h3><p style='font-size:12px;color:var(--text2);margin-bottom:12px'>解析到 "+importState.rows.length+" 筆交易，請確認以下公司對應的股票代號（已自動填入常見股票）：</p>"
+    +"<div style='display:grid;grid-template-columns:1fr 120px;gap:8px;margin-bottom:12px'>"
+    +"<div style='font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;padding:4px 0'>公司名稱</div><div style='font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;padding:4px 0'>代號</div>"
+    +companies.map(co=>"<div style='font-size:13px;padding:5px 0;border-bottom:0.5px solid var(--border);display:flex;align-items:center'>"+esc(co)+"</div><div style='border-bottom:0.5px solid var(--border);padding:3px 0'><input id='sym-"+btoa(co.slice(0,20)).replace(/[^a-zA-Z0-9]/g,'')+"' value='"+esc(importState.symMap[co])+"' placeholder='代號' style='width:100%;padding:5px 8px;font-size:13px;font-weight:500;text-transform:uppercase'></div>").join('')
+    +"</div><div style='display:flex;gap:8px'><button class='btn btn-blue' onclick='confirmSymMap()'>下一步：預覽匯入</button><button class='btn' onclick='importState.step=0;render()'>取消</button></div></div>";
+  }
+
+  if(importState.step===2){
+    // Build preview
+    const mapped=buildImportRows();
+    const skip=mapped.filter(r=>r.skip);
+    const ok=mapped.filter(r=>!r.skip);
+    return "<div class='settings-box' id='fsv-import-panel'><h3>📥 步驟 2／2：預覽匯入（"+ok.length+" 筆）</h3>"
+    +(skip.length?"<div class='warn-box' style='margin-bottom:10px'>⚠️ 略過 "+skip.length+" 筆（類型為「其他」或無法識別）</div>":"")
+    +"<div class='scroll-x' style='max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px'><table><thead><tr><th>日期</th><th>類別</th><th>代號</th><th class='num'>股數</th><th class='num'>成交價</th><th class='num'>金額</th></tr></thead><tbody>"
+    +ok.map(r=>"<tr><td style='font-size:12px;color:var(--text2)'>"+r.date+"</td><td><span class='badge "+({'買入':'b-buy','賣出':'b-sell','入金':'b-dep','現金利息':'b-int','匯費補貼':'b-reb','配息':'b-div'}[r.type]||'b-reb')+"'>"+r.type+"</span></td><td>"+(r.sym?"<strong>"+esc(r.sym)+"</strong>":"—")+"</td><td class='num'>"+(r.shares||'—')+"</td><td class='num'>"+(r.price?"$"+fn(r.price,2):"—")+"</td><td class='num "+(r.amt>=0?"pos":"neg")+"'>"+(r.amt>=0?"+":"")+"$"+fn(r.amt,2)+"</td></tr>").join('')
+    +"</tbody></table></div>"
+    +"<div style='display:flex;gap:8px'><button class='btn btn-blue' onclick='doImportFSV()'>✅ 確認匯入 "+ok.length+" 筆</button><button class='btn' onclick='importState.step=1;render()'>上一步</button><button class='btn' onclick='importState.step=0;render()'>取消</button></div></div>";
+  }
+  return '';
+}
+
+function confirmSymMap(){
+  const companies=Object.keys(importState.symMap);
+  companies.forEach(co=>{
+    const key='sym-'+btoa(co.slice(0,20)).replace(/[^a-zA-Z0-9]/g,'');
+    const el=document.getElementById(key);
+    if(el)importState.symMap[co]=(el.value||'').trim().toUpperCase();
+  });
+  importState.step=2;render();
+  requestAnimationFrame(()=>document.getElementById('fsv-import-panel')?.scrollIntoView({behavior:'smooth',block:'nearest'}));
+}
+
+function buildImportRows(){
+  return importState.rows.map(r=>{
+    const type=classifyRow(r);
+    if(type==='其他')return{...r,skip:true,type};
+    let sym='',shares=0,price=0;
+    if(r.action==='BUY'||r.action==='SELL'||r.action==='DIV'){
+      const co=extractCompanyName(r.desc);
+      sym=importState.symMap[co]||'';
+      shares=Math.abs(r.qty);
+      price=r.price;
+    }
+    const fee=Math.abs(r.commission)+Math.abs(r.fee);
+    return{date:r.date.slice(0,10),type,sym,shares,price,fee,amt:r.amount,wire:0,skip:false};
+  });
+}
+
+function doImportFSV(){
+  const rows=buildImportRows().filter(r=>!r.skip);
+  // Sort by date
+  rows.sort((a,b)=>a.date.localeCompare(b.date));
+  let added=0,skipped=0;
+  rows.forEach(r=>{
+    // Skip duplicates (same date+type+sym+shares)
+    const dup=S.T.find(t=>t.date===r.date&&t.type===r.type&&t.sym===r.sym&&Math.abs(t.shares-r.shares)<0.01&&Math.abs(t.amt-r.amt)<0.01);
+    if(dup){skipped++;return}
+    const t={id:gid(),...r};
+    if(applyTx(t)===false)return;
+    S.T=[...S.T,t];added++;
+  });
+  sv("T");sv("H");
+  importState.step=0;
+  toast("✅ 匯入完成：新增 "+added+" 筆"+(skipped?'，略過重複 '+skipped+' 筆':''));
+  S.tab='tx';render();
+}
+
+S.H=ld("H")||INIT_H;S.T=ld("T")||INIT_T;S.E=ld("E")||INIT_E;S.acc=ld("acc")||{cash:9853.5,rate:31.5665};
+S.apiKey=localStorage.getItem("ft_apikey")||"";
+S.ghToken=localStorage.getItem("ft_ghToken")||"";S.ghUser=localStorage.getItem("ft_ghUser")||"";S.ghRepo=localStorage.getItem("ft_ghRepo")||"";S.ghSHA=localStorage.getItem("ft_ghSHA")||"";
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
 document.getElementById("inp-rate").value=S.acc.rate;document.getElementById("inp-cash").value=S.acc.cash;
 render();
+if(S.ghToken&&S.ghUser&&S.ghRepo){
+  loadFromGitHub().then(ok=>{if(ok){toast("☁️ 已從 GitHub 載入最新資料");render()}});
+}
 </script>
 </body>
 </html>

@@ -396,6 +396,18 @@ function applyTx(tx){
   return true;
 }
 
+function recalcCash(){
+  // Calculate current cash from all transactions
+  var cash=0;
+  S.T.forEach(function(t){
+    var type=t.type,amt=t.amt||0;
+    if(type==="入金"||type==="現金利息"||type==="匯費補貼"||type==="配息"||type==="賣出")cash+=amt;
+    else if(type==="買入")cash+=amt; // amt is already negative for buys
+  });
+  S.acc.cash=parseFloat(cash.toFixed(2));
+  sv("acc");
+  document.getElementById("ic").value=S.acc.cash;
+}
 function rebuildFromTx(){
   if(!confirm("根據所有交易紀錄重新計算持倉股數、均成本、損益。\n現價、備註保留。確定？"))return;
   var map={};
@@ -423,8 +435,9 @@ function rebuildFromTx(){
       realized:parseFloat(h.realized.toFixed(2)),note:ex?ex.note:"",fd:h.fd};
   });
   sv("H");
+  recalcCash();
   S.tab="holdings";
-  toast("✅ 從 "+sorted.length+" 筆交易重建完成，共 "+S.H.length+" 支");
+  toast("✅ 從 "+sorted.length+" 筆交易重建完成，共 "+S.H.length+" 支，現金 $"+fn(S.acc.cash,2));
   render();
 }
 
@@ -527,9 +540,10 @@ function fsvConfirmImport(){
     S.T.push(t);added++;
   });
   sv("T");sv("H");
+  recalcCash();
   S.imp={rows:[],symMap:{},step:0};
-  toast("✅ 匯入完成：新增 "+added+" 筆"+(skipped?"，略過重複 "+skipped+" 筆":""));
-  S.tab="tx";render();
+  toast("✅ 匯入完成：新增 "+added+" 筆"+(skipped?"，略過重複 "+skipped+" 筆":"")+("，現金餘額 $"+fn(S.acc.cash,2)));
+  S.tab="dash";render();
 }
 function fsvCancel(){S.imp={rows:[],symMap:{},step:0};render();}
 

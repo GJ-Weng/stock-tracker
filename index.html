@@ -397,16 +397,17 @@ function applyTx(tx){
 }
 
 function recalcCash(){
-  // Calculate current cash from all transactions
   var cash=0;
   S.T.forEach(function(t){
-    var type=t.type,amt=t.amt||0;
-    if(type==="入金"||type==="現金利息"||type==="匯費補貼"||type==="配息"||type==="賣出")cash+=amt;
-    else if(type==="買入")cash+=amt; // amt is already negative for buys
+    // Sum all amt values - buys are negative, sells/deposits are positive
+    // Skip types that shouldn't affect cash balance
+    if(t.type!=="其他")cash+=(t.amt||0);
   });
   S.acc.cash=parseFloat(cash.toFixed(2));
   sv("acc");
-  document.getElementById("ic").value=S.acc.cash;
+  var el=document.getElementById("ic");
+  if(el)el.value=S.acc.cash;
+  return S.acc.cash;
 }
 function rebuildFromTx(){
   if(!confirm("根據所有交易紀錄重新計算持倉股數、均成本、損益。\n現價、備註保留。確定？"))return;
@@ -466,9 +467,14 @@ function classifyFSV(r){
   if(r.action==="SELL")return"賣出";
   if(r.action==="Interest")return"現金利息";
   if(r.action==="DIV"||d.includes("DIVIDEND"))return"配息";
-  if(d.includes("WIRE FUNDS")||d.includes("TRANSFER FROM")||/^TFR CASH FROM/.test(d))return"入金";
+  // Explicitly skip internal margin/cash transfers (always cancel out, should not affect cash)
+  if(d.includes("XFER CASH TO MARGIN")||d.includes("XFER MARGIN TO CASH"))return"其他";
+  if(/^TFR CASH TO/.test(d))return"其他";
+  // Actual deposits
+  if(d.includes("WIRE FUNDS"))return"入金";
+  if(d.includes("TRANSFER FROM")&&(d.includes("ACAT")||d.includes("SCHWA")||d.includes("FIDELITY")||d.includes("SCHWAB")))return"入金";
+  if(/^TFR CASH FROM/.test(d))return"入金";
   if(d.includes("REBATE")||d.toLowerCase().includes("rebate"))return"匯費補貼";
-  if(r.action==="Other"&&r.amount>0&&r.recType==="Financial")return"入金";
   return"其他";
 }
 function cleanName(desc){
@@ -540,9 +546,9 @@ function fsvConfirmImport(){
     S.T.push(t);added++;
   });
   sv("T");sv("H");
-  recalcCash();
+  var cash=recalcCash();
   S.imp={rows:[],symMap:{},step:0};
-  toast("✅ 匯入完成：新增 "+added+" 筆"+(skipped?"，略過重複 "+skipped+" 筆":"")+("，現金餘額 $"+fn(S.acc.cash,2)));
+  toast("✅ 匯入完成：新增 "+added+" 筆"+(skipped?"，略過重複 "+skipped+" 筆":"")+("，現金餘額 $"+fn(cash,2)+"（可與 Firstrade 帳戶核對）"));
   S.tab="dash";render();
 }
 function fsvCancel(){S.imp={rows:[],symMap:{},step:0};render();}

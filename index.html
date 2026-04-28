@@ -256,6 +256,7 @@ var S={
 };
 function sv(k){
   localStorage.setItem("ft_"+k,JSON.stringify(S[k]));
+  S._localTs=Date.now();
   clearTimeout(S._syncTimer);
   S._syncTimer=setTimeout(syncToGitHub,2000);
 }
@@ -280,8 +281,9 @@ function calc(){
 // ─── GITHUB SYNC ───
 var GH_FILE="stock-data.json";
 function ghHdr(){return{"Authorization":"token "+S.ghToken,"Accept":"application/vnd.github.v3+json","Content-Type":"application/json"};}
-function loadFromGitHub(){
+function loadFromGitHub(force){
   if(!S.ghToken||!S.ghUser||!S.ghRepo)return Promise.resolve(false);
+  if(!force&&S._localTs&&(Date.now()-S._localTs)<10000){console.log("Skipping GH load - recent local change");return Promise.resolve(false);}
   return fetch("https://api.github.com/repos/"+S.ghUser+"/"+S.ghRepo+"/contents/"+GH_FILE,{headers:ghHdr()})
   .then(function(r){
     if(r.status===404)return false;
@@ -327,13 +329,13 @@ function saveGHConfig(){
   localStorage.setItem("ft_ghUser",S.ghUser);
   localStorage.setItem("ft_ghRepo",S.ghRepo);
   toast("✅ GitHub 設定已儲存，載入雲端資料中…");
-  loadFromGitHub().then(function(ok){
+  loadFromGitHub(true).then(function(ok){
     if(ok){toast("✅ 已從 GitHub 載入資料");render();}
     else toast("⚠️ 找不到雲端資料，下次儲存時會自動建立");
   });
 }
 function ghLoad(){
-  loadFromGitHub().then(function(ok){
+  loadFromGitHub(true).then(function(ok){
     if(ok){toast("✅ 已載入最新雲端資料");render();}
     else toast("❌ 載入失敗，請確認設定");
   });
@@ -421,7 +423,8 @@ function rebuildFromTx(){
       realized:parseFloat(h.realized.toFixed(2)),note:ex?ex.note:"",fd:h.fd};
   });
   sv("H");
-  toast("✅ 從 "+sorted.length+" 筆交易重建完成");
+  S.tab="holdings";
+  toast("✅ 從 "+sorted.length+" 筆交易重建完成，共 "+S.H.length+" 支");
   render();
 }
 
@@ -569,7 +572,10 @@ function resetData(){
   S.E=JSON.parse(JSON.stringify(INIT_E));
   S.acc={cash:9853.5,rate:31.5665};
   ["H","T","E","acc"].forEach(sv);
-  toast("✅ 已重置");render();
+  S.tab="dash";S.showForm=null;S.editTxId=null;S.editPriceId=null;
+  document.getElementById("ir").value=S.acc.rate;
+  document.getElementById("ic").value=S.acc.cash;
+  toast("✅ 已重置為初始資料");render();
 }
 
 // ─── CHART ───

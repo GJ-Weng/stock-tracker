@@ -89,7 +89,8 @@ tr:hover td{background:var(--bg3)}
   <div class="hr">
     <span id="ss" style="font-size:11px;color:var(--text2)"></span>
     <div class="ai"><span>USD/TWD</span><input type="number" id="ir" step="0.001" onchange="onAcc('rate',this.value)"></div>
-    <div class="ai"><span>現金(USD)</span><input type="number" id="ic" onchange="onAcc('cash',this.value)"></div>
+    <div class="ai"><span>FT現金</span><input type="number" id="ic-ft" step="0.01" onchange="onAcc('cashFT',this.value)"></div>
+    <div class="ai"><span>嘉信現金</span><input type="number" id="ic-sw" step="0.01" onchange="onAcc('cashSchwab',this.value)"></div>
     <button class="btn" onclick="doExport()">⬇ 匯出</button>
   </div>
 </div>
@@ -277,8 +278,9 @@ function calc(){
   act.forEach(function(h){mkt+=mktVal(h);cost+=costBasis(h);todayChg+=h.shares*(h.chg||0)*(h.isOption?100:1);});
   var real=0,div=0;
   S.H.forEach(function(h){real+=(h.realized||0);div+=(h.div||0);});
+  var totalCash=(S.acc.cashFT||0)+(S.acc.cashSchwab||0);
   return{mkt:mkt,cost:cost,unreal:mkt-cost,real:real,div:div,todayChg:todayChg,
-    totalUSD:mkt+S.acc.cash,totalTWD:(mkt+S.acc.cash)*S.acc.rate,fxRate:avgFx(),act:act};
+    totalUSD:mkt+totalCash,totalTWD:(mkt+totalCash)*S.acc.rate,fxRate:avgFx(),act:act,cash:totalCash};
 }
 
 // ─── GITHUB SYNC ───
@@ -419,11 +421,12 @@ function recalcCash(){
     if(d.includes("XFER CASH TO MARGIN")&&amt>0)return;
     cash+=amt;
   });
-  S.acc.cash=parseFloat(cash.toFixed(2));
+  S.acc.cashFT=parseFloat(cash.toFixed(2));
+  S.acc.cash=(S.acc.cashFT||0)+(S.acc.cashSchwab||0);
   sv("acc");
-  var el=document.getElementById("ic");
-  if(el)el.value=S.acc.cash;
-  return S.acc.cash;
+  var el=document.getElementById("ic-ft");
+  if(el)el.value=S.acc.cashFT;
+  return S.acc.cashFT;
 }
 function rebuildFromTx(){
   if(!confirm("根據所有交易紀錄重新計算持倉股數、均成本、損益。\n現價、備註保留。確定？"))return;
@@ -565,9 +568,10 @@ function rSchwabPanel(){
 }
 function schwabSetCash(){
   var v=parseFloat(document.getElementById("schwab-cash").value)||0;
-  S.acc.cash=v;
+  S.acc.cashSchwab=v;
+  S.acc.cash=(S.acc.cashFT||0)+v;
   sv("acc");
-  var el=document.getElementById("ic");if(el)el.value=v;
+  var el=document.getElementById("ic-sw");if(el)el.value=v;
   schwabImp={rows:[],step:0};
   clearTimeout(S._syncTimer);syncToGitHub();
   toast("✅ 嘉信匯入完成，現金 $"+fn(v,2));
@@ -782,16 +786,16 @@ function resetData(){
   ["H","T","E","acc"].forEach(sv);
   S.tab="dash";S.showForm=null;S.editTxId=null;S.editPriceId=null;
   document.getElementById("ir").value=S.acc.rate;
-  document.getElementById("ic").value=S.acc.cash;
+  var _cft=document.getElementById("ic-ft");var _csw=document.getElementById("ic-sw");if(_cft)_cft.value=S.acc.cashFT||0;if(_csw)_csw.value=S.acc.cashSchwab||0;
   toast("✅ 已恢復初始範例資料");render();
 }
 function clearAll(){
   if(!confirm("確定清空所有持倉和交易紀錄？換匯紀錄會保留。此操作無法復原。"))return;
-  S.H=[];S.T=[];S.acc={cash:0,rate:S.acc.rate};
+  S.H=[];S.T=[];S.acc={cash:0,cashFT:0,cashSchwab:0,rate:S.acc.rate};
   ["H","T","acc"].forEach(sv);
   S.tab="settings";S.showForm=null;S.editTxId=null;S.editPriceId=null;
   document.getElementById("ir").value=S.acc.rate;
-  document.getElementById("ic").value=S.acc.cash;
+  var _cft=document.getElementById("ic-ft");var _csw=document.getElementById("ic-sw");if(_cft)_cft.value=S.acc.cashFT||0;if(_csw)_csw.value=S.acc.cashSchwab||0;
   toast("✅ 持倉和交易已清空，換匯紀錄保留。請匯入 FSV 檔案");render();
   clearTimeout(S._syncTimer);
   syncToGitHub();
@@ -828,7 +832,7 @@ function rDash(p){
   html+=rCard("未實現損益",(p.unreal>=0?"+":"")+"$"+fn(p.unreal,2),p.cost>0?fp(p.unreal/p.cost):"—",cv(p.unreal));
   html+=rCard("已實現損益",(p.real>=0?"+":"")+"$"+fn(p.real,2),"含配息 $"+fn(p.div,2),cv(p.real));
   html+=rCard("今日損益",(p.todayChg>=0?"+":"-")+"$"+fn(Math.abs(p.todayChg),2),"市場波動",cv(p.todayChg));
-  html+=rCard("帳戶現金","$"+fn(S.acc.cash,2),"USD");
+  html+=rCard("帳戶現金","$"+fn(p.cash,2),"FT $"+fn(S.acc.cashFT||0,2)+" + 嘉信 $"+fn(S.acc.cashSchwab||0,2));
   html+="</div>";
   html+="<div class='cw'>";
   html+="<div class='cc'><div class='ct'>資產配置</div><div style='position:relative;height:190px'><canvas id='pie-chart'></canvas></div><div id='pie-legend' style='margin-top:10px'></div></div>";
@@ -1081,9 +1085,11 @@ function rSettings(){
 // ─── MASTER RENDER ───
 function render(){
   try{
-    var ri=document.getElementById("ir"),ci=document.getElementById("ic");
+    var ri=document.getElementById("ir");
+    var cft=document.getElementById("ic-ft"),csw=document.getElementById("ic-sw");
     if(ri&&document.activeElement!==ri)ri.value=S.acc.rate;
-    if(ci&&document.activeElement!==ci)ci.value=S.acc.cash;
+    if(cft&&document.activeElement!==cft)cft.value=S.acc.cashFT||0;
+    if(csw&&document.activeElement!==csw)csw.value=S.acc.cashSchwab||0;
     document.querySelectorAll(".tab").forEach(function(b){b.classList.toggle("active",b.dataset.tab===S.tab);});
     var p=calc(),m=document.getElementById("main");
     if(S.tab==="dash")m.innerHTML=rDash(p);
@@ -1124,7 +1130,11 @@ function setHoldingsView(v){S.holdingsView=v;render();}
 function setTab(t){S.tab=t;S.showForm=null;S.editTxId=null;S.editPriceId=null;render();}
 function toggleForm(f){S.showForm=S.showForm===f?null:f;S.editTxId=null;render();}
 function setFilter(f){S.filterType=f;render();}
-function onAcc(k,v){S.acc[k]=parseFloat(v)||0;sv("acc");render();}
+function onAcc(k,v){
+  S.acc[k]=parseFloat(v)||0;
+  S.acc.cash=(S.acc.cashFT||0)+(S.acc.cashSchwab||0);
+  sv("acc");render();
+}
 function saveApiKey(){S.apiKey=document.getElementById("api-key-inp").value.trim();localStorage.setItem("ft_apiKey",S.apiKey);toast("✅ API Key 已儲存");}
 function sortH(col){S.sortDir=S.sortCol===col?S.sortDir*-1:-1;S.sortCol=col;render();}
 function startEditPrice(id,v){S.editPriceId=id;S.editPriceVal=String(v);render();}
@@ -1208,7 +1218,9 @@ function delFX(id){if(!confirm("確定刪除？"))return;S.E=S.E.filter(function
 S.H=ld("H")||JSON.parse(JSON.stringify(INIT_H));
 S.T=ld("T")||JSON.parse(JSON.stringify(INIT_T));
 S.E=ld("E")||JSON.parse(JSON.stringify(INIT_E));
-S.acc=ld("acc")||{cash:9853.5,rate:31.5665};
+S.acc=ld("acc")||{cash:0,cashFT:0,cashSchwab:0,rate:31.5665};
+// migrate old data
+if(S.acc.cashFT===undefined){S.acc.cashFT=S.acc.cash||0;S.acc.cashSchwab=0;}
 S.apiKey=localStorage.getItem("ft_apiKey")||"";
 S.ghToken=localStorage.getItem("ft_ghToken")||"";
 S.ghUser=localStorage.getItem("ft_ghUser")||"";
@@ -1216,7 +1228,7 @@ S.ghRepo=localStorage.getItem("ft_ghRepo")||"";
 S.ghSHA=localStorage.getItem("ft_ghSHA")||"";
 document.querySelectorAll(".tab").forEach(function(b){b.addEventListener("click",function(){setTab(b.dataset.tab);});});
 document.getElementById("ir").value=S.acc.rate;
-document.getElementById("ic").value=S.acc.cash;
+var _cft=document.getElementById("ic-ft");var _csw=document.getElementById("ic-sw");if(_cft)_cft.value=S.acc.cashFT||0;if(_csw)_csw.value=S.acc.cashSchwab||0;
 render();
 if(S.ghToken&&S.ghUser&&S.ghRepo){
   loadFromGitHub().then(function(ok){if(ok){toast("☁️ 已從 GitHub 載入最新資料");render();}});

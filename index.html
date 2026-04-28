@@ -397,11 +397,11 @@ function applyTx(tx){
 }
 
 function recalcCash(){
+  // Sum ALL amounts directly from FSV - no classification needed
+  // XFER/TFR pairs cancel each other out naturally (+25 and -25 = 0)
   var cash=0;
   S.T.forEach(function(t){
-    // Sum all amt values - buys are negative, sells/deposits are positive
-    // Skip types that shouldn't affect cash balance
-    if(t.type!=="其他")cash+=(t.amt||0);
+    cash+=(t.amt||0);
   });
   S.acc.cash=parseFloat(cash.toFixed(2));
   sv("acc");

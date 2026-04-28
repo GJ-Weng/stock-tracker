@@ -410,13 +410,12 @@ function applyTx(tx){
 }
 
 function recalcCash(){
-  // Sum ALL amounts, except positive XFER CASH TO MARGIN
-  // (those are internal tax counter-entries, not real cash flows)
+  // Only calculate cash from FT transactions
+  // Schwab cash is set manually (CSV lacks TD historical deposits)
   var cash=0;
-  S.T.forEach(function(t){
+  S.T.filter(function(t){return !t.source||t.source==="FT";}).forEach(function(t){
     var d=(t.desc||"").toUpperCase();
     var amt=t.amt||0;
-    // Exclude positive XFER CASH TO MARGIN (tax withholding counter-entry)
     if(d.includes("XFER CASH TO MARGIN")&&amt>0)return;
     cash+=amt;
   });
@@ -577,7 +576,9 @@ function schwabSetCash(){
 function schwabConfirmImport(){
   var allRows=schwabImp.rows;
   allRows.sort(function(a,b){return a.date.localeCompare(b.date);});
-  S.T=[];
+  // Keep other accounts' data, only replace Schwab entries
+  S.T=S.T.filter(function(t){return t.source&&t.source!=="Schwab";});
+  S.H=S.H.filter(function(h){return h.acct&&h.acct!=="Schwab";});
 
   // Step 1: Build S.T with all transactions
   allRows.forEach(function(r){
@@ -718,8 +719,9 @@ function fsvBuildRows(){
 function fsvConfirmImport(){
   var rows=fsvBuildRows();
   rows.sort(function(a,b){return a.date.localeCompare(b.date);});
-  // Completely replace S.T and S.H with FSV data (no append, no old data mixing)
-  S.T=[];S.H=[];
+  // Keep other accounts' data, only replace FT entries
+  S.T=S.T.filter(function(t){return t.source&&t.source!=="FT";});
+  S.H=S.H.filter(function(h){return h.acct&&h.acct!=="FT";});
   var added=0,skipped=0;
   rows.forEach(function(r){
     var t=Object.assign({id:gid(),source:"FT"},r);
@@ -995,7 +997,7 @@ function rImportPanel(){
   out+="<button class='btn btn-blue' onclick='openFSVImport()'>📋 Firstrade FSV/CSV</button>";
   out+="<button class='btn btn-blue' onclick='openSchwabImport()'>📋 嘉信 Schwab CSV</button>";
   out+="</div>";
-  out+="<div class='fh'>⚠️ 兩個帳戶分開匯入，匯入前請先「🗑 清空持倉和交易」</div>";
+  out+="<div class='fh'>💡 兩個帳戶可以分別匯入，資料會自動合併，不需要清空。重新匯入同一帳戶時會自動取代舊資料。</div>";
   out+="</div>";
   if(S.imp&&S.imp.step>0)out+=rFSVSteps();
   out+=rSchwabPanel();

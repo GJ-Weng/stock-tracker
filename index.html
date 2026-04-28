@@ -422,7 +422,9 @@ function recalcCash(){
     cash+=amt;
   });
   S.acc.cashFT=parseFloat(cash.toFixed(2));
-  S.acc.cash=(S.acc.cashFT||0)+(S.acc.cashSchwab||0);
+  // Preserve Schwab cash when recalculating
+  if(S.acc.cashSchwab===undefined)S.acc.cashSchwab=0;
+  S.acc.cash=S.acc.cashFT+S.acc.cashSchwab;
   sv("acc");
   var el=document.getElementById("ic-ft");
   if(el)el.value=S.acc.cashFT;
@@ -1219,8 +1221,12 @@ S.H=ld("H")||JSON.parse(JSON.stringify(INIT_H));
 S.T=ld("T")||JSON.parse(JSON.stringify(INIT_T));
 S.E=ld("E")||JSON.parse(JSON.stringify(INIT_E));
 S.acc=ld("acc")||{cash:0,cashFT:0,cashSchwab:0,rate:31.5665};
-// migrate old data
-if(S.acc.cashFT===undefined){S.acc.cashFT=S.acc.cash||0;S.acc.cashSchwab=0;}
+// migrate old data - only if cashFT not yet defined
+if(S.acc.cashFT===undefined){S.acc.cashFT=0;S.acc.cashSchwab=0;}
+// Always recalc FT cash on startup from transactions to ensure accuracy
+setTimeout(function(){
+  if(S.T.some(function(t){return t.source==="FT"||!t.source;})){recalcCash();}
+},100);
 S.apiKey=localStorage.getItem("ft_apiKey")||"";
 S.ghToken=localStorage.getItem("ft_ghToken")||"";
 S.ghUser=localStorage.getItem("ft_ghUser")||"";
@@ -1231,7 +1237,13 @@ document.getElementById("ir").value=S.acc.rate;
 var _cft=document.getElementById("ic-ft");var _csw=document.getElementById("ic-sw");if(_cft)_cft.value=S.acc.cashFT||0;if(_csw)_csw.value=S.acc.cashSchwab||0;
 render();
 if(S.ghToken&&S.ghUser&&S.ghRepo){
-  loadFromGitHub().then(function(ok){if(ok){toast("☁️ 已從 GitHub 載入最新資料");render();}});
+  loadFromGitHub().then(function(ok){
+    if(ok){
+      // Always recalc FT cash from transactions to avoid stale GitHub data
+      if(S.T.some(function(t){return t.source==="FT";})){recalcCash();}
+      toast("☁️ 已從 GitHub 載入最新資料");render();
+    }
+  });
 }
 </script>
 </body>

@@ -876,7 +876,7 @@ function rDash(p){
   // Build dash view
   var dashAccts=["all"];
   S.H.forEach(function(h){if(h.acct&&dashAccts.indexOf(h.acct)<0)dashAccts.push(h.acct);});
-  var dashLabels={"all":"整合","FT":"Firstrade","Schwab":"嘉信","GT":"國泰"};
+  var dashLabels={"all":"整合","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
   var dashView=S.dashView||"all";
   // Build rows based on view
   var dashRows;
@@ -942,7 +942,7 @@ function rHoldings(){
   var html="<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px'>";
   // Account filter tabs
   var accts=["all","FT","Schwab","GT"];
-  var acctLabels={"all":"整合檢視","FT":"Firstrade","Schwab":"嘉信","GT":"國泰"};
+  var acctLabels={"all":"整合檢視","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
   var usedAccts=["all"];
   S.H.forEach(function(h){if(h.acct&&usedAccts.indexOf(h.acct)<0)usedAccts.push(h.acct);});
   html+="<div style='display:flex;gap:6px;flex-wrap:wrap'>";
@@ -971,6 +971,7 @@ function rHoldings(){
     html+="<div><div class='fl'>今日漲跌</div><input id='fh-chg' type='number' placeholder='-1.5'></div>";
     html+="<div><div class='fl'>已實現損益</div><input id='fh-real' type='number' placeholder='0'></div>";
     html+="<div><div class='fl'>首次買入日期</div><input id='fh-fd' type='date' value='"+today()+"'></div>";
+    html+="<div><div class='fl'>帳戶</div><select id='fh-acct'><option value='FT'>Firstrade</option><option value='Schwab'>嘉信</option><option value='GT'>國泰複委托</option></select></div>";
     html+="<div><div class='fl'>備註</div><input id='fh-note' placeholder='選填'></div>";
     html+="<div style='display:flex;align-items:flex-end;gap:8px;grid-column:span 2'><button class='btn btn-blue' onclick='addHolding()' style='flex:1'>確認新增／合併</button><button class='btn-sm' onclick=\"toggleForm(null)\" style='padding:8px 12px'>取消</button></div>";
     html+="</div><div class='fh'>💡 若代號已存在，股數和成本會自動加權合併</div></div>";
@@ -1293,7 +1294,9 @@ function addHolding(){
   var cost=parseFloat(document.getElementById("fh-cost").value)||0;
   var price=parseFloat(document.getElementById("fh-price").value)||0;
   var fd=document.getElementById("fh-fd").value||today();
-  var i=S.H.findIndex(function(h){return h.sym===sym;});
+  var acctEl=document.getElementById("fh-acct");
+  var acct=acctEl?acctEl.value:"FT";
+  var i=S.H.findIndex(function(h){return h.sym===sym&&h.acct===acct;});
   if(i>=0&&shares>0&&cost>0){
     var ns=S.H[i].shares+shares,nc=(S.H[i].shares*S.H[i].cost+shares*cost)/ns;
     S.H=S.H.map(function(h,j){return j===i?Object.assign({},h,{shares:ns,cost:parseFloat(nc.toFixed(6)),price:price||h.price,realized:(h.realized||0)+(parseFloat(document.getElementById("fh-real").value)||0),note:document.getElementById("fh-note").value||h.note,fd:h.fd||fd}):h;});

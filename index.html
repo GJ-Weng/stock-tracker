@@ -248,7 +248,7 @@ const INIT_E=[
 ];
 
 // ─── STATE ───
-var S={holdingsView:"all",editCostId:null,editCostVal:"",showZero:false,quickTrade:null,
+var S={holdingsView:"all",dashView:"all",editCostId:null,editCostVal:"",showZero:false,quickTrade:null,
   tab:"dash",H:null,T:null,E:null,acc:null,
   apiKey:"",ghToken:"",ghUser:"",ghRepo:"",ghSHA:"",
   showForm:null,filterType:"全部",txSearch:"",
@@ -873,9 +873,40 @@ function rDash(p){
     html+="<div class='bw'><div class='bv' style='width:"+pct+"%'></div></div></div>";
   });
   html+="</div></div>";
-  html+="<div class='panel'><div class='ph'><span>全部持倉</span>"+rUBtn(S.updating?"<span class='spin'></span> 更新中…":"🔄 更新報價","updatePrices",S.updating)+"</div>";
+  // Build dash view
+  var dashAccts=["all"];
+  S.H.forEach(function(h){if(h.acct&&dashAccts.indexOf(h.acct)<0)dashAccts.push(h.acct);});
+  var dashLabels={"all":"整合","FT":"Firstrade","Schwab":"嘉信","GT":"國泰"};
+  var dashView=S.dashView||"all";
+  // Build rows based on view
+  var dashRows;
+  if(dashView==="all"){
+    // Merge same symbol across accounts
+    var merged={};
+    p.act.forEach(function(h){
+      var sym=h.sym;
+      if(!merged[sym])merged[sym]={sym:sym,shares:0,cost:0,price:h.price,chg:h.chg,div:0,realized:0,fd:h.fd,isOption:h.isOption};
+      var ns=merged[sym].shares+h.shares;
+      merged[sym].cost=ns>0?(merged[sym].shares*merged[sym].cost+h.shares*h.cost)/ns:0;
+      merged[sym].shares=ns;
+      merged[sym].div+=(h.div||0);
+      merged[sym].realized+=(h.realized||0);
+      if(h.fd&&(!merged[sym].fd||h.fd<merged[sym].fd))merged[sym].fd=h.fd;
+    });
+    dashRows=Object.values(merged).filter(function(h){return h.shares>0;});
+  }else{
+    dashRows=p.act.filter(function(h){return h.acct===dashView;});
+  }
+  html+="<div class='panel'><div class='ph'>";
+  html+="<div style='display:flex;gap:6px;flex-wrap:wrap'>";
+  dashAccts.forEach(function(a){
+    var lbl=(dashLabels[a]||a);
+    html+="<button class='chip"+(dashView===a?" active":"")+"' data-dv='"+a+"' onclick='S.dashView=this.dataset.dv;render()'>"+lbl+"</button>";
+  })
+  html+="</div>";
+  html+=rUBtn(S.updating?"<span class='spin'></span> 更新中…":"🔄 更新報價","updatePrices",S.updating)+"</div>";
   html+="<div class='sx'><table><thead><tr><th>代號</th><th class='num'>股數</th><th class='num'>均成本</th><th class='num'>現價</th><th class='num'>今日漲跌</th><th class='num'>市值</th><th class='num'>未實現損益</th><th class='num'>報酬率</th><th class='num'>年化報酬</th></tr></thead><tbody>";
-  p.act.forEach(function(h){
+  dashRows.forEach(function(h){
     var mv=h.shares*h.price,ur=h.shares*(h.price-h.cost),ret=h.cost>0?(h.price-h.cost)/h.cost:0,ann=annualReturn(h.cost,h.price,h.fd);
     html+="<tr><td><strong>"+esc(h.sym)+"</strong>"+(h.note?"<br><small style='color:var(--text2)'>"+esc(h.note)+"</small>":"")+"</td>";
     html+="<td class='num'><span class='editable' data-type='shares' data-id='"+h.id+"' data-val='"+h.shares+"'>"+fn(h.shares,h.shares%1===0?0:6)+"</span></td>";

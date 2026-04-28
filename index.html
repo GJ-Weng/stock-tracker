@@ -524,6 +524,16 @@ function onSchwabFile(input){
   input.value="";
 }
 function rSchwabPanel(){
+  if(schwabImp.step===2){
+    return "<div class='sb' id='schwab-panel'><h3>💰 設定嘉信帳戶現金餘額</h3>"
+      +"<p style='font-size:12px;color:var(--text2);margin-bottom:12px'>請從嘉信 App 查詢「Cash & Cash Equivalents」後填入實際現金餘額：</p>"
+      +"<div style='display:flex;gap:8px;align-items:flex-end;max-width:300px'>"
+      +"<div style='flex:1'><div class='fl'>嘉信現金餘額 (USD)</div><input id='schwab-cash' type='number' step='0.01' placeholder='例：186.80'></div>"
+      +"<button class='btn btn-blue' onclick='schwabSetCash()'>確認</button>"
+      +"</div>"
+      +"<p style='font-size:11px;color:var(--text2);margin-top:8px'>持倉已建立完成，填入現金後即完成。</p>"
+      +"</div>";
+  }
   if(!schwabImp.step){
     return "<div class='sb'><h3>📋 嘉信 Schwab CSV</h3>"
       +"<p style='font-size:12px;color:var(--text2);margin-bottom:10px'>從嘉信帳戶下載 CSV 交易記錄，自動識別買入/賣出/配息/利息。</p>"
@@ -553,15 +563,6 @@ function rSchwabPanel(){
   html+="<button class='btn' onclick='schwabImp={rows:[],step:0};render()'>取消</button>";
   html+="</div></div>";
   return html;
-}
-// Step 2: ask for cash after import
-if(schwabImp.step===2){
-  return "<div class='sb' id='schwab-panel'><h3>💰 設定嘉信帳戶現金餘額</h3>"
-    +"<p style='font-size:12px;color:var(--text2);margin-bottom:12px'>由於嘉信 CSV 不含 TD 時期的入金記錄，請直接從嘉信 App 查詢「Cash & Cash Equivalents」後填入：</p>"
-    +"<div style='display:flex;gap:8px;align-items:flex-end;max-width:280px'>"
-    +"<div style='flex:1'><div class='fl'>嘉信現金餘額 (USD)</div><input id='schwab-cash' type='number' step='0.01' placeholder='例：186.80' value='"+S.acc.cash+"'></div>"
-    +"<button class='btn btn-blue' onclick='schwabSetCash()'>確認</button>"
-    +"</div></div>";
 }
 function schwabSetCash(){
   var v=parseFloat(document.getElementById("schwab-cash").value)||0;

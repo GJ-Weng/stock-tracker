@@ -412,8 +412,7 @@ function applyTx(tx){
 }
 
 function recalcCash(){
-  // Only calculate cash from FT transactions
-  // Schwab cash is set manually (CSV lacks TD historical deposits)
+  // Always compute FT cash live from transactions - never store in GitHub
   var cash=0;
   S.T.filter(function(t){return !t.source||t.source==="FT";}).forEach(function(t){
     var d=(t.desc||"").toUpperCase();
@@ -422,10 +421,10 @@ function recalcCash(){
     cash+=amt;
   });
   S.acc.cashFT=parseFloat(cash.toFixed(2));
-  // Preserve Schwab cash when recalculating
   if(S.acc.cashSchwab===undefined)S.acc.cashSchwab=0;
   S.acc.cash=S.acc.cashFT+S.acc.cashSchwab;
-  sv("acc");
+  // Save only cashSchwab and rate - NOT cashFT (it's always recalculated)
+  localStorage.setItem("ft_cashSchwab",S.acc.cashSchwab);
   var el=document.getElementById("ic-ft");
   if(el)el.value=S.acc.cashFT;
   return S.acc.cashFT;
@@ -572,7 +571,7 @@ function schwabSetCash(){
   var v=parseFloat(document.getElementById("schwab-cash").value)||0;
   S.acc.cashSchwab=v;
   S.acc.cash=(S.acc.cashFT||0)+v;
-  sv("acc");
+  sv("acc");  // syncs cashSchwab to GitHub
   var el=document.getElementById("ic-sw");if(el)el.value=v;
   schwabImp={rows:[],step:0};
   clearTimeout(S._syncTimer);syncToGitHub();
@@ -1135,7 +1134,7 @@ function setFilter(f){S.filterType=f;render();}
 function onAcc(k,v){
   S.acc[k]=parseFloat(v)||0;
   S.acc.cash=(S.acc.cashFT||0)+(S.acc.cashSchwab||0);
-  sv("acc");render();
+  sv("acc");render();  // all acc changes sync to GitHub
 }
 function saveApiKey(){S.apiKey=document.getElementById("api-key-inp").value.trim();localStorage.setItem("ft_apiKey",S.apiKey);toast("✅ API Key 已儲存");}
 function sortH(col){S.sortDir=S.sortCol===col?S.sortDir*-1:-1;S.sortCol=col;render();}
@@ -1223,10 +1222,9 @@ S.E=ld("E")||JSON.parse(JSON.stringify(INIT_E));
 S.acc=ld("acc")||{cash:0,cashFT:0,cashSchwab:0,rate:31.5665};
 // migrate old data - only if cashFT not yet defined
 if(S.acc.cashFT===undefined){S.acc.cashFT=0;S.acc.cashSchwab=0;}
-// Always recalc FT cash on startup from transactions to ensure accuracy
-setTimeout(function(){
-  if(S.T.some(function(t){return t.source==="FT"||!t.source;})){recalcCash();}
-},100);
+// cashSchwab is in S.acc (from localStorage or GitHub)
+// cashFT is always recalculated from transactions
+if(S.T.length>0)recalcCash();
 S.apiKey=localStorage.getItem("ft_apiKey")||"";
 S.ghToken=localStorage.getItem("ft_ghToken")||"";
 S.ghUser=localStorage.getItem("ft_ghUser")||"";
@@ -1239,8 +1237,9 @@ render();
 if(S.ghToken&&S.ghUser&&S.ghRepo){
   loadFromGitHub().then(function(ok){
     if(ok){
-      // Always recalc FT cash from transactions to avoid stale GitHub data
-      if(S.T.some(function(t){return t.source==="FT";})){recalcCash();}
+      // cashSchwab comes from GitHub, cashFT is always recalculated
+      recalcCash();
+      S.acc.cash=S.acc.cashFT+(S.acc.cashSchwab||0);
       toast("☁️ 已從 GitHub 載入最新資料");render();
     }
   });

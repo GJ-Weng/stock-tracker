@@ -103,6 +103,7 @@ tr:hover td{background:var(--bg3)}
 <main id="main"></main>
 <div class="toast" id="toast"></div>
 <input type="file" id="fsv-file" accept=".fsv,.csv,.txt" style="display:none" onchange="onFSVFile(this)">
+<input type="file" id="schwab-file" accept=".csv,.txt" style="display:none" onchange="onSchwabFile(this)">
 <input type="file" id="imp" accept=".json" style="display:none" onchange="importJSON(this)">
 
 <script>
@@ -130,15 +131,15 @@ function annualReturn(cost,price,fd){
 
 // ─── INIT DATA ───
 const INIT_H=[
-  {id:"h1",sym:"AMZN",shares:0,cost:0,price:245.95,chg:-2.55,div:0,realized:178,note:"已出清",fd:"2025-10-24"},
-  {id:"h2",sym:"ALAB",shares:0,cost:0,price:163.21,chg:-8.88,div:0,realized:1086.89,note:"已出清",fd:"2025-10-24"},
-  {id:"h3",sym:"ONDS Call 1/15/27 $7.50",shares:1,cost:700.02,price:0,chg:0,div:0,realized:0,note:"選擇權",fd:"2026-02-01"},
-  {id:"h4",sym:"ONDS",shares:1200,cost:10.3583,price:9.84,chg:-0.19,div:0,realized:0,note:"",fd:"2026-02-01"},
-  {id:"h5",sym:"SOFI",shares:100,cost:24.5,price:18.86,chg:0.06,div:0,realized:0,note:"",fd:"2026-02-07"},
-  {id:"h6",sym:"KBSX",shares:8179,cost:1.2222,price:1.23,chg:-0.02,div:0,realized:0,note:"",fd:"2026-02-12"},
-  {id:"h7",sym:"TSLA",shares:10,cost:389,price:384.34,chg:-7.62,div:0,realized:0,note:"",fd:"2026-02-14"},
-  {id:"h8",sym:"RMBS",shares:5,cost:102,price:118.36,chg:-1.66,div:0,realized:0,note:"",fd:"2026-02-28"},
-  {id:"h9",sym:"NVDA",shares:27,cost:181,price:196.96,chg:-1.91,div:0,realized:0,note:"",fd:"2026-03-22"},
+  {id:"h1",sym:"AMZN",shares:0,cost:0,price:245.95,chg:-2.55,div:0,realized:178,note:"已出清",fd:"2025-10-24",acct:"FT"},
+  {id:"h2",sym:"ALAB",shares:0,cost:0,price:163.21,chg:-8.88,div:0,realized:1086.89,note:"已出清",fd:"2025-10-24",acct:"FT"},
+  {id:"h3",sym:"ONDS Call 1/15/27 $7.50",shares:1,cost:700.02,price:0,chg:0,div:0,realized:0,note:"選擇權",fd:"2026-02-01",isOption:true,acct:"FT"},
+  {id:"h4",sym:"ONDS",shares:1200,cost:10.3583,price:9.84,chg:-0.19,div:0,realized:0,note:"",fd:"2026-02-01",acct:"FT"},
+  {id:"h5",sym:"SOFI",shares:100,cost:24.5,price:18.86,chg:0.06,div:0,realized:0,note:"",fd:"2026-02-07",acct:"FT"},
+  {id:"h6",sym:"KBSX",shares:8179,cost:1.2222,price:1.23,chg:-0.02,div:0,realized:0,note:"",fd:"2026-02-12",acct:"FT"},
+  {id:"h7",sym:"TSLA",shares:10,cost:389,price:384.34,chg:-7.62,div:0,realized:0,note:"",fd:"2026-02-14",acct:"FT"},
+  {id:"h8",sym:"RMBS",shares:5,cost:102,price:118.36,chg:-1.66,div:0,realized:0,note:"",fd:"2026-02-28",acct:"FT"},
+  {id:"h9",sym:"NVDA",shares:27,cost:181,price:196.96,chg:-1.91,div:0,realized:0,note:"",fd:"2026-03-22",acct:"FT"},
 ];
 const INIT_T=[
   {id:"t1",date:d2s(45926),type:"入金",sym:"",shares:0,price:15000,fee:0,amt:15000,wire:1200},
@@ -246,7 +247,7 @@ const INIT_E=[
 ];
 
 // ─── STATE ───
-var S={
+var S={holdingsView:"all",
   tab:"dash",H:null,T:null,E:null,acc:null,
   apiKey:"",ghToken:"",ghUser:"",ghRepo:"",ghSHA:"",
   showForm:null,filterType:"全部",txSearch:"",
@@ -268,10 +269,12 @@ function avgFx(){
   S.E.forEach(function(e){tu+=e.usd;tt+=e.twd;});
   return tu>0?tt/tu:S.acc.rate;
 }
+function mktVal(h){return h.shares*(h.isOption?h.price*100:h.price);}
+function costBasis(h){return h.shares*h.cost;}
 function calc(){
   var act=S.H.filter(function(h){return h.shares>0;});
   var mkt=0,cost=0,todayChg=0;
-  act.forEach(function(h){mkt+=h.shares*h.price;cost+=h.shares*h.cost;todayChg+=h.shares*(h.chg||0);});
+  act.forEach(function(h){mkt+=mktVal(h);cost+=costBasis(h);todayChg+=h.shares*(h.chg||0)*(h.isOption?100:1);});
   var real=0,div=0;
   S.H.forEach(function(h){real+=(h.realized||0);div+=(h.div||0);});
   return{mkt:mkt,cost:cost,unreal:mkt-cost,real:real,div:div,todayChg:todayChg,
@@ -372,11 +375,21 @@ function applyTx(tx){
   var i;
   if(type==="買入"){
     i=S.H.findIndex(function(h){return h.sym===sym;});
-    if(i>=0){
+    var acct=tx.source||"FT";
+    if(i>=0&&S.H[i].acct===acct){
       var ns=S.H[i].shares+shares,nc=(S.H[i].shares*S.H[i].cost+shares*price)/ns;
       S.H=S.H.map(function(h,j){return j===i?Object.assign({},h,{shares:ns,cost:parseFloat(nc.toFixed(6))}):h;});
+    }else if(i>=0&&S.H[i].acct!==acct){
+      // Different account - add as separate holding
+      var existAcct=S.H.find(function(h){return h.sym===sym&&h.acct===acct;});
+      if(existAcct){
+        var ei=S.H.indexOf(existAcct),ns2=existAcct.shares+shares,nc2=(existAcct.shares*existAcct.cost+shares*price)/ns2;
+        S.H=S.H.map(function(h,j){return j===ei?Object.assign({},h,{shares:ns2,cost:parseFloat(nc2.toFixed(6))}):h;});
+      }else{
+        S.H.push({id:gid(),sym:sym,shares:shares,cost:price,price:price,chg:0,div:0,realized:0,note:"",fd:date||today(),acct:acct});
+      }
     }else{
-      S.H.push({id:gid(),sym:sym,shares:shares,cost:price,price:price,chg:0,div:0,realized:0,note:"",fd:date||today()});
+      S.H.push({id:gid(),sym:sym,shares:shares,cost:price,price:price,chg:0,div:0,realized:0,note:"",fd:date||today(),acct:acct});
     }
     sv("H");
   }else if(type==="賣出"){
@@ -444,6 +457,95 @@ function rebuildFromTx(){
   S.tab="holdings";
   toast("✅ 從 "+sorted.length+" 筆交易重建完成，共 "+S.H.length+" 支，現金 $"+fn(S.acc.cash,2));
   render();
+}
+
+// ─── SCHWAB CSV PARSER ───────────────────────────────────────────────────────
+function parseSchwabAmt(s){
+  if(!s||!s.trim())return 0;
+  return parseFloat(s.trim().replace(/[$,]/g,""))||0;
+}
+function parseSchwabDate(s){
+  // MM/DD/YYYY → YYYY-MM-DD
+  if(!s||!s.trim())return"";
+  var p=s.trim().split("/");
+  if(p.length!==3)return s.trim();
+  return p[2]+"-"+p[0].padStart(2,"0")+"-"+p[1].padStart(2,"0");
+}
+function classifySchwab(action){
+  var a=action.trim();
+  if(a==="Buy"||a==="Reinvest Shares")return"買入";
+  if(a==="Sell")return"賣出";
+  if(a==="Qualified Dividend"||a==="Cash Dividend"||a==="Qual Div Reinvest")return"配息";
+  if(a==="Credit Interest"||a==="Bond Interest")return"現金利息";
+  if(a==="Wire Received"||a==="Wire Funds Received")return"入金";
+  if(a==="NRA Tax Adj")return"預扣稅";
+  return"其他";
+}
+function parseSchwabCSV(text){
+  var lines=text.trim().split(/\r?\n/);
+  var headers=lines[0].split(",").map(function(h){return h.trim().replace(/^"|"$/g,"").toLowerCase().replace(/\s/g,"_").replace(/&/g,"and").replace(/fees_and_comm/,"fee");});
+  function idx(h){return headers.indexOf(h);}
+  var rows=[];
+  for(var i=1;i<lines.length;i++){
+    var cells=lines[i].split(",").map(function(c){return c.trim().replace(/^"|"$/g,"");});
+    if(cells.length<4)continue;
+    var action=cells[idx("action")]||"";
+    if(!action.trim())continue;
+    rows.push({
+      date:parseSchwabDate(cells[idx("date")]||""),
+      action:action.trim(),
+      sym:(cells[idx("symbol")]||"").trim().toUpperCase(),
+      desc:(cells[idx("description")]||"").trim(),
+      qty:parseFloat(cells[idx("quantity")])||0,
+      price:parseSchwabAmt(cells[idx("price")]),
+      fee:parseSchwabAmt(cells[idx("fee")]||cells[idx("fees_and_comm")]||""),
+      amount:parseSchwabAmt(cells[idx("amount")])
+    });
+  }
+  return rows;
+}
+function openSchwabImport(){document.getElementById("schwab-file").click();}
+function onSchwabFile(input){
+  var f=input.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(e){
+    try{
+      var rows=parseSchwabCSV(e.target.result);
+      // Build transactions directly (symbol already known)
+      S.T=[];S.H=[];
+      var added=0;
+      rows.sort(function(a,b){return a.date.localeCompare(b.date);});
+      rows.forEach(function(r){
+        var type=classifySchwab(r.action);
+        var t={id:gid(),date:r.date,type:type,sym:r.sym,shares:Math.abs(r.qty),
+          price:r.price,fee:Math.abs(r.fee),amt:r.amount,wire:0,desc:r.desc,source:"schwab"};
+        applyTx(t);
+        S.T.push(t);added++;
+      });
+      sv("T");sv("H");
+      var cash=recalcSchwabCash();
+      clearTimeout(S._syncTimer);syncToGitHub();
+      toast("✅ 嘉信匯入完成："+added+" 筆，現金 $"+fn(cash,2));
+      S.tab="dash";render();
+    }catch(err){toast("❌ 嘉信 CSV 解析失敗："+err.message);console.error(err);}
+  };
+  r.readAsText(f,"UTF-8");
+  input.value="";
+}
+function recalcSchwabCash(){
+  var cash=0;
+  S.T.forEach(function(t){
+    // Exclude Security Transfer (ACAT out) and internal journaling
+    var d=(t.desc||"").toUpperCase();
+    if(d.includes("ACAT TOA")||d.includes("ACAT FROM"))return;
+    if(t.type==="其他")return;
+    cash+=t.amt||0;
+  });
+  S.acc.cash=parseFloat(cash.toFixed(2));
+  sv("acc");
+  var el=document.getElementById("ic");
+  if(el)el.value=S.acc.cash;
+  return S.acc.cash;
 }
 
 // ─── FSV IMPORT ───
@@ -551,7 +653,7 @@ function fsvConfirmImport(){
   S.T=[];S.H=[];
   var added=0,skipped=0;
   rows.forEach(function(r){
-    var t=Object.assign({id:gid()},r);
+    var t=Object.assign({id:gid(),source:"FT"},r);
     if(applyTx(t)===false)return;
     S.T.push(t);added++;
   });
@@ -659,7 +761,7 @@ function rDash(p){
   html+="<div class='cc'><div class='ct'>資產配置</div><div style='position:relative;height:190px'><canvas id='pie-chart'></canvas></div><div id='pie-legend' style='margin-top:10px'></div></div>";
   html+="<div class='cc'><div class='ct'>持倉概覽</div>";
   p.act.forEach(function(h){
-    var mv=h.shares*h.price,ur=h.shares*(h.price-h.cost),ret=h.cost>0?(h.price-h.cost)/h.cost:0,pct=p.mkt>0?mv/p.mkt*100:0;
+    var mv=mktVal(h),ur=mv-costBasis(h),ret=h.cost>0?(h.price*(h.isOption?100:1)-h.cost)/h.cost:0,pct=p.mkt>0?mv/p.mkt*100:0;
     html+="<div style='padding:5px 0;border-bottom:0.5px solid var(--border)'><div style='display:flex;justify-content:space-between'><strong>"+esc(h.sym)+"</strong><span class='"+cv(ur)+"' style='font-family:ui-monospace,monospace;font-size:12px'>"+(ur>=0?"+":"")+"$"+fn(ur,2)+"</span></div>";
     html+="<div style='display:flex;justify-content:space-between;font-size:11px;color:var(--text2)'><span>$"+fn(h.price,2)+" × "+fn(h.shares,0)+"</span><span class='"+cv(ret)+"'>"+(ret>=0?"+":"")+fp(ret)+"</span></div>";
     html+="<div class='bw'><div class='bv' style='width:"+pct+"%'></div></div></div>";
@@ -681,7 +783,7 @@ function rDash(p){
 
 function rHoldings(){
   var fx=avgFx();
-  var rows=S.H.slice();
+  var rows=(S.holdingsView==="all"?S.H:S.H.filter(function(h){return h.acct===S.holdingsView;})).slice();
   if(S.sortCol){
     rows.sort(function(a,b){
       var av,bv;
@@ -694,7 +796,20 @@ function rHoldings(){
   }
   function th(col,lbl){return "<th class='"+(S.sortCol===col?(S.sortDir===1?"sa":"sd"):"")+"' onclick=\"sortH('"+col+"')\">"+lbl+"</th>";}
   var html="<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px'>";
-  html+="<span style='color:var(--text2);font-size:13px'>"+S.H.length+" 支（含已出清）</span>";
+  // Account filter tabs
+  var accts=["all","FT","Schwab","GT"];
+  var acctLabels={"all":"整合檢視","FT":"Firstrade","Schwab":"嘉信","GT":"國泰"};
+  var usedAccts=["all"];
+  S.H.forEach(function(h){if(h.acct&&usedAccts.indexOf(h.acct)<0)usedAccts.push(h.acct);});
+  html+="<div style='display:flex;gap:6px;flex-wrap:wrap'>";
+    usedAccts.forEach(function(a){
+    var isActive=S.holdingsView===a;
+    html+="<button class='chip"+(isActive?" active":"")+"' onclick='setHoldingsView(this.dataset.v)' data-v='"+esc(a)+"'>"+acctLabels[a]+"</button>";
+  });
+  html+="</div>";
+  // Filter holdings by account
+  var viewH=(S.holdingsView==="all")?S.H:S.H.filter(function(h){return h.acct===S.holdingsView;});
+  html+="<span style='color:var(--text2);font-size:13px'>"+viewH.length+" 支（含已出清）</span>";
   html+="<div style='display:flex;gap:8px;flex-wrap:wrap'>";
   html+=rUBtn(S.updating?"<span class='spin'></span> 更新中":"🔄 更新報價","updatePrices",S.updating);
   html+="<button class='btn' onclick='rebuildFromTx()'>🔁 從交易重建</button>";
@@ -717,7 +832,7 @@ function rHoldings(){
   html+=th("sym","代號")+th("shares","股數")+th("cost","均成本")+"<th>現價(點擊)</th>"+th("chg","今日漲跌")+th("mkt","市值")+th("ur","未實現")+th("realized","已實現")+th("div","股息")+th("ret","報酬率")+"<th>年化</th><th>台幣成本</th><th></th>";
   html+="</tr></thead><tbody>";
   rows.forEach(function(h){
-    var mv=h.shares*h.price,ur=h.shares*(h.price-h.cost),ret=h.cost>0?(h.price-h.cost)/h.cost:0,ann=annualReturn(h.cost,h.price,h.fd),isE=S.editPriceId===h.id;
+    var mv=mktVal(h),ur=mv-costBasis(h),ret=h.cost>0?(h.price*(h.isOption?100:1)-h.cost)/h.cost:0,ann=annualReturn(h.cost,h.price*(h.isOption?100:1),h.fd),isE=S.editPriceId===h.id;
     html+="<tr><td><strong>"+esc(h.sym)+"</strong>"+(h.note?"<br><small style='color:var(--text2)'>"+esc(h.note)+"</small>":"")+"</td>";
     html+="<td class='num'>"+fn(h.shares,h.shares%1===0?0:4)+"</td><td class='num'>$"+fn(h.cost,4)+"</td>";
     html+="<td class='num'>"+(isE?"<input id='ep-"+h.id+"' type='number' value='"+S.editPriceVal+"' style='width:82px;padding:3px 6px;font-size:12px;text-align:right' onblur=\"savePrice('"+h.id+"')\" onkeydown=\"if(event.key==='Enter')savePrice('"+h.id+"');else if(event.key==='Escape'){S.editPriceId=null;render();}\" oninput='S.editPriceVal=this.value'>":"<span onclick=\"startEditPrice('"+h.id+"',"+h.price+")\" style='cursor:pointer;text-decoration:underline dotted'>$"+fn(h.price,2)+"</span>")+"</td>";
@@ -790,19 +905,32 @@ function rFX(){
     html+="<div class='fb'><div class='fg'><div><div class='fl'>台幣(NTD)</div><input id='fe-twd' type='number' placeholder='10000'></div>";
     html+="<div><div class='fl'>美金(USD)</div><input id='fe-usd' type='number' placeholder='316'></div>";
     html+="<div><div class='fl'>匯率（留空自動算）</div><input id='fe-rate' type='number' step='0.001'></div>";
+    html+="<div><div class='fl'>備註（銀行）</div><input id='fe-note' placeholder='台銀、玉山、永豐…'></div>";
     html+="<div style='display:flex;align-items:flex-end;gap:8px'><button class='btn btn-blue' onclick='addFX()' style='flex:1'>確認新增</button><button class='btn-sm' onclick=\"toggleForm(null)\" style='padding:8px 12px'>取消</button></div></div></div>";
   }
-  html+="<div class='panel'><div class='sx sy'><table><thead><tr><th>#</th><th class='num'>台幣(NTD)</th><th class='num'>美金(USD)</th><th class='num'>匯率</th><th></th></tr></thead><tbody>";
+  html+="<div class='panel'><div class='sx sy'><table><thead><tr><th>#</th><th class='num'>台幣(NTD)</th><th class='num'>美金(USD)</th><th class='num'>匯率</th><th>備註</th><th></th></tr></thead><tbody>";
   var rev=S.E.slice().reverse();
   rev.forEach(function(e,i){
     html+="<tr><td style='color:var(--text2)'>"+(S.E.length-i)+"</td><td class='num'>NT$"+fn(e.twd,0)+"</td><td class='num'>$"+fn(e.usd,2)+"</td><td class='num'>"+e.rate.toFixed(3)+"</td>";
+    html+="<td style='font-size:12px;color:var(--text2)'>"+esc(e.note||"")+"</td>";
     html+="<td><button class='btn-red' onclick=\"delFX('"+e.id+"')\">刪除</button></td></tr>";
   });
   html+="</tbody></table></div></div>";
   return html;
 }
 
-function rFSVPanel(){
+function rImportPanel(){
+  var out="<div class='sb'><h3>📥 匯入交易紀錄</h3>";
+  out+="<p style='font-size:12px;color:var(--text2);margin-bottom:10px'>選擇券商格式匯入，自動計算持倉和現金。匯入前請先清空持倉和交易。</p>";
+  out+="<div style='display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px'>";
+  out+="<button class='btn btn-blue' onclick='openFSVImport()'>📋 Firstrade FSV/CSV</button>";
+  out+="<button class='btn btn-blue' onclick='openSchwabImport()'>📋 嘉信 Schwab CSV</button>";
+  out+="</div>";
+  if(S.imp&&S.imp.step>0)out+=rFSVSteps();
+  out+="</div>";
+  return out;
+}
+function rFSVSteps(){
   var imp=S.imp;
   if(!imp.step)return "<div class='sb'><h3>📥 匯入 Firstrade 交易紀錄 (FSV/CSV)</h3><p style='font-size:12px;color:var(--text2);margin-bottom:10px'>從 Firstrade 下載 FSV/CSV 格式對帳單，一鍵匯入所有交易並自動計算持倉。</p><button class='btn btn-blue' onclick='openFSVImport()'>選擇 FSV / CSV 檔案</button></div>";
   if(imp.step===1){
@@ -851,7 +979,7 @@ function rSettings(){
   html+="<button class='btn' onclick='ghLoad()'>⬇ 從雲端載入</button>";
   html+="<button class='btn' onclick='syncToGitHub()'>⬆ 立即同步</button>";
   html+="</div><div class='ib' style='margin-top:10px'>💡 Token 申請：GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Contents: Read and Write</div></div>";
-  html+=rFSVPanel();
+  html+=rImportPanel();
   html+="<div class='sb'><h3>🔑 Anthropic API Key（報價備援）</h3>";
   html+="<div class='kr'><input type='password' id='api-key-inp' placeholder='sk-ant-api03-…' value='"+esc(S.apiKey)+"'><button class='btn btn-blue' onclick='saveApiKey()'>儲存</button></div></div>";
   html+="<div class='sb'><h3>📦 資料管理</h3><div style='display:flex;gap:8px;flex-wrap:wrap;margin-top:8px'>";
@@ -887,6 +1015,7 @@ function render(){
 }
 
 // ─── ACTIONS ───
+function setHoldingsView(v){S.holdingsView=v;render();}
 function setTab(t){S.tab=t;S.showForm=null;S.editTxId=null;S.editPriceId=null;render();}
 function toggleForm(f){S.showForm=S.showForm===f?null:f;S.editTxId=null;render();}
 function setFilter(f){S.filterType=f;render();}
@@ -947,7 +1076,8 @@ function addFX(){
   var twd=parseFloat(document.getElementById("fe-twd").value)||0,usd=parseFloat(document.getElementById("fe-usd").value)||0;
   if(!usd){alert("請輸入美金金額");return;}
   var ri=parseFloat(document.getElementById("fe-rate").value),rate=(!isNaN(ri)&&ri>0)?ri:parseFloat((twd/usd).toFixed(4));
-  S.E.push({id:gid(),twd:twd,usd:usd,rate:rate});sv("E");S.showForm=null;toast("✅ 已新增換匯紀錄");render();
+  var note=(document.getElementById("fe-note")&&document.getElementById("fe-note").value)||"";
+  S.E.push({id:gid(),twd:twd,usd:usd,rate:rate,note:note});sv("E");S.showForm=null;toast("✅ 已新增換匯紀錄");render();
 }
 function delFX(id){if(!confirm("確定刪除？"))return;S.E=S.E.filter(function(e){return e.id!==id;});sv("E");render();}
 

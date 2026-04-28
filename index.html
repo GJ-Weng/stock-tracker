@@ -548,8 +548,11 @@ function fsvConfirmImport(){
   sv("T");sv("H");
   var cash=recalcCash();
   S.imp={rows:[],symMap:{},step:0};
-  toast("✅ 匯入完成：新增 "+added+" 筆"+(skipped?"，略過重複 "+skipped+" 筆":"")+("，現金餘額 $"+fn(cash,2)+"（可與 Firstrade 帳戶核對）"));
+  toast("✅ 匯入完成：新增 "+added+" 筆"+(skipped?"，略過重複 "+skipped+" 筆":"")+("，現金 $"+fn(cash,2)));
   S.tab="dash";render();
+  // Force immediate sync to GitHub (don't wait 2s timer - prevents stale data on refresh)
+  clearTimeout(S._syncTimer);
+  syncToGitHub();
 }
 function fsvCancel(){S.imp={rows:[],symMap:{},step:0};render();}
 
@@ -605,6 +608,8 @@ function clearAll(){
   document.getElementById("ir").value=S.acc.rate;
   document.getElementById("ic").value=S.acc.cash;
   toast("✅ 持倉和交易已清空，換匯紀錄保留。請匯入 FSV 檔案");render();
+  clearTimeout(S._syncTimer);
+  syncToGitHub();
 }
 
 // ─── CHART ───

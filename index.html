@@ -616,6 +616,8 @@ function schwabConfirmImport(){
   sv("T");sv("H");
   schwabImp={rows:[],step:2};  // step 2 = ask for cash
   render();
+  // Auto update prices after import
+  setTimeout(function(){updatePrices();},500);
 }
 
 // ─── FSV IMPORT ───
@@ -905,7 +907,7 @@ function rHoldings(){
   rows.forEach(function(h){
     var mv=mktVal(h),ur=mv-costBasis(h),ret=h.cost>0?(h.price*(h.isOption?100:1)-h.cost)/h.cost:0,ann=annualReturn(h.cost,h.price*(h.isOption?100:1),h.fd),isE=S.editPriceId===h.id;
     html+="<tr><td><strong>"+esc(h.sym)+"</strong>"+(h.note?"<br><small style='color:var(--text2)'>"+esc(h.note)+"</small>":"")+"</td>";
-    html+="<td class='num'>"+fn(h.shares,h.shares%1===0?0:4)+"</td><td class='num'>$"+fn(h.cost,4)+"</td>";
+    html+="<td class='num'><span onclick='startEditShares(\""+h.id+"\")' title='點擊修改股數' style='cursor:pointer;text-decoration:underline dotted'>"+fn(h.shares,h.shares%1===0?0:6)+"</span></td><td class='num'>$"+fn(h.cost,4)+"</td>";
     html+="<td class='num'>"+(isE?"<input id='ep-"+h.id+"' type='number' value='"+S.editPriceVal+"' style='width:82px;padding:3px 6px;font-size:12px;text-align:right' onblur=\"savePrice('"+h.id+"')\" onkeydown=\"if(event.key==='Enter')savePrice('"+h.id+"');else if(event.key==='Escape'){S.editPriceId=null;render();}\" oninput='S.editPriceVal=this.value'>":"<span onclick=\"startEditPrice('"+h.id+"',"+h.price+")\" style='cursor:pointer;text-decoration:underline dotted'>$"+fn(h.price,2)+"</span>")+"</td>";
     html+="<td class='num "+cv(h.chg)+"'>"+(h.chg>=0?"+":"")+fn(h.chg,2)+"</td>";
     html+="<td class='num'>"+(h.shares>0?"$"+fn(mv,0):"—")+"</td>";
@@ -1096,6 +1098,18 @@ function onAcc(k,v){S.acc[k]=parseFloat(v)||0;sv("acc");render();}
 function saveApiKey(){S.apiKey=document.getElementById("api-key-inp").value.trim();localStorage.setItem("ft_apiKey",S.apiKey);toast("✅ API Key 已儲存");}
 function sortH(col){S.sortDir=S.sortCol===col?S.sortDir*-1:-1;S.sortCol=col;render();}
 function startEditPrice(id,v){S.editPriceId=id;S.editPriceVal=String(v);render();}
+function startEditShares(id){
+  var h=S.H.find(function(h){return h.id===id;});
+  if(!h)return;
+  var v=prompt("修改 "+h.sym+" 股數（目前："+h.shares+"）：",h.shares);
+  if(v===null)return;
+  var n=parseFloat(v);
+  if(isNaN(n)||n<0){alert("請輸入有效數字");return;}
+  S.H=S.H.map(function(h2){return h2.id===id?Object.assign({},h2,{shares:n}):h2;});
+  sv("H");
+  toast("✅ "+h.sym+" 股數已更新為 "+n);
+  render();
+}
 function savePrice(id){
   var v=parseFloat(S.editPriceVal);
   if(!isNaN(v)){S.H=S.H.map(function(h){return h.id===id?Object.assign({},h,{price:v}):h;});sv("H");}

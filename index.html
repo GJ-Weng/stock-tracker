@@ -612,11 +612,13 @@ function schwabConfirmImport(){
       hMap[sym].div=(hMap[sym].div||0)+r.amount;
     }
   });
-  S.H=Object.keys(hMap).map(function(sym){
+  // Append Schwab holdings to existing non-Schwab holdings (don't replace)
+  var schwabH=Object.keys(hMap).map(function(sym){
     var h=hMap[sym];
     return{id:gid(),sym:sym,shares:h.shares,cost:parseFloat((h.cost||0).toFixed(6)),
       price:0,chg:0,div:parseFloat((h.div||0).toFixed(2)),realized:0,note:"",fd:h.fd,acct:"Schwab"};
   });
+  S.H=S.H.concat(schwabH);
 
   sv("T");sv("H");
   schwabImp={rows:[],step:2};  // step 2 = ask for cash

@@ -566,16 +566,25 @@ function importJSON(input){
   r.readAsText(input.files[0]);
 }
 function resetData(){
-  if(!confirm("確定清除所有資料，恢復為預設初始值？"))return;
+  if(!confirm("確定恢復為預設初始資料（9 支範例股票）？"))return;
   S.H=JSON.parse(JSON.stringify(INIT_H));
   S.T=JSON.parse(JSON.stringify(INIT_T));
   S.E=JSON.parse(JSON.stringify(INIT_E));
-  S.acc={cash:9853.5,rate:31.5665};
+  S.acc={cash:0,rate:31.5};
   ["H","T","E","acc"].forEach(sv);
   S.tab="dash";S.showForm=null;S.editTxId=null;S.editPriceId=null;
   document.getElementById("ir").value=S.acc.rate;
   document.getElementById("ic").value=S.acc.cash;
-  toast("✅ 已重置為初始資料");render();
+  toast("✅ 已恢復初始範例資料");render();
+}
+function clearAll(){
+  if(!confirm("確定清空所有持倉和交易紀錄？換匯紀錄會保留。此操作無法復原。"))return;
+  S.H=[];S.T=[];S.acc={cash:0,rate:S.acc.rate};
+  ["H","T","acc"].forEach(sv);
+  S.tab="settings";S.showForm=null;S.editTxId=null;S.editPriceId=null;
+  document.getElementById("ir").value=S.acc.rate;
+  document.getElementById("ic").value=S.acc.cash;
+  toast("✅ 持倉和交易已清空，換匯紀錄保留。請匯入 FSV 檔案");render();
 }
 
 // ─── CHART ───
@@ -813,7 +822,10 @@ function rSettings(){
   html+="<div class='sb'><h3>📦 資料管理</h3><div style='display:flex;gap:8px;flex-wrap:wrap;margin-top:8px'>";
   html+="<button class='btn' onclick='exportJSON()'>📤 備份 JSON</button>";
   html+="<button class='btn' onclick='document.getElementById(\"imp\").click()'>📥 還原 JSON</button>";
-  html+="<button class='btn-red' onclick='resetData()'>🗑 清除重置</button></div></div>";
+  html+="</div><div style='display:flex;gap:8px;flex-wrap:wrap;margin-top:8px'>";
+  html+="<button class='btn-red' onclick='clearAll()' style='font-weight:600'>🗑 清空持倉和交易（換匯保留）</button>";
+  html+="<button class='btn' onclick='resetData()' style='opacity:.7'>↩ 恢復範例資料</button>";
+  html+="</div><div class='fh' style='margin-top:8px'>💡 步驟：完全清空 → 設定頁上方匯入 FSV</div></div>";
   html+="</div>";
   return html;
 }

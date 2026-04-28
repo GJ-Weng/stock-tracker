@@ -393,7 +393,6 @@ function applyTx(tx){
     }else{
       S.H.push({id:gid(),sym:sym,shares:shares,cost:price,price:price,chg:0,div:0,realized:0,note:"",fd:date||today(),acct:acct});
     }
-    sv("H");
   }else if(type==="賣出"){
     var acctS=tx.source||"FT";
     i=S.H.findIndex(function(h){return h.sym===sym&&(h.acct===acctS||!h.acct);});
@@ -407,7 +406,6 @@ function applyTx(tx){
     i=S.H.findIndex(function(h){return h.sym===sym;});
     if(i>=0){
       S.H=S.H.map(function(h,j){return j===i?Object.assign({},h,{div:parseFloat(((h.div||0)+amt).toFixed(2))}):h;});
-      sv("H");
     }
   }
   return true;
@@ -769,9 +767,8 @@ function fsvConfirmImport(){
   sv("T");sv("H");
   var cash=recalcCash();
   S.imp={rows:[],symMap:{},step:0};
-  toast("✅ 匯入完成：新增 "+added+" 筆"+(skipped?"，略過重複 "+skipped+" 筆":"")+("，現金 $"+fn(cash,2)));
+  toast("✅ 匯入完成：新增 "+added+" 筆，現金 $"+fn(cash,2));
   S.tab="dash";render();
-  // Force immediate sync to GitHub (don't wait 2s timer - prevents stale data on refresh)
   clearTimeout(S._syncTimer);
   syncToGitHub();
 }

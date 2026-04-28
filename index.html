@@ -463,18 +463,18 @@ function parseFSV(text){
 }
 function classifyFSV(r){
   var d=r.desc.toUpperCase();
+  var amt=r.amount||0;
   if(r.action==="BUY")return"買入";
   if(r.action==="SELL")return"賣出";
   if(r.action==="Interest")return"現金利息";
   if(r.action==="DIV"||d.includes("DIVIDEND"))return"配息";
-  // Explicitly skip internal margin/cash transfers (always cancel out, should not affect cash)
-  if(d.includes("XFER CASH TO MARGIN")||d.includes("XFER MARGIN TO CASH"))return"其他";
-  if(/^TFR CASH TO/.test(d))return"其他";
-  // Actual deposits
+  if(d.includes("TFR"))return"其他";
+  // Negative XFER MARGIN TO CASH = tax withholding actually deducted from cash
+  if(d.includes("XFER MARGIN TO CASH")&&amt<0)return"預扣稅";
+  if(d.includes("XFER"))return"其他";
   if(d.includes("WIRE FUNDS"))return"入金";
-  if(d.includes("TRANSFER FROM")&&(d.includes("ACAT")||d.includes("SCHWA")||d.includes("FIDELITY")||d.includes("SCHWAB")))return"入金";
-  if(/^TFR CASH FROM/.test(d))return"入金";
-  if(d.includes("REBATE")||d.toLowerCase().includes("rebate"))return"匯費補貼";
+  if(d.includes("TRANSFER FROM")&&d.includes("ACAT"))return"入金";
+  if(d.includes("REBATE"))return"匯費補貼";
   return"其他";
 }
 function cleanName(desc){
@@ -628,12 +628,12 @@ function drawChart(p){
 
 // ─── RENDERS ───
 function rCard(l,v,s,c){return "<div class='card'><div class='cl'>"+l+"</div><div class='cv "+(c||"")+"'>"+v+"</div><div class='cs'>"+s+"</div></div>";}
-function rBadge(t){var m={"買入":"bb","賣出":"bs","入金":"bd","現金利息":"bi","匯費補貼":"br","配息":"bd"};return "<span class='badge "+(m[t]||"br")+"'>"+t+"</span>";}
+function rBadge(t){var m={"買入":"bb","賣出":"bs","入金":"bd","現金利息":"bi","匯費補貼":"br","配息":"bd","預扣稅":"bs"};return "<span class='badge "+(m[t]||"br")+"'>"+t+"</span>";}
 function rUBtn(text,fn,loading){return "<button class='ubtn"+(loading?" loading":"")+"' onclick='"+fn+"()'>"+text+"</button>";}
 
 function rDash(p){
   var html="<div class='cards'>";
-  html+=rCard("總資產(TWD)","NT$"+fn(p.totalTWD,0),"≈ USD "+fn(p.totalUSD,0));
+  html+=rCard("總資產(USD)","$"+fn(p.totalUSD,0),"≈ NT$"+fn(p.totalTWD,0));
   html+=rCard("股票市值(USD)","$"+fn(p.mkt,0),p.act.length+" 支持倉");
   html+=rCard("未實現損益",(p.unreal>=0?"+":"")+"$"+fn(p.unreal,2),p.cost>0?fp(p.unreal/p.cost):"—",cv(p.unreal));
   html+=rCard("已實現損益",(p.real>=0?"+":"")+"$"+fn(p.real,2),"含配息 $"+fn(p.div,2),cv(p.real));

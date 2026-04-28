@@ -247,7 +247,7 @@ const INIT_E=[
 ];
 
 // ─── STATE ───
-var S={holdingsView:"all",
+var S={holdingsView:"all",editCostId:null,editCostVal:"",showZero:false,
   tab:"dash",H:null,T:null,E:null,acc:null,
   apiKey:"",ghToken:"",ghUser:"",ghRepo:"",ghSHA:"",
   showForm:null,filterType:"全部",txSearch:"",
@@ -845,7 +845,14 @@ function rDash(p){
   p.act.forEach(function(h){
     var mv=h.shares*h.price,ur=h.shares*(h.price-h.cost),ret=h.cost>0?(h.price-h.cost)/h.cost:0,ann=annualReturn(h.cost,h.price,h.fd);
     html+="<tr><td><strong>"+esc(h.sym)+"</strong>"+(h.note?"<br><small style='color:var(--text2)'>"+esc(h.note)+"</small>":"")+"</td>";
-    html+="<td class='num'>"+fn(h.shares,h.shares%1===0?0:4)+"</td><td class='num'>$"+fn(h.cost,4)+"</td><td class='num'>$"+fn(h.price,2)+"</td>";
+    html+="<td class='num'><span class='editable' data-type='shares' data-id='"+h.id+"' data-val='"+h.shares+"'>"+fn(h.shares,h.shares%1===0?0:6)+"</span></td>";
+    var isEC=S.editCostId===h.id;
+    if(isEC){
+      html+="<td class='num'><input id='ec-"+h.id+"' type='number' value='"+S.editCostVal+"' style='width:90px;padding:3px 6px;font-size:12px;text-align:right'></td>";
+    }else{
+      html+="<td class='num'><span class='editable' data-type='cost' data-id='"+h.id+"' data-val='"+h.cost+"'>$"+fn(h.cost,4)+"</span></td>";
+    }
+    html+="<td class='num'>$"+fn(h.price,2)+"</td>";
     html+="<td class='num "+cv(h.chg)+"'>"+(h.chg>=0?"+":"")+fn(h.chg,2)+"</td><td class='num'>$"+fn(mv,0)+"</td>";
     html+="<td class='num "+cv(ur)+"'>"+(ur>=0?"+":"")+"$"+fn(ur,2)+"</td><td class='num "+cv(ret)+"'>"+(ret>=0?"+":"")+fp(ret)+"</td>";
     html+="<td class='num "+(ann!==null?cv(ann):"neu")+"'>"+(ann!==null?(ann>=0?"+":"")+fp(ann):"—")+"</td></tr>";
@@ -882,10 +889,13 @@ function rHoldings(){
   html+="</div>";
   // Filter holdings by account
   var viewH=(S.holdingsView==="all")?S.H:S.H.filter(function(h){return h.acct===S.holdingsView;});
+  // Hide 0-share holdings unless showZero is set
+  if(!S.showZero)viewH=viewH.filter(function(h){return h.shares>0||h.acct==="FT";});
   html+="<span style='color:var(--text2);font-size:13px'>"+viewH.length+" 支（含已出清）</span>";
   html+="<div style='display:flex;gap:8px;flex-wrap:wrap'>";
   html+=rUBtn(S.updating?"<span class='spin'></span> 更新中":"🔄 更新報價","updatePrices",S.updating);
   html+="<button class='btn' onclick='rebuildFromTx()'>🔁 從交易重建</button>";
+  html+="<button class='btn' onclick='S.showZero=!S.showZero;render()'>"+(S.showZero?"隱藏已清倉":"顯示已清倉")+"</button>";
   html+="<button class='btn btn-blue' onclick=\"toggleForm('h')\">＋ 新增持倉</button>";
   html+="</div></div>";
   if(S.showForm==="h"){
@@ -1083,6 +1093,26 @@ function render(){
     else m.innerHTML=rSettings();
     if(S.tab==="dash")requestAnimationFrame(function(){drawChart(p);});
     if(S.editPriceId){var el=document.getElementById("ep-"+S.editPriceId);if(el){el.focus();el.select();}}
+  if(S.editCostId){
+    var ec=document.getElementById("ec-"+S.editCostId);
+    if(ec){
+      ec.focus();ec.select();
+      ec.onblur=function(){saveCost(S.editCostId);};
+      ec.oninput=function(){S.editCostVal=this.value;};
+      ec.onkeydown=function(e){if(e.key==="Enter")saveCost(S.editCostId);else if(e.key==="Escape"){S.editCostId=null;render();}};
+    }
+  }
+  // Event delegation for editable spans
+  document.querySelectorAll(".editable").forEach(function(el){
+    el.style.cursor="pointer";
+    el.style.textDecoration="underline dotted";
+    el.style.textUnderlineOffset="2px";
+    el.onclick=function(){
+      var id=this.dataset.id,val=this.dataset.val,type=this.dataset.type;
+      if(type==="shares")startEditShares(id);
+      else if(type==="cost")startEditCost(id,val);
+    };
+  });
   }catch(err){
     console.error("render error:",err);
     document.getElementById("main").innerHTML="<div style='padding:20px;color:var(--red)'>⚠️ 渲染錯誤："+err.message+"<br><small>"+err.stack+"</small></div>";
@@ -1098,6 +1128,12 @@ function onAcc(k,v){S.acc[k]=parseFloat(v)||0;sv("acc");render();}
 function saveApiKey(){S.apiKey=document.getElementById("api-key-inp").value.trim();localStorage.setItem("ft_apiKey",S.apiKey);toast("✅ API Key 已儲存");}
 function sortH(col){S.sortDir=S.sortCol===col?S.sortDir*-1:-1;S.sortCol=col;render();}
 function startEditPrice(id,v){S.editPriceId=id;S.editPriceVal=String(v);render();}
+function startEditCost(id,v){S.editCostId=id;S.editCostVal=String(v);render();}
+function saveCost(id){
+  var v=parseFloat(S.editCostVal);
+  if(!isNaN(v)&&v>0){S.H=S.H.map(function(h){return h.id===id?Object.assign({},h,{cost:parseFloat(v.toFixed(6))}):h;});sv("H");toast("✅ 均成本已更新");}
+  S.editCostId=null;render();
+}
 function startEditShares(id){
   var h=S.H.find(function(h){return h.id===id;});
   if(!h)return;

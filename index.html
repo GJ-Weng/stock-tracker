@@ -1327,7 +1327,7 @@ function applyTx(tx){
     if(shares>S.H[i].shares+0.0001){return true;}  // over-sell = ignore silently
     var gain=(price-S.H[i].cost)*shares-fee;
     S.H=S.H.map(function(h,j){return j===i?Object.assign({},h,{shares:Math.max(0,h.shares-shares),realized:parseFloat(((h.realized||0)+gain).toFixed(2))}):h;});
-    sv("H");
+
   }else if(type==="配息"&&sym&&amt>0){
     i=S.H.findIndex(function(h){return h.sym===sym;});
     if(i>=0){
@@ -1835,7 +1835,8 @@ function rDash(p){
   html+="<div style='height:100%;border-radius:6px;background:linear-gradient(90deg,var(--blue),var(--green));width:"+retPct+"%'></div></div>";
   html+="<div style='display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--text2)'>";
   html+="<span>距目標還差 <strong style='color:var(--text)'>$"+fn(retLeft,0)+"</strong></span><span>目標 $1,000,000 USD</span></div></div>";
-  html+="<div class='cw'>";;
+  html+="<div class='cw'>";
+  html+="</div>";  // close retirement bar outer div
   html+="<div class='cc'><div class='ct'>資產配置</div><div style='position:relative;height:190px'><canvas id='pie-chart'></canvas></div><div id='pie-legend' style='margin-top:10px'></div></div>";
   html+="<div class='cc'><div class='ct'>持倉概覽</div>";
   dashRows.forEach(function(h){

@@ -482,6 +482,9 @@ function classifyFSV(r){
   return"其他";
 }
 function cleanName(desc){
+  // For options/calls/puts, use the underlying symbol directly
+  var callMatch=desc.match(/(?:CALL|PUT)\s+([A-Z]{1,5})\s/i);
+  if(callMatch)return"OPTION:"+callMatch[1].toUpperCase();
   return desc.replace(/\s+(COMMON STOCK|UNSOLICITED|INC\b|CORP\b|LTD\b|ETF\b|ADR\b)/gi,"").replace(/\s+/g," ").trim();
 }
 var KNOWN_SYM={"AMAZON":"AMZN","ASTERA LABS":"ALAB","ONDAS":"ONDS","SOFI":"SOFI","KIORA":"KBSX","TESLA":"TSLA","RAMBUS":"RMBS","NVIDIA":"NVDA","APPLE":"AAPL","MICROSOFT":"MSFT","META ":"META","ALPHABET":"GOOGL"};
@@ -501,7 +504,12 @@ function onFSVFile(input){
       rows.forEach(function(row){
         if((row.action==="BUY"||row.action==="SELL"||row.action==="DIV")&&row.desc){
           var co=cleanName(row.desc);
-          if(!companies[co])companies[co]=guessSymbol(co);
+          if(co.startsWith("OPTION:")){
+            var underlying=co.replace("OPTION:","");
+            if(!companies[co])companies[co]=underlying+" Call/Put";
+          }else{
+            if(!companies[co])companies[co]=guessSymbol(co);
+          }
         }
       });
       S.imp={rows:rows,symMap:companies,step:1};
@@ -537,14 +545,12 @@ function fsvBuildRows(){
   });
 }
 function fsvConfirmImport(){
-  var rows=fsvBuildRows().filter(function(r){return!r.skip;});
+  var rows=fsvBuildRows();
   rows.sort(function(a,b){return a.date.localeCompare(b.date);});
+  // Completely replace S.T and S.H with FSV data (no append, no old data mixing)
+  S.T=[];S.H=[];
   var added=0,skipped=0;
   rows.forEach(function(r){
-    var dup=S.T.find(function(t){
-      return t.date===r.date&&t.type===r.type&&t.sym===r.sym&&Math.abs(t.shares-r.shares)<0.01&&Math.abs(t.amt-r.amt)<0.1;
-    });
-    if(dup){skipped++;return;}
     var t=Object.assign({id:gid()},r);
     if(applyTx(t)===false)return;
     S.T.push(t);added++;

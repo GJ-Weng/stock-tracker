@@ -266,8 +266,9 @@ async function loadFromGitHub(){
     if(!r.ok)throw new Error("GitHub "+r.status);
     const d=await r.json();
     S.ghSHA=d.sha;localStorage.setItem("ft_ghSHA",S.ghSHA);
-    const data=JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/
-/g,"")))));
+    const b64=d.content.split("").filter(c=>c!=="\n"&&c!=="\r").join("");
+    const json=decodeURIComponent(escape(atob(b64)));
+    const data=JSON.parse(json);
     if(data.H)S.H=data.H;if(data.T)S.T=data.T;if(data.E)S.E=data.E;if(data.acc)S.acc=data.acc;
     ["H","T","E","acc"].forEach(k=>localStorage.setItem("ft_"+k,JSON.stringify(S[k])));
     return true;
@@ -414,11 +415,55 @@ function rFX(){
 }
 
 function rSettings(){
-  return "<div style='max-width:540px'><div class='settings-box'><h3>☁️ GitHub 雲端同步</h3><p style='font-size:12px;color:var(--text2);margin-bottom:10px'>資料儲存在你的 GitHub repo，換電腦或手機開網址自動同步。</p><div class='form-grid' style='grid-template-columns:1fr 1fr 1fr'><div><div class='form-label'>GitHub 帳號</div><input id='gh-user' placeholder='你的帳號' value='"+esc(S.ghUser)+"'></div><div><div class='form-label'>Repo 名稱</div><input id='gh-repo' placeholder='stock-tracker' value='"+esc(S.ghRepo)+"'></div><div><div class='form-label'>Personal Token</div><input id='gh-token' type='password' placeholder='ghp_xxxx' value='"+esc(S.ghToken)+"'></div></div><div style='display:flex;gap:8px;margin-top:10px'><button class='btn btn-blue' onclick='saveGHConfig()'>儲存設定</button><button class='btn' onclick='loadFromGitHub().then(ok=>{if(ok){toast("✅ 已載入最新雲端資料");render()}else toast("❌ 載入失敗，請確認設定")})'>⬇ 從雲端載入</button><button class='btn' onclick='syncToGitHub()'>⬆ 立即同步</button></div><div class='info-box' style='margin-top:10px'>💡 Token 申請：GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → 只需開 <strong>Contents: Read and Write</strong> 權限，指定你的 stock-tracker repo 即可。</div></div>"
-  +"<div class='settings-box'><h3>🔄 自動報價更新說明</h3><p style='font-size:12px;color:var(--text2);margin-bottom:8px'>點「更新報價」時優先用 <strong>Yahoo Finance</strong>（免費，不需 key）。若從本機 file:// 開啟會因 CORS 失敗，改用 Anthropic API 備援。</p><div class='info-box'>💡 建議用 VS Code Live Server 等工具開啟此檔，Yahoo Finance 即可正常運作，相當於 GOOGLEFINANCE 的效果，完全不需 API Key。</div><div class='warn-box' style='margin-top:8px'>⚠️ Excel 中的 GOOGLEFINANCE 是 Google Sheets 專屬函數，無法在獨立 HTML 中直接使用。Yahoo Finance API 提供同等功能。</div></div>"
-  +"<div class='settings-box'><h3>🔑 Anthropic API Key（Yahoo 失敗時備援）</h3><div class='key-row'><input type='password' id='api-key-inp' placeholder='sk-ant-api03-…' value='"+esc(S.apiKey)+"'><button class='btn btn-blue' onclick='saveApiKey()'>儲存</button></div><p style='font-size:11px;color:var(--text2);margin-top:8px'>申請：<a href='https://console.anthropic.com' target='_blank' style='color:var(--blue)'>console.anthropic.com</a></p></div>"
-  +"<div class='settings-box'><h3>📦 資料管理</h3><div style='display:flex;gap:8px;flex-wrap:wrap;margin-top:8px'><button class='btn' onclick='exportJSON()'>📤 備份 JSON</button><button class='btn' onclick='document.getElementById(\"imp\").click()'>📥 還原 JSON</button><button class='btn-danger' onclick='resetData()'>🗑 清除重置</button></div><input type='file' id='imp' accept='.json' style='display:none' onchange='importJSON(this)'><p style='font-size:11px;color:var(--text2);margin-top:10px'>備份 JSON 可在不同電腦/瀏覽器間同步資料。</p></div>"
-  +renderFSVPanel()+"<div class='settings-box'><h3>📋 功能更新說明</h3><ul style='font-size:12px;color:var(--text2);padding-left:16px;line-height:2.1'><li>買入交易 → 自動合併持倉，加權均成本</li><li>賣出交易 → 自動扣股數、算已實現損益，賣超會警告</li><li>配息交易 → 自動更新持倉累積股息</li><li>🔁 從交易重建 → 重算所有持倉數據（現價保留）</li><li>持倉表點欄位標題可排序</li><li>年化報酬率自動由首次買入日計算</li><li>台幣成本用換匯加權均匯率換算</li><li>交易紀錄支援搜尋和編輯</li></ul></div></div>";
+  var ghSection="<div class='settings-box'><h3>&#x2601;&#xFE0F; GitHub 雲端同步</h3>"
+    +"<p style='font-size:12px;color:var(--text2);margin-bottom:10px'>資料儲存在你的 GitHub repo，換電腦或手機開網址自動同步。</p>"
+    +"<div class='form-grid' style='grid-template-columns:1fr 1fr 1fr'>"
+    +"<div><div class='form-label'>GitHub 帳號</div><input id='gh-user' placeholder='你的帳號' value='"+esc(S.ghUser)+"'></div>"
+    +"<div><div class='form-label'>Repo 名稱</div><input id='gh-repo' placeholder='stock-tracker' value='"+esc(S.ghRepo)+"'></div>"
+    +"<div><div class='form-label'>Personal Token</div><input id='gh-token' type='password' placeholder='ghp_xxxx' value='"+esc(S.ghToken)+"'></div>"
+    +"</div><div style='display:flex;gap:8px;margin-top:10px'>"
+    +"<button class='btn btn-blue' onclick='saveGHConfig()'>儲存設定</button>"
+    +"<button class='btn' onclick='ghLoad()'>&#x2B07; 從雲端載入</button>"
+    +"<button class='btn' onclick='syncToGitHub()'>&#x2B06; 立即同步</button>"
+    +"</div>"
+    +"<div class='info-box' style='margin-top:10px'>&#x1F4A1; Token 申請：GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → 只需開 <strong>Contents: Read and Write</strong> 權限，指定你的 stock-tracker repo 即可。</div>"
+    +"</div>";
+  var quoteSection="<div class='settings-box'><h3>&#x1F504; 自動報價更新說明</h3>"
+    +"<p style='font-size:12px;color:var(--text2);margin-bottom:8px'>點「更新報價」時優先用 <strong>Yahoo Finance</strong>（免費，不需 key）。若從本機 file:// 開啟會因 CORS 失敗，改用 Anthropic API 備援。</p>"
+    +"<div class='info-box'>&#x1F4A1; 建議用 VS Code Live Server 等工具開啟此檔，Yahoo Finance 即可正常運作。</div>"
+    +"</div>";
+  var apiSection="<div class='settings-box'><h3>&#x1F511; Anthropic API Key（Yahoo 失敗時備援）</h3>"
+    +"<div class='key-row'><input type='password' id='api-key-inp' placeholder='sk-ant-api03-…' value='"+esc(S.apiKey)+"'>"
+    +"<button class='btn btn-blue' onclick='saveApiKey()'>儲存</button></div>"
+    +"<p style='font-size:11px;color:var(--text2);margin-top:8px'>申請：<a href='https://console.anthropic.com' target='_blank' style='color:var(--blue)'>console.anthropic.com</a></p>"
+    +"</div>";
+  var dataSection="<div class='settings-box'><h3>&#x1F4E6; 資料管理</h3>"
+    +"<div style='display:flex;gap:8px;flex-wrap:wrap;margin-top:8px'>"
+    +"<button class='btn' onclick='exportJSON()'>&#x1F4E4; 備份 JSON</button>"
+    +"<button class='btn' onclick='document.getElementById(\'imp\').click()'>&#x1F4E5; 還原 JSON</button>"
+    +"<button class='btn-danger' onclick='resetData()'>&#x1F5D1; 清除重置</button>"
+    +"</div>"
+    +"<input type='file' id='imp' accept='.json' style='display:none' onchange='importJSON(this)'>"
+    +"<p style='font-size:11px;color:var(--text2);margin-top:10px'>備份 JSON 可在不同電腦/瀏覽器間同步資料。</p>"
+    +"</div>";
+  var noteSection="<div class='settings-box'><h3>&#x1F4CB; 功能說明</h3>"
+    +"<ul style='font-size:12px;color:var(--text2);padding-left:16px;line-height:2.1'>"
+    +"<li>買入交易 → 自動合併持倉，加權均成本</li>"
+    +"<li>賣出交易 → 自動扣股數、算已實現損益，賣超會警告</li>"
+    +"<li>配息交易 → 自動更新持倉累積股息</li>"
+    +"<li>&#x1F501; 從交易重建 → 重算所有持倉數據（現價保留）</li>"
+    +"<li>持倉表點欄位標題可排序</li>"
+    +"<li>年化報酬率自動由首次買入日計算</li>"
+    +"<li>台幣成本用換匯加權均匯率換算</li>"
+    +"<li>交易紀錄支援搜尋和編輯</li>"
+    +"</ul></div>";
+  return "<div style='max-width:540px'>"+ghSection+renderFSVPanel()+quoteSection+apiSection+dataSection+noteSection+"</div>";
+}
+function ghLoad(){
+  loadFromGitHub().then(function(ok){
+    if(ok){toast("✅ 已載入最新雲端資料");render();}
+    else toast("❌ 載入失敗，請確認設定");
+  });
 }
 
 function render(){

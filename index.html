@@ -541,7 +541,7 @@ function fsvBuildRows(){
     }
     // Never skip - include all transactions so XFER/TFR pairs cancel correctly in cash calc
     return{date:r.date,type:type,sym:sym,shares:shares,price:price,
-      fee:Math.abs(r.commission)+Math.abs(r.fee),amt:r.amount,wire:0,skip:false};
+      fee:Math.abs(r.commission)+Math.abs(r.fee),amt:r.amount,wire:0,skip:false,desc:r.desc};
   });
 }
 function fsvConfirmImport(){

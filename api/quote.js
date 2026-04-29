@@ -5,7 +5,7 @@ export default async function handler(req, res) {
 
   const syms = sym.split(',').map(s => s.trim()).filter(Boolean);
   const results = {};
-
+ 
   await Promise.all(syms.map(async s => {
     try {
       const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s)}?interval=1d&range=2d`;

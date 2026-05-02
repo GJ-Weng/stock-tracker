@@ -94,8 +94,8 @@
     {
       "id": "1777368311237-f1t5",
       "sym": "NVDA",
-      "shares": 27,
-      "cost": 181,
+      "shares": 32,
+      "cost": 183.875,
       "price": 209.25,
       "chg": -3.92,
       "div": 0,
@@ -4958,6 +4958,17 @@
       "wire": 0,
       "desc": "NVIDIA CORP",
       "source": "Schwab"
+    },
+    {
+      "id": "1777694679037-84hm",
+      "date": "2026-05-01",
+      "type": "買入",
+      "sym": "NVDA",
+      "shares": 5,
+      "price": 199.4,
+      "fee": 0,
+      "amt": 0,
+      "wire": 0
     }
   ],
   "E": [

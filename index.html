@@ -253,7 +253,7 @@ var S={holdingsView:"all",dashView:"all",editCostId:null,editCostVal:"",showZero
   tab:"dash",H:null,T:null,E:null,acc:null,
   apiKey:"",ghToken:"",ghUser:"",ghRepo:"",ghSHA:"",
   showForm:null,filterType:"全部",txSearch:"",
-  sortCol:"",sortDir:-1,editTxId:null,editPriceId:null,editPriceVal:"",
+  sortCol:"",sortDir:-1,editTxId:null,editFxId:null,editPriceId:null,editPriceVal:"",
   updating:false,syncing:false,chartInst:null,
   imp:{rows:[],symMap:{},step:0}
 };
@@ -1099,27 +1099,39 @@ function rFX(){
   html+=rCard("加權平均匯率",avg.toFixed(4),"");html+=rCard("換匯次數",S.E.length+" 次","");
   html+="</div><div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px'>";
   html+="<span style='color:var(--text2);font-size:13px'>換匯紀錄（最新優先）</span>";
-  html+="<button class='btn btn-blue' onclick=\"toggleForm('e')\">＋ 新增</button></div>";
+  html+="<button class='btn btn-blue' onclick=\"S.editFxId=null;toggleForm('e')\">＋ 新增</button></div>";
   var BANKS=["台灣銀行","合作金庫","第一銀行","華南銀行","彰化銀行","玉山銀行","永豐銀行","國泰世華","富邦銀行","中信銀行","兆豐銀行","其他"];
-  if(S.showForm==="e"){
-    html+="<div class='fb'><div class='fg'>";
-    html+="<div><div class='fl'>日期</div><input id='fe-date' type='date' value='"+today()+"'></div>";
-    html+="<div><div class='fl'>銀行</div><select id='fe-bank'><option value=''>請選擇…</option>"+BANKS.map(function(b){return"<option>"+b+"</option>";}).join("")+"</select></div>";
-    html+="<div><div class='fl'>台幣(NTD)</div><input id='fe-twd' type='number' placeholder='10000'></div>";
-    html+="<div><div class='fl'>美金(USD)</div><input id='fe-usd' type='number' placeholder='316'></div>";
-    html+="<div><div class='fl'>匯率（留空自動算）</div><input id='fe-rate' type='number' step='0.001'></div>";
-    html+="<div><div class='fl'>備註（選填）</div><input id='fe-note' placeholder='補充說明…'></div>";
-    html+="<div style='display:flex;align-items:flex-end;gap:8px'><button class='btn btn-blue' onclick='addFX()' style='flex:1'>確認新增</button><button class='btn-sm' onclick=\"toggleForm(null)\" style='padding:8px 12px'>取消</button></div></div></div>";
+  function fxForm(e){
+    var isNew=!e;
+    var bankSel="<select id='fe-bank'><option value=''>請選擇…</option>"+BANKS.map(function(b){return"<option"+(e&&e.bank===b?" selected":"")+">"+b+"</option>";}).join("")+"</select>";
+    var h="<div class='fb'><div style='font-size:13px;font-weight:500;margin-bottom:10px'>"+(isNew?"新增換匯紀錄":"編輯換匯紀錄")+"</div><div class='fg'>";
+    h+="<div><div class='fl'>日期</div><input id='fe-date' type='date' value='"+(e&&e.date?e.date:today())+"'></div>";
+    h+="<div><div class='fl'>銀行</div>"+bankSel+"</div>";
+    h+="<div><div class='fl'>台幣(NTD)</div><input id='fe-twd' type='number' placeholder='10000' value='"+(e?e.twd:"")+"'></div>";
+    h+="<div><div class='fl'>美金(USD)</div><input id='fe-usd' type='number' placeholder='316' value='"+(e?e.usd:"")+"'></div>";
+    h+="<div><div class='fl'>匯率（留空自動算）</div><input id='fe-rate' type='number' step='0.001' value='"+(e?e.rate:"")+"'></div>";
+    h+="<div><div class='fl'>備註（選填）</div><input id='fe-note' placeholder='補充說明…' value='"+esc(e&&e.note?e.note:"")+"'></div>";
+    h+="<div style='display:flex;align-items:flex-end;gap:8px'>";
+    if(isNew){h+="<button class=\"btn btn-blue\" onclick='addFX()' style='flex:1'>確認新增</button><button class='btn-sm' onclick=\"S.showForm=null;render()\" style='padding:8px 12px'>取消</button>";}
+    else{h+="<button class=\"btn btn-blue\" onclick=\"saveEditFX('"+e.id+"')\" style='flex:1'>儲存修改</button><button class='btn-sm' onclick=\"S.editFxId=null;render()\" style='padding:8px 12px'>取消</button>";}
+    h+="</div></div></div>";
+    return h;
   }
+  if(S.showForm==="e"&&!S.editFxId)html+=fxForm(null);
   html+="<div class='panel'><div class='sx sy'><table><thead><tr><th>#</th><th>日期</th><th>銀行</th><th class='num'>台幣(NTD)</th><th class='num'>美金(USD)</th><th class='num'>匯率</th><th>備註</th><th></th></tr></thead><tbody>";
   var rev=S.E.slice().reverse();
   rev.forEach(function(e,i){
-    html+="<tr><td style='color:var(--text2)'>"+(S.E.length-i)+"</td>";
-    html+="<td style='font-size:12px;color:var(--text2);white-space:nowrap'>"+(e.date||"—")+"</td>";
-    html+="<td><span class='badge bb' style='font-size:11px'>"+(e.bank||e.note||"—")+"</span></td>";
-    html+="<td class='num'>NT$"+fn(e.twd,0)+"</td><td class='num'>$"+fn(e.usd,2)+"</td><td class='num'>"+e.rate.toFixed(3)+"</td>";
-    html+="<td style='font-size:12px;color:var(--text2)'>"+(e.bank&&e.note?esc(e.note):"")+"</td>";
-    html+="<td><button class='btn-red' onclick=\"delFX('"+e.id+"')\">刪除</button></td></tr>";
+    var isEd=S.editFxId===e.id;
+    if(isEd){
+      html+="<tr><td colspan='8' style='padding:0'><div style='padding:10px'>"+fxForm(e)+"</div></td></tr>";
+    }else{
+      html+="<tr><td style='color:var(--text2)'>"+(S.E.length-i)+"</td>";
+      html+="<td style='font-size:12px;color:var(--text2);white-space:nowrap'>"+(e.date||"—")+"</td>";
+      html+="<td><span class='badge bb' style='font-size:11px'>"+(e.bank||e.note||"—")+"</span></td>";
+      html+="<td class='num'>NT$"+fn(e.twd,0)+"</td><td class='num'>$"+fn(e.usd,2)+"</td><td class='num'>"+e.rate.toFixed(3)+"</td>";
+      html+="<td style='font-size:12px;color:var(--text2)'>"+(e.bank&&e.note?esc(e.note):"")+"</td>";
+      html+="<td><div style='display:flex;gap:4px'><button class='btn-sm' onclick=\"S.showForm=null;S.editFxId='"+e.id+"';render()\">編輯</button><button class='btn-red' onclick=\"delFX('"+e.id+"')\">刪除</button></div></td></tr>";
+    }
   });
   html+="</tbody></table></div></div>";
   return html;
@@ -1375,6 +1387,16 @@ function addFX(){
   var bank=(document.getElementById("fe-bank")&&document.getElementById("fe-bank").value)||"";
   var date=(document.getElementById("fe-date")&&document.getElementById("fe-date").value)||today();
   S.E.push({id:gid(),date:date,bank:bank,twd:twd,usd:usd,rate:rate,note:note});sv("E");S.showForm=null;toast("✅ 已新增換匯紀錄");render();
+}
+function saveEditFX(id){
+  var twd=parseFloat(document.getElementById("fe-twd").value)||0,usd=parseFloat(document.getElementById("fe-usd").value)||0;
+  if(!usd){alert("請輸入美金金額");return;}
+  var ri=parseFloat(document.getElementById("fe-rate").value),rate=(!isNaN(ri)&&ri>0)?ri:parseFloat((twd/usd).toFixed(4));
+  var note=(document.getElementById("fe-note")&&document.getElementById("fe-note").value)||"";
+  var bank=(document.getElementById("fe-bank")&&document.getElementById("fe-bank").value)||"";
+  var date=(document.getElementById("fe-date")&&document.getElementById("fe-date").value)||today();
+  S.E=S.E.map(function(e){return e.id===id?Object.assign({},e,{date:date,bank:bank,twd:twd,usd:usd,rate:rate,note:note}):e;});
+  sv("E");S.editFxId=null;toast("✅ 換匯紀錄已更新");render();
 }
 function delFX(id){if(!confirm("確定刪除？"))return;S.E=S.E.filter(function(e){return e.id!==id;});sv("E");render();}
 

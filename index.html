@@ -91,6 +91,7 @@ tr:hover td{background:var(--bg3)}
     <div class="ai"><span>USD/TWD</span><input type="number" id="ir" step="0.001" onchange="onAcc('rate',this.value)"></div>
     <div class="ai"><span>FT現金</span><input type="number" id="ic-ft" step="0.01" onchange="onAcc('cashFT',this.value)"></div>
     <div class="ai"><span>嘉信現金</span><input type="number" id="ic-sw" step="0.01" onchange="onAcc('cashSchwab',this.value)"></div>
+    <div class="ai"><span>國泰現金</span><input type="number" id="ic-ct" step="0.01" onchange="onAcc('cashCathay',this.value)"></div>
     <button class="btn" onclick="doExport()">⬇ 匯出</button>
   </div>
 </div>
@@ -278,9 +279,11 @@ function calc(){
   act.forEach(function(h){mkt+=mktVal(h);cost+=costBasis(h);todayChg+=h.shares*(h.chg||0)*(h.isOption?100:1);});
   var real=0,div=0;
   S.H.forEach(function(h){real+=(h.realized||0);div+=(h.div||0);});
-  var totalCash=(S.acc.cashFT||0)+(S.acc.cashSchwab||0);
+  var totalCash=(S.acc.cashFT||0)+(S.acc.cashSchwab||0)+(S.acc.cashCathay||0);
+  var totalInvested=0;
+  S.T.forEach(function(t){if(t.type==="入金")totalInvested+=t.amt||0;});
   return{mkt:mkt,cost:cost,unreal:mkt-cost,real:real,div:div,todayChg:todayChg,
-    totalUSD:mkt+totalCash,totalTWD:(mkt+totalCash)*S.acc.rate,fxRate:avgFx(),act:act,cash:totalCash};
+    totalUSD:mkt+totalCash,totalTWD:(mkt+totalCash)*S.acc.rate,fxRate:avgFx(),act:act,cash:totalCash,totalInvested:totalInvested};
 }
 
 // ─── GITHUB SYNC ───
@@ -422,7 +425,8 @@ function recalcCash(){
   });
   S.acc.cashFT=parseFloat(cash.toFixed(2));
   if(S.acc.cashSchwab===undefined)S.acc.cashSchwab=0;
-  S.acc.cash=S.acc.cashFT+S.acc.cashSchwab;
+  if(S.acc.cashCathay===undefined)S.acc.cashCathay=0;
+  S.acc.cash=S.acc.cashFT+S.acc.cashSchwab+(S.acc.cashCathay||0);
   // Save only cashSchwab and rate - NOT cashFT (it's always recalculated)
   localStorage.setItem("ft_cashSchwab",S.acc.cashSchwab);
   var el=document.getElementById("ic-ft");
@@ -876,13 +880,14 @@ function rDash(p){
   html+=rCard("未實現損益",(p.unreal>=0?"+":"")+"$"+fn(p.unreal,2),p.cost>0?fp(p.unreal/p.cost):"—",cv(p.unreal));
   html+=rCard("已實現損益",(p.real>=0?"+":"")+"$"+fn(p.real,2),"含配息 $"+fn(p.div,2),cv(p.real));
   html+=rCard("今日損益",(p.todayChg>=0?"+":"-")+"$"+fn(Math.abs(p.todayChg),2),"市場波動",cv(p.todayChg));
-  html+=rCard("帳戶現金","$"+fn(p.cash,2),"FT $"+fn(S.acc.cashFT||0,2)+" + 嘉信 $"+fn(S.acc.cashSchwab||0,2));
+  html+=rCard("帳戶現金","$"+fn(p.cash,2),"FT $"+fn(S.acc.cashFT||0,2)+" + 嘉信 $"+fn(S.acc.cashSchwab||0,2)+" + 國泰 $"+fn(S.acc.cashCathay||0,2));
+  html+=rCard("累計投入現金","$"+fn(p.totalInvested,2),"含所有入金交易");
   html+="</div>";
   var retPct=Math.min(p.totalUSD/1000000*100,100),retLeft=Math.max(1000000-p.totalUSD,0);
   // Build dashRows for all views
   var dashAccts=["all"];
   S.H.forEach(function(h){if(h.acct&&dashAccts.indexOf(h.acct)<0)dashAccts.push(h.acct);});
-  var dashLabels={"all":"整合","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
+  var dashLabels={"all":"整合","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托","Cathay":"國泰"};
   var dashView=S.dashView||"all";
   var dashRows;
   if(dashView==="all"){
@@ -962,8 +967,8 @@ function rHoldings(){
   function th(col,lbl){return "<th class='"+(S.sortCol===col?(S.sortDir===1?"sa":"sd"):"")+"' onclick=\"sortH('"+col+"')\">"+lbl+"</th>";}
   var html="<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px'>";
   // Account filter tabs
-  var accts=["all","FT","Schwab","GT"];
-  var acctLabels={"all":"整合檢視","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
+  var accts=["all","FT","Schwab","GT","Cathay"];
+  var acctLabels={"all":"整合檢視","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托","Cathay":"國泰"};
   var usedAccts=["all"];
   S.H.forEach(function(h){if(h.acct&&usedAccts.indexOf(h.acct)<0)usedAccts.push(h.acct);});
   html+="<div style='display:flex;gap:6px;flex-wrap:wrap'>";
@@ -992,7 +997,7 @@ function rHoldings(){
     html+="<div><div class='fl'>今日漲跌</div><input id='fh-chg' type='number' placeholder='-1.5'></div>";
     html+="<div><div class='fl'>已實現損益</div><input id='fh-real' type='number' placeholder='0'></div>";
     html+="<div><div class='fl'>首次買入日期</div><input id='fh-fd' type='date' value='"+today()+"'></div>";
-    html+="<div><div class='fl'>帳戶</div><select id='fh-acct'><option value='FT'>Firstrade</option><option value='Schwab'>嘉信</option><option value='GT'>國泰複委托</option></select></div>";
+    html+="<div><div class='fl'>帳戶</div><select id='fh-acct'><option value='FT'>Firstrade</option><option value='Schwab'>嘉信</option><option value='GT'>國泰複委托</option><option value='Cathay'>國泰</option></select></div>";
     html+="<div><div class='fl'>備註</div><input id='fh-note' placeholder='選填'></div>";
     html+="<div style='display:flex;align-items:flex-end;gap:8px;grid-column:span 2'><button class='btn btn-blue' onclick='addHolding()' style='flex:1'>確認新增／合併</button><button class='btn-sm' onclick=\"toggleForm(null)\" style='padding:8px 12px'>取消</button></div>";
     html+="</div><div class='fh'>💡 若代號已存在，股數和成本會自動加權合併</div></div>";
@@ -1193,10 +1198,11 @@ function rSettings(){
 function render(){
   try{
     var ri=document.getElementById("ir");
-    var cft=document.getElementById("ic-ft"),csw=document.getElementById("ic-sw");
+    var cft=document.getElementById("ic-ft"),csw=document.getElementById("ic-sw"),cct=document.getElementById("ic-ct");
     if(ri&&document.activeElement!==ri)ri.value=S.acc.rate;
     if(cft&&document.activeElement!==cft)cft.value=S.acc.cashFT||0;
     if(csw&&document.activeElement!==csw)csw.value=S.acc.cashSchwab||0;
+    if(cct&&document.activeElement!==cct)cct.value=S.acc.cashCathay||0;
     document.querySelectorAll(".tab").forEach(function(b){b.classList.toggle("active",b.dataset.tab===S.tab);});
     var p=calc(),m=document.getElementById("main");
     if(S.tab==="dash")m.innerHTML=rDash(p);
@@ -1279,7 +1285,7 @@ function toggleForm(f){S.showForm=S.showForm===f?null:f;S.editTxId=null;render()
 function setFilter(f){S.filterType=f;render();}
 function onAcc(k,v){
   S.acc[k]=parseFloat(v)||0;
-  S.acc.cash=(S.acc.cashFT||0)+(S.acc.cashSchwab||0);
+  S.acc.cash=(S.acc.cashFT||0)+(S.acc.cashSchwab||0)+(S.acc.cashCathay||0);
   sv("acc");render();  // all acc changes sync to GitHub
 }
 function saveApiKey(){S.apiKey=document.getElementById("api-key-inp").value.trim();localStorage.setItem("ft_apiKey",S.apiKey);toast("✅ API Key 已儲存");}
@@ -1367,9 +1373,10 @@ function delFX(id){if(!confirm("確定刪除？"))return;S.E=S.E.filter(function
 S.H=ld("H")||JSON.parse(JSON.stringify(INIT_H));
 S.T=ld("T")||JSON.parse(JSON.stringify(INIT_T));
 S.E=ld("E")||JSON.parse(JSON.stringify(INIT_E));
-S.acc=ld("acc")||{cash:0,cashFT:0,cashSchwab:0,rate:31.5665};
+S.acc=ld("acc")||{cash:0,cashFT:0,cashSchwab:0,cashCathay:0,rate:31.5665};
 // migrate old data - only if cashFT not yet defined
 if(S.acc.cashFT===undefined){S.acc.cashFT=0;S.acc.cashSchwab=0;}
+if(S.acc.cashCathay===undefined){S.acc.cashCathay=0;}
 // cashSchwab is in S.acc (from localStorage or GitHub)
 // cashFT is always recalculated from transactions
 if(S.T.length>0)recalcCash();

@@ -5533,8 +5533,10 @@
       "usd": 317.94,
       "rate": 31.452,
       "date": "2025-12-29",
-      "bank": "其他",
-      "note": ""
+      "bank": "Line Bank",
+      "note": "",
+      "acct": "FT",
+      "mode": "twd"
     },
     {
       "id": "e17",

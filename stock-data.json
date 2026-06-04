@@ -5839,7 +5839,9 @@
       "twd": 50000,
       "usd": 1563.09,
       "rate": 31.988,
-      "note": "KBSX"
+      "note": "KBSX",
+      "acct": "GT",
+      "mode": "twd"
     },
     {
       "id": "1780373712741-jerp",

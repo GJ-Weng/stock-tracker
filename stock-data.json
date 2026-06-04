@@ -5828,7 +5828,9 @@
       "twd": 251760,
       "usd": 8000,
       "rate": 31.47,
-      "note": "KBSX"
+      "note": "KBSX",
+      "acct": "GT",
+      "mode": "twd"
     },
     {
       "id": "1780373649670-j9c1",

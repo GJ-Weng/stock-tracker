@@ -1089,7 +1089,9 @@ function rTx(){
     var amtSign=["買入"].indexOf(curType)>=0?"-":"+";
     var amtAbs=isEd&&edTx?Math.abs(edTx.amt||0):"";
     html+="<div class='fb'><div style='font-size:13px;font-weight:500;margin-bottom:10px'>"+(isEd?"編輯交易（"+edTx.date+"）":"新增交易")+"</div><div class='fg'>";
+    var curAcct=isEd&&edTx?ev("source","FT"):"FT";
     html+="<div><div class='fl'>日期</div><input id='ft-date' type='date' value='"+ev("date",today())+"'></div>";
+    html+="<div><div class='fl'>帳戶</div><select id='ft-source'><option value='FT'"+(curAcct==='FT'?' selected':'')+">Firstrade</option><option value='Schwab'"+(curAcct==='Schwab'?' selected':'')+">嘉信</option><option value='GT'"+(curAcct==='GT'?' selected':'')+">國泰複委托</option><option value='Cathay'"+(curAcct==='Cathay'?' selected':'')+">國泰</option></select></div>";
     html+="<div><div class='fl'>類別</div><select id='ft-type' onchange='onTxTypeChange(this.value)'>"+types.map(function(t){return"<option"+(isEd&&edTx.type===t?" selected":"")+">"+t+"</option>";}).join("")+"</select></div>";
     html+="<div><div class='fl'>股票代號</div><input id='ft-sym' placeholder='選填' value='"+esc(ev("sym",""))+"'></div>";
     html+="<div><div class='fl'>股數</div><input id='ft-shares' type='number' value='"+ev("shares","")+"' placeholder='0' oninput='autoCalcAmt()'></div>";
@@ -1104,7 +1106,8 @@ function rTx(){
   html+="<div class='panel'><div class='ph'><span>顯示 "+filtered.length+" / "+S.T.length+" 筆</span></div>";
   html+="<div class='sx sy'><table><thead><tr><th>日期</th><th>類別</th><th>代號</th><th class='num'>股數</th><th class='num'>成交價</th><th class='num'>手續費</th><th class='num'>實際金額</th><th class='num'>匯費(NTD)</th><th></th></tr></thead><tbody>";
   filtered.forEach(function(t){
-    html+="<tr><td style='font-size:12px;color:var(--text2);white-space:nowrap'>"+t.date+"</td><td>"+rBadge(t.type)+"</td>";
+    var srcLabel={"FT":"FT","Schwab":"嘉信","GT":"國泰複","Cathay":"國泰"};
+    html+="<tr><td style='font-size:12px;color:var(--text2);white-space:nowrap'>"+t.date+"</td><td style='white-space:nowrap'>"+rBadge(t.type)+"<span class='badge br' style='font-size:10px;margin-left:3px'>"+(srcLabel[t.source||"FT"]||t.source||"FT")+"</span></td>";
     html+="<td>"+(t.sym?"<strong>"+esc(t.sym)+"</strong>":"—")+"</td>";
     html+="<td class='num'>"+(t.shares||"—")+"</td><td class='num'>"+(t.price?"$"+fn(t.price,2):"—")+"</td>";
     html+="<td class='num'>"+(t.fee?fn(t.fee,2):"—")+"</td>";
@@ -1128,7 +1131,7 @@ function rFX(){
   html+="</div><div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px'>";
   html+="<span style='color:var(--text2);font-size:13px'>出入金紀錄（依日期新→舊）</span>";
   html+="<button class='btn btn-blue' onclick=\"S.editFxId=null;toggleForm('e')\">＋ 新增</button></div>";
-  var BANKS=["台灣銀行","合作金庫","第一銀行","華南銀行","彰化銀行","玉山銀行","永豐銀行","國泰世華","富邦銀行","中信銀行","兆豐銀行","其他"];
+  var BANKS=["國泰世華","Line Bank"];
   function fxForm(e){
     var isNew=!e;
     var mode=S.fxMode||(e&&!e.twd?"usd":"twd");
@@ -1449,7 +1452,8 @@ function addTx(){
   autoCalcAmt(); // ensure hidden field is updated
   var rawAmt=parseFloat(document.getElementById("ft-amt").value);
   var amt=isNaN(rawAmt)?0:rawAmt;
-  var t={id:gid(),date:document.getElementById("ft-date").value,type:type,sym:sym,shares:shares,price:price,fee:parseFloat(document.getElementById("ft-fee").value)||0,amt:amt,wire:parseFloat(document.getElementById("ft-wire").value)||0};
+  var source=document.getElementById("ft-source")&&document.getElementById("ft-source").value||"FT";
+  var t={id:gid(),date:document.getElementById("ft-date").value,type:type,sym:sym,shares:shares,price:price,fee:parseFloat(document.getElementById("ft-fee").value)||0,amt:amt,wire:parseFloat(document.getElementById("ft-wire").value)||0,source:source};
   if(applyTx(t)===false)return;
   S.T.push(t);sv("T");
   var h=S.H.find(function(h){return h.sym===sym;});
@@ -1465,7 +1469,8 @@ function saveEditTx(){
     if(t.id!==S.editTxId)return t;
     autoCalcAmt();
     var _rawAmt=parseFloat(document.getElementById("ft-amt").value);var _amt=isNaN(_rawAmt)?0:_rawAmt;
-    return Object.assign({},t,{date:document.getElementById("ft-date").value,type:document.getElementById("ft-type").value,sym:(document.getElementById("ft-sym").value||"").toUpperCase(),shares:parseFloat(document.getElementById("ft-shares").value)||0,price:parseFloat(document.getElementById("ft-price").value)||0,fee:parseFloat(document.getElementById("ft-fee").value)||0,amt:_amt,wire:parseFloat(document.getElementById("ft-wire").value)||0});
+    var _src=document.getElementById("ft-source")&&document.getElementById("ft-source").value||t.source||"FT";
+    return Object.assign({},t,{date:document.getElementById("ft-date").value,type:document.getElementById("ft-type").value,sym:(document.getElementById("ft-sym").value||"").toUpperCase(),shares:parseFloat(document.getElementById("ft-shares").value)||0,price:parseFloat(document.getElementById("ft-price").value)||0,fee:parseFloat(document.getElementById("ft-fee").value)||0,amt:_amt,wire:parseFloat(document.getElementById("ft-wire").value)||0,source:_src});
   });
   sv("T");S.editTxId=null;toast("✅ 交易已修改");render();
 }

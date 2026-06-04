@@ -415,6 +415,19 @@
       "note": "",
       "fd": "2025-12-03",
       "acct": "Schwab"
+    },
+    {
+      "id": "1780559303503-nfmz",
+      "sym": "MRVL",
+      "shares": 2,
+      "cost": 305,
+      "price": 305,
+      "chg": 0,
+      "div": 0,
+      "realized": 0,
+      "note": "",
+      "fd": "2026-06-03",
+      "acct": "FT"
     }
   ],
   "T": [
@@ -5494,6 +5507,18 @@
       "wire": 0,
       "desc": "APPLE INC",
       "source": "Schwab"
+    },
+    {
+      "id": "1780559303502-ryja",
+      "date": "2026-06-03",
+      "type": "買入",
+      "sym": "MRVL",
+      "shares": 2,
+      "price": 305,
+      "fee": 0,
+      "amt": -610,
+      "wire": 0,
+      "source": "FT"
     }
   ],
   "E": [

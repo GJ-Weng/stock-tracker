@@ -6157,13 +6157,13 @@
     }
   ],
   "acc": {
-    "cash": 2884.55,
-    "cashFT": 2591.05,
+    "cash": 2886.41,
+    "cashFT": 2592.91,
     "cashSchwab": 186.8,
     "rate": 31.5,
     "cashCathay": 106.7,
     "cashAdj": {
-      "FT": 0,
+      "FT": 1.86,
       "Schwab": 5728.86,
       "GT": 0
     }

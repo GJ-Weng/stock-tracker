@@ -91,12 +91,12 @@ tr:hover td{background:var(--bg3)}
     <span id="ss" style="font-size:11px;color:var(--text2)"></span>
     <div class="ai"><span>USD/TWD</span><input type="number" id="ir" step="0.001" onchange="onAcc('rate',this.value)"></div>
     <div style="position:relative">
-      <button class="btn" onclick="document.getElementById('cash-panel').classList.toggle('open')" style="font-size:12px;padding:4px 10px">💰 現金餘額 ▾</button>
+      <button class="btn" onclick="document.getElementById('cash-panel').classList.toggle('open')" style="font-size:12px;padding:4px 10px" title="由交易紀錄自動計算">💰 現金餘額 ▾</button>
       <div id="cash-panel" style="display:none;position:absolute;right:0;top:34px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:12px 14px;z-index:200;min-width:220px;box-shadow:0 4px 16px rgba(0,0,0,.12)">
-        <div style="font-size:11px;color:var(--text2);font-weight:500;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">帳戶現金餘額</div>
-        <div class="ai" style="margin-bottom:6px"><span style="min-width:60px">Firstrade</span><input type="number" id="ic-ft" step="0.01" onchange="onAcc('cashFT',this.value)" style="width:110px"></div>
-        <div class="ai" style="margin-bottom:6px"><span style="min-width:60px">嘉信</span><input type="number" id="ic-sw" step="0.01" onchange="onAcc('cashSchwab',this.value)" style="width:110px"></div>
-        <div class="ai"><span style="min-width:60px">國泰</span><input type="number" id="ic-ct" step="0.01" onchange="onAcc('cashCathay',this.value)" style="width:110px"></div>
+        <div style="font-size:11px;color:var(--text2);font-weight:500;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">帳戶現金（由交易自動計算）</div>
+        <div class="ai" style="margin-bottom:6px"><span style="min-width:60px">Firstrade</span><input type="number" id="ic-ft" readonly style="width:110px;opacity:0.6;cursor:default"></div>
+        <div class="ai" style="margin-bottom:6px"><span style="min-width:60px">嘉信</span><input type="number" id="ic-sw" readonly style="width:110px;opacity:0.6;cursor:default"></div>
+        <div class="ai"><span style="min-width:60px">國泰複委托</span><input type="number" id="ic-ct" readonly style="width:110px;opacity:0.6;cursor:default"></div>
       </div>
     </div>
     <button class="btn" onclick="doExport()">⬇ 匯出</button>
@@ -425,23 +425,28 @@ function applyTx(tx){
 }
 
 function recalcCash(){
-  // Always compute FT cash live from transactions - never store in GitHub
-  var cash=0;
-  S.T.filter(function(t){return !t.source||t.source==="FT";}).forEach(function(t){
+  // Compute cash for each account live from transactions
+  var cashFT=0, cashSchwab=0, cashGT=0;
+  S.T.forEach(function(t){
     var d=(t.desc||"").toUpperCase();
     var amt=t.amt||0;
+    var src=t.source||"FT";
     if(d.includes("XFER CASH TO MARGIN")&&amt>0)return;
-    cash+=amt;
+    if(src==="FT")cashFT+=amt;
+    else if(src==="Schwab")cashSchwab+=amt;
+    else if(src==="GT")cashGT+=amt;
   });
-  S.acc.cashFT=parseFloat(cash.toFixed(2));
-  if(S.acc.cashSchwab===undefined)S.acc.cashSchwab=0;
-  if(S.acc.cashCathay===undefined)S.acc.cashCathay=0;
-  S.acc.cash=S.acc.cashFT+S.acc.cashSchwab+(S.acc.cashCathay||0);
-  // Save cashSchwab and cashCathay - NOT cashFT (it's always recalculated)
-  localStorage.setItem("ft_cashSchwab",S.acc.cashSchwab);
-  localStorage.setItem("ft_cashCathay",S.acc.cashCathay);
-  var el=document.getElementById("ic-ft");
-  if(el)el.value=S.acc.cashFT;
+  S.acc.cashFT=parseFloat(cashFT.toFixed(2));
+  S.acc.cashSchwab=parseFloat(cashSchwab.toFixed(2));
+  S.acc.cashCathay=parseFloat(cashGT.toFixed(2));
+  S.acc.cash=S.acc.cashFT+S.acc.cashSchwab+S.acc.cashCathay;
+  // Update header inputs
+  var eft=document.getElementById("ic-ft");
+  var esw=document.getElementById("ic-sw");
+  var ect=document.getElementById("ic-ct");
+  if(eft)eft.value=S.acc.cashFT;
+  if(esw)esw.value=S.acc.cashSchwab;
+  if(ect)ect.value=S.acc.cashCathay;
   return S.acc.cashFT;
 }
 function rebuildFromTx(){
@@ -1263,6 +1268,7 @@ function rSettings(){
 
 // ─── MASTER RENDER ───
 function render(){
+  var _scrollY=window.scrollY||0;
   try{
     var ri=document.getElementById("ir");
     var cft=document.getElementById("ic-ft"),csw=document.getElementById("ic-sw"),cct=document.getElementById("ic-ct");
@@ -1277,6 +1283,7 @@ function render(){
     else if(S.tab==="tx")m.innerHTML=rTx();
     else if(S.tab==="fx")m.innerHTML=rFX();
     else m.innerHTML=rSettings();
+    requestAnimationFrame(function(){window.scrollTo(0,_scrollY);});
     if(S.tab==="dash")requestAnimationFrame(function(){drawChart(p);});
     if(S.editPriceId){var el=document.getElementById("ep-"+S.editPriceId);if(el){el.focus();el.select();}}
   if(S.editCostId){
@@ -1351,9 +1358,8 @@ function setTab(t){S.tab=t;S.showForm=null;S.editTxId=null;S.editPriceId=null;re
 function toggleForm(f){S.showForm=S.showForm===f?null:f;S.editTxId=null;render();}
 function setFilter(f){S.filterType=f;render();}
 function onAcc(k,v){
-  S.acc[k]=parseFloat(v)||0;
-  S.acc.cash=(S.acc.cashFT||0)+(S.acc.cashSchwab||0)+(S.acc.cashCathay||0);
-  sv("acc");render();  // all acc changes sync to GitHub
+  // Only rate is manually editable; cash fields are all auto-calculated from transactions
+  if(k==="rate"){S.acc.rate=parseFloat(v)||31.5;sv("acc");render();}
 }
 function saveApiKey(){S.apiKey=document.getElementById("api-key-inp").value.trim();localStorage.setItem("ft_apiKey",S.apiKey);toast("✅ API Key 已儲存");}
 function sortH(col){S.sortDir=S.sortCol===col?S.sortDir*-1:-1;S.sortCol=col;render();}

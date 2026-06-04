@@ -901,7 +901,7 @@ function rDash(p){
   // Build dashRows for all views
   var dashAccts=["all"];
   S.H.forEach(function(h){if(h.acct&&dashAccts.indexOf(h.acct)<0)dashAccts.push(h.acct);});
-  var dashLabels={"all":"整合","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托","Cathay":"國泰"};
+  var dashLabels={"all":"整合","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
   var dashView=S.dashView||"all";
   var dashRows;
   if(dashView==="all"){
@@ -981,8 +981,8 @@ function rHoldings(){
   function th(col,lbl){return "<th class='"+(S.sortCol===col?(S.sortDir===1?"sa":"sd"):"")+"' onclick=\"sortH('"+col+"')\">"+lbl+"</th>";}
   var html="<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px'>";
   // Account filter tabs
-  var accts=["all","FT","Schwab","GT","Cathay"];
-  var acctLabels={"all":"整合檢視","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托","Cathay":"國泰"};
+  var accts=["all","FT","Schwab","GT"];
+  var acctLabels={"all":"整合檢視","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
   var usedAccts=["all"];
   S.H.forEach(function(h){if(h.acct&&usedAccts.indexOf(h.acct)<0)usedAccts.push(h.acct);});
   html+="<div style='display:flex;gap:6px;flex-wrap:wrap'>";
@@ -1011,7 +1011,7 @@ function rHoldings(){
     html+="<div><div class='fl'>今日漲跌</div><input id='fh-chg' type='number' placeholder='-1.5'></div>";
     html+="<div><div class='fl'>已實現損益</div><input id='fh-real' type='number' placeholder='0'></div>";
     html+="<div><div class='fl'>首次買入日期</div><input id='fh-fd' type='date' value='"+today()+"'></div>";
-    html+="<div><div class='fl'>帳戶</div><select id='fh-acct'><option value='FT'>Firstrade</option><option value='Schwab'>嘉信</option><option value='GT'>國泰複委托</option><option value='Cathay'>國泰</option></select></div>";
+    html+="<div><div class='fl'>帳戶</div><select id='fh-acct'><option value='FT'>Firstrade</option><option value='Schwab'>嘉信</option><option value='GT'>國泰複委托</option></select></div>";
     html+="<div><div class='fl'>備註</div><input id='fh-note' placeholder='選填'></div>";
     html+="<div style='display:flex;align-items:flex-end;gap:8px;grid-column:span 2'><button class='btn btn-blue' onclick='addHolding()' style='flex:1'>確認新增／合併</button><button class='btn-sm' onclick=\"toggleForm(null)\" style='padding:8px 12px'>取消</button></div>";
     html+="</div><div class='fh'>💡 若代號已存在，股數和成本會自動加權合併</div></div>";
@@ -1091,7 +1091,7 @@ function rTx(){
     html+="<div class='fb'><div style='font-size:13px;font-weight:500;margin-bottom:10px'>"+(isEd?"編輯交易（"+edTx.date+"）":"新增交易")+"</div><div class='fg'>";
     var curAcct=isEd&&edTx?ev("source","FT"):"FT";
     html+="<div><div class='fl'>日期</div><input id='ft-date' type='date' value='"+ev("date",today())+"'></div>";
-    html+="<div><div class='fl'>帳戶</div><select id='ft-source'><option value='FT'"+(curAcct==='FT'?' selected':'')+">Firstrade</option><option value='Schwab'"+(curAcct==='Schwab'?' selected':'')+">嘉信</option><option value='GT'"+(curAcct==='GT'?' selected':'')+">國泰複委托</option><option value='Cathay'"+(curAcct==='Cathay'?' selected':'')+">國泰</option></select></div>";
+    html+="<div><div class='fl'>帳戶</div><select id='ft-source'><option value='FT'"+(curAcct==='FT'?' selected':'')+">Firstrade</option><option value='Schwab'"+(curAcct==='Schwab'?' selected':'')+">嘉信</option><option value='GT'"+(curAcct==='GT'?' selected':'')+">國泰複委托</option></select></div>";
     html+="<div><div class='fl'>類別</div><select id='ft-type' onchange='onTxTypeChange(this.value)'>"+types.map(function(t){return"<option"+(isEd&&edTx.type===t?" selected":"")+">"+t+"</option>";}).join("")+"</select></div>";
     html+="<div><div class='fl'>股票代號</div><input id='ft-sym' placeholder='選填' value='"+esc(ev("sym",""))+"'></div>";
     html+="<div><div class='fl'>股數</div><input id='ft-shares' type='number' value='"+ev("shares","")+"' placeholder='0' oninput='autoCalcAmt()'></div>";
@@ -1106,7 +1106,7 @@ function rTx(){
   html+="<div class='panel'><div class='ph'><span>顯示 "+filtered.length+" / "+S.T.length+" 筆</span></div>";
   html+="<div class='sx sy'><table><thead><tr><th>日期</th><th>類別</th><th>代號</th><th class='num'>股數</th><th class='num'>成交價</th><th class='num'>手續費</th><th class='num'>實際金額</th><th class='num'>匯費(NTD)</th><th></th></tr></thead><tbody>";
   filtered.forEach(function(t){
-    var srcLabel={"FT":"FT","Schwab":"嘉信","GT":"國泰複","Cathay":"國泰"};
+    var srcLabel={"FT":"FT","Schwab":"嘉信","GT":"國泰複"};
     html+="<tr><td style='font-size:12px;color:var(--text2);white-space:nowrap'>"+t.date+"</td><td style='white-space:nowrap'>"+rBadge(t.type)+"<span class='badge br' style='font-size:10px;margin-left:3px'>"+(srcLabel[t.source||"FT"]||t.source||"FT")+"</span></td>";
     html+="<td>"+(t.sym?"<strong>"+esc(t.sym)+"</strong>":"—")+"</td>";
     html+="<td class='num'>"+(t.shares||"—")+"</td><td class='num'>"+(t.price?"$"+fn(t.price,2):"—")+"</td>";
@@ -1140,11 +1140,11 @@ function rFX(){
       +"<button class='"+(mode==="twd"?"btn btn-blue":"btn-sm")+"' onclick=\"S.fxMode='twd';render()\" style='flex:1;font-size:12px'>台幣換美金</button>"
       +"<button class='"+(mode==="usd"?"btn btn-blue":"btn-sm")+"' onclick=\"S.fxMode='usd';render()\" style='flex:1;font-size:12px'>美金＋匯率</button>"
       +"</div>";
+    var acctSel="<select id='fe-acct'>"+"<option value='FT'"+(e&&e.acct==='FT'?' selected':'')+">Firstrade</option>"+"<option value='Schwab'"+(e&&e.acct==='Schwab'?' selected':'')+">嘉信</option>"+"<option value='GT'"+(e&&e.acct==='GT'?' selected':'')+">國泰複委托</option>"+"<option value='Cathay'"+((!e||!e.acct||e.acct==='Cathay')?' selected':'')+">國泰</option>"+"</select>";
     var h="<div class='fb'><div style='font-size:13px;font-weight:500;margin-bottom:10px'>"+(isNew?"新增出入金紀錄":"編輯出入金紀錄")+"</div>"+modeToggle+"<div class='fg'>";
     h+="<div><div class='fl'>日期</div><input id='fe-date' type='date' value='"+(e&&e.date?e.date:today())+"'></div>";
-    var acctSel="<select id='fe-acct'>"+"<option value='FT'"+(e&&e.acct==='FT'?' selected':'')+">Firstrade</option>"+"<option value='Schwab'"+(e&&e.acct==='Schwab'?' selected':'')+">嘉信</option>"+"<option value='GT'"+(e&&e.acct==='GT'?' selected':'')+">國泰複委托</option>"+"<option value='Cathay'"+((!e||!e.acct||e.acct==='Cathay')?' selected':'')+">國泰</option>"+"</select>";
-    h+="<div><div class='fl'>銀行／來源</div>"+bankSel+"</div>";
     h+="<div><div class='fl'>匯入帳戶</div>"+acctSel+"</div>";
+    h+="<div><div class='fl'>銀行／來源</div>"+bankSel+"</div>";
     if(mode==="twd"){
       h+="<div><div class='fl'>台幣(NTD)</div><input id='fe-twd' type='number' placeholder='310000' value='"+(e&&e.twd?e.twd:"")+"'></div>";
       h+="<div><div class='fl'>美金(USD)</div><input id='fe-usd' type='number' placeholder='10000' value='"+(e?e.usd:"")+"'></div>";

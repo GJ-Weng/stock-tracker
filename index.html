@@ -80,6 +80,7 @@ tr:hover td{background:var(--bg3)}
 .ib{background:var(--blue-bg);border-radius:var(--radius);padding:10px 12px;font-size:12px;color:var(--blue);margin-top:8px;line-height:1.7}
 .wb{background:var(--yellow-bg);border-radius:var(--radius);padding:10px 12px;font-size:12px;color:var(--yellow);margin-top:8px;line-height:1.7}
 .kr{display:flex;gap:8px}.kr input{flex:1}
+#cash-panel.open{display:block!important}
 @media(max-width:600px){main{padding:12px}#hd{padding:10px 14px}.ai{display:none}.cards{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
@@ -89,9 +90,15 @@ tr:hover td{background:var(--bg3)}
   <div class="hr">
     <span id="ss" style="font-size:11px;color:var(--text2)"></span>
     <div class="ai"><span>USD/TWD</span><input type="number" id="ir" step="0.001" onchange="onAcc('rate',this.value)"></div>
-    <div class="ai"><span>FT現金</span><input type="number" id="ic-ft" step="0.01" onchange="onAcc('cashFT',this.value)"></div>
-    <div class="ai"><span>嘉信現金</span><input type="number" id="ic-sw" step="0.01" onchange="onAcc('cashSchwab',this.value)"></div>
-    <div class="ai"><span>國泰現金</span><input type="number" id="ic-ct" step="0.01" onchange="onAcc('cashCathay',this.value)"></div>
+    <div style="position:relative">
+      <button class="btn" onclick="document.getElementById('cash-panel').classList.toggle('open')" style="font-size:12px;padding:4px 10px">💰 現金餘額 ▾</button>
+      <div id="cash-panel" style="display:none;position:absolute;right:0;top:34px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:12px 14px;z-index:200;min-width:220px;box-shadow:0 4px 16px rgba(0,0,0,.12)">
+        <div style="font-size:11px;color:var(--text2);font-weight:500;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">帳戶現金餘額</div>
+        <div class="ai" style="margin-bottom:6px"><span style="min-width:60px">Firstrade</span><input type="number" id="ic-ft" step="0.01" onchange="onAcc('cashFT',this.value)" style="width:110px"></div>
+        <div class="ai" style="margin-bottom:6px"><span style="min-width:60px">嘉信</span><input type="number" id="ic-sw" step="0.01" onchange="onAcc('cashSchwab',this.value)" style="width:110px"></div>
+        <div class="ai"><span style="min-width:60px">國泰</span><input type="number" id="ic-ct" step="0.01" onchange="onAcc('cashCathay',this.value)" style="width:110px"></div>
+      </div>
+    </div>
     <button class="btn" onclick="doExport()">⬇ 匯出</button>
   </div>
 </div>
@@ -99,7 +106,7 @@ tr:hover td{background:var(--bg3)}
   <button class="tab" data-tab="dash">📊 總覽</button>
   <button class="tab" data-tab="holdings">📈 持倉</button>
   <button class="tab" data-tab="tx">📝 交易</button>
-  <button class="tab" data-tab="fx">💱 換匯</button>
+  <button class="tab" data-tab="fx">💸 出入金</button>
   <button class="tab" data-tab="settings">⚙️ 設定</button>
 </nav>
 <main id="main"></main>
@@ -253,7 +260,7 @@ var S={holdingsView:"all",dashView:"all",editCostId:null,editCostVal:"",showZero
   tab:"dash",H:null,T:null,E:null,acc:null,
   apiKey:"",ghToken:"",ghUser:"",ghRepo:"",ghSHA:"",
   showForm:null,filterType:"全部",txSearch:"",
-  sortCol:"",sortDir:-1,editTxId:null,editFxId:null,editPriceId:null,editPriceVal:"",
+  sortCol:"",sortDir:-1,showExtraCols:false,fxMode:"twd",editTxId:null,editFxId:null,editPriceId:null,editPriceVal:"",
   updating:false,syncing:false,chartInst:null,
   imp:{rows:[],symMap:{},step:0}
 };
@@ -280,10 +287,15 @@ function calc(){
   var real=0,div=0;
   S.H.forEach(function(h){real+=(h.realized||0);div+=(h.div||0);});
   var totalCash=(S.acc.cashFT||0)+(S.acc.cashSchwab||0)+(S.acc.cashCathay||0);
+  // totalInvested = sum of all 入金 transactions (in USD)
   var totalInvested=0;
   S.T.forEach(function(t){if(t.type==="入金")totalInvested+=t.amt||0;});
+  // twdInvested = total TWD spent (from FX records; supports USD+rate mode too)
+  var twdInvested=0;
+  S.E.forEach(function(e){twdInvested+=e.twd||0;});
   return{mkt:mkt,cost:cost,unreal:mkt-cost,real:real,div:div,todayChg:todayChg,
-    totalUSD:mkt+totalCash,totalTWD:(mkt+totalCash)*S.acc.rate,fxRate:avgFx(),act:act,cash:totalCash,totalInvested:totalInvested};
+    totalUSD:mkt+totalCash,totalTWD:(mkt+totalCash)*S.acc.rate,fxRate:avgFx(),act:act,cash:totalCash,
+    totalInvested:totalInvested,twdInvested:twdInvested};
 }
 
 // ─── GITHUB SYNC ───
@@ -352,7 +364,8 @@ function ghLoad(){
 // ─── PRICE UPDATE ───
 async function updatePrices(){
   if(S.updating)return;
-  var syms=S.H.filter(function(h){return h.shares>0&&!h.sym.includes("Call")&&!h.sym.includes("Put");}).map(function(h){return h.sym;});
+  var _rawSyms=S.H.filter(function(h){return h.shares>0&&!h.sym.includes("Call")&&!h.sym.includes("Put");}).map(function(h){return h.sym;});
+  var syms=_rawSyms.filter(function(s,i){return _rawSyms.indexOf(s)===i;});
   if(!syms.length){toast("沒有有效持倉");return;}
   S.updating=true;render();
   try{
@@ -427,8 +440,9 @@ function recalcCash(){
   if(S.acc.cashSchwab===undefined)S.acc.cashSchwab=0;
   if(S.acc.cashCathay===undefined)S.acc.cashCathay=0;
   S.acc.cash=S.acc.cashFT+S.acc.cashSchwab+(S.acc.cashCathay||0);
-  // Save only cashSchwab and rate - NOT cashFT (it's always recalculated)
+  // Save cashSchwab and cashCathay - NOT cashFT (it's always recalculated)
   localStorage.setItem("ft_cashSchwab",S.acc.cashSchwab);
+  localStorage.setItem("ft_cashCathay",S.acc.cashCathay);
   var el=document.getElementById("ic-ft");
   if(el)el.value=S.acc.cashFT;
   return S.acc.cashFT;
@@ -440,24 +454,25 @@ function rebuildFromTx(){
   sorted.forEach(function(tx){
     var sym=tx.sym,shares=tx.shares,price=tx.price,fee=tx.fee||0,amt=tx.amt||0;
     if(!sym)return;
+    var mapKey=sym+(tx.source||"FT");
     if(tx.type==="買入"&&shares>0&&price>0){
-      if(!map[sym])map[sym]={sym:sym,shares:0,cost:0,realized:0,div:0,fd:tx.date};
-      var ns=map[sym].shares+shares;
-      map[sym].cost=ns>0?(map[sym].shares*map[sym].cost+shares*price)/ns:0;
-      map[sym].shares=ns;
-      if(!map[sym].fd||tx.date<map[sym].fd)map[sym].fd=tx.date;
-    }else if(tx.type==="賣出"&&shares>0&&price>0&&map[sym]){
-      map[sym].realized+=(price-map[sym].cost)*shares-fee;
-      map[sym].shares=Math.max(0,map[sym].shares-shares);
-    }else if(tx.type==="配息"&&amt>0&&map[sym]){
-      map[sym].div+=amt;
+      if(!map[mapKey])map[mapKey]={sym:sym,shares:0,cost:0,realized:0,div:0,fd:tx.date,acct:tx.source||"FT"};
+      var ns=map[mapKey].shares+shares;
+      map[mapKey].cost=ns>0?(map[mapKey].shares*map[mapKey].cost+shares*price)/ns:0;
+      map[mapKey].shares=ns;
+      if(!map[mapKey].fd||tx.date<map[mapKey].fd)map[mapKey].fd=tx.date;
+    }else if(tx.type==="賣出"&&shares>0&&price>0&&map[mapKey]){
+      map[mapKey].realized+=(price-map[mapKey].cost)*shares-fee;
+      map[mapKey].shares=Math.max(0,map[mapKey].shares-shares);
+    }else if(tx.type==="配息"&&amt>0&&map[mapKey]){
+      map[mapKey].div+=amt;
     }
   });
   S.H=Object.values(map).map(function(h){
-    var ex=S.H.find(function(e){return e.sym===h.sym;});
+    var ex=S.H.find(function(e){return e.sym===h.sym&&(!h.acct||e.acct===h.acct);});
     return{id:ex?ex.id:gid(),sym:h.sym,shares:h.shares,cost:parseFloat(h.cost.toFixed(6)),
       price:ex?ex.price:0,chg:ex?ex.chg:0,div:parseFloat(h.div.toFixed(2)),
-      realized:parseFloat(h.realized.toFixed(2)),note:ex?ex.note:"",fd:h.fd};
+      realized:parseFloat(h.realized.toFixed(2)),note:ex?ex.note:"",fd:h.fd,acct:h.acct||ex&&ex.acct||"FT"};
   });
   sv("H");
   recalcCash();
@@ -788,7 +803,7 @@ function doExport(){
       "台幣成本":+(h.shares*h.cost*fx).toFixed(0),"備註":h.note,"首次買入":h.fd||""};})),"庫存總覽");
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(S.T.map(function(t){
     return{"交易日期":t.date,"交易類別":t.type,"股票代號":t.sym,"成交股數":t.shares,"成交價(USD)":t.price,"手續費":t.fee,"實際金額":t.amt,"匯款手續費(NTD)":t.wire};})),"交易紀錄");
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(S.E.map(function(e){return{"台幣":e.twd,"美金":e.usd,"匯率":e.rate};})),"換匯紀錄");
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(S.E.map(function(e){return{"日期":e.date||"","銀行":e.bank||e.note||"","台幣":e.twd,"美金":e.usd,"匯率":e.rate,"備註":e.note||""};})),"出入金紀錄");
   XLSX.writeFile(wb,"Firstrade_"+today()+".xlsx");
   toast("✅ 已匯出 Excel");
 }
@@ -815,21 +830,21 @@ function resetData(){
   S.H=JSON.parse(JSON.stringify(INIT_H));
   S.T=JSON.parse(JSON.stringify(INIT_T));
   S.E=JSON.parse(JSON.stringify(INIT_E));
-  S.acc={cash:0,rate:31.5};
+  S.acc={cash:0,cashFT:0,cashSchwab:0,cashCathay:0,rate:31.5};
   ["H","T","E","acc"].forEach(sv);
   S.tab="dash";S.showForm=null;S.editTxId=null;S.editPriceId=null;
   document.getElementById("ir").value=S.acc.rate;
-  var _cft=document.getElementById("ic-ft");var _csw=document.getElementById("ic-sw");if(_cft)_cft.value=S.acc.cashFT||0;if(_csw)_csw.value=S.acc.cashSchwab||0;
+  var _cft=document.getElementById("ic-ft");var _csw=document.getElementById("ic-sw");var _cct=document.getElementById("ic-ct");if(_cft)_cft.value=0;if(_csw)_csw.value=0;if(_cct)_cct.value=0;
   toast("✅ 已恢復初始範例資料");render();
 }
 function clearAll(){
-  if(!confirm("確定清空所有持倉和交易紀錄？換匯紀錄會保留。此操作無法復原。"))return;
-  S.H=[];S.T=[];S.acc={cash:0,cashFT:0,cashSchwab:0,rate:S.acc.rate};
+  if(!confirm("確定清空所有持倉和交易紀錄？出入金紀錄會保留。此操作無法復原。"))return;
+  S.H=[];S.T=[];S.acc={cash:0,cashFT:0,cashSchwab:0,cashCathay:0,rate:S.acc.rate};
   ["H","T","acc"].forEach(sv);
   S.tab="settings";S.showForm=null;S.editTxId=null;S.editPriceId=null;
   document.getElementById("ir").value=S.acc.rate;
-  var _cft=document.getElementById("ic-ft");var _csw=document.getElementById("ic-sw");if(_cft)_cft.value=S.acc.cashFT||0;if(_csw)_csw.value=S.acc.cashSchwab||0;
-  toast("✅ 持倉和交易已清空，換匯紀錄保留。請匯入 FSV 檔案");render();
+  var _cft=document.getElementById("ic-ft");var _csw=document.getElementById("ic-sw");var _cct=document.getElementById("ic-ct");if(_cft)_cft.value=0;if(_csw)_csw.value=0;if(_cct)_cct.value=0;
+  toast("✅ 持倉和交易已清空，出入金紀錄保留。請匯入 FSV 檔案");render();
   clearTimeout(S._syncTimer);
   syncToGitHub();
 }
@@ -880,8 +895,10 @@ function rDash(p){
   html+=rCard("未實現損益",(p.unreal>=0?"+":"")+"$"+fn(p.unreal,2),p.cost>0?fp(p.unreal/p.cost):"—",cv(p.unreal));
   html+=rCard("已實現損益",(p.real>=0?"+":"")+"$"+fn(p.real,2),"含配息 $"+fn(p.div,2),cv(p.real));
   html+=rCard("今日損益",(p.todayChg>=0?"+":"-")+"$"+fn(Math.abs(p.todayChg),2),"市場波動",cv(p.todayChg));
-  html+=rCard("帳戶現金","$"+fn(p.cash,2),"FT $"+fn(S.acc.cashFT||0,2)+" + 嘉信 $"+fn(S.acc.cashSchwab||0,2)+" + 國泰 $"+fn(S.acc.cashCathay||0,2));
-  html+=rCard("累計投入現金","$"+fn(p.totalInvested,2),"含所有入金交易");
+  var cashROI=p.totalInvested>0?((p.totalUSD-p.totalInvested)/p.totalInvested):0;
+  html+=rCard("帳戶現金","$"+fn(p.cash,2),"FT·嘉信·國泰合計");
+  html+=rCard("累計入金(USD)","$"+fn(p.totalInvested,2),(p.twdInvested?"NT$"+fn(p.twdInvested,0)+" 出入金紀錄合計":"出入金紀錄：無資料"));
+  if(cashROI!==0)html+=rCard("整體報酬率",(cashROI>=0?"+":"")+fp(cashROI),"以入金USD計算",cv(cashROI));
   html+="</div>";
   var retPct=Math.min(p.totalUSD/1000000*100,100),retLeft=Math.max(1000000-p.totalUSD,0);
   // Build dashRows for all views
@@ -980,7 +997,7 @@ function rHoldings(){
   // Filter holdings by account
   var viewH=(S.holdingsView==="all")?S.H:S.H.filter(function(h){return h.acct===S.holdingsView;});
   // Hide 0-share holdings unless showZero is set
-  if(!S.showZero)viewH=viewH.filter(function(h){return h.shares>0||h.acct==="FT";});
+  if(!S.showZero)viewH=viewH.filter(function(h){return h.shares>0||(h.realized&&h.realized!==0)||h.note;});
   html+="<span style='color:var(--text2);font-size:13px'>"+viewH.length+" 支（含已出清）</span>";
   html+="<div style='display:flex;gap:8px;flex-wrap:wrap'>";
   html+=rUBtn(S.updating?"<span class='spin'></span> 更新中":"🔄 更新報價","updatePrices",S.updating);
@@ -1002,8 +1019,13 @@ function rHoldings(){
     html+="<div style='display:flex;align-items:flex-end;gap:8px;grid-column:span 2'><button class='btn btn-blue' onclick='addHolding()' style='flex:1'>確認新增／合併</button><button class='btn-sm' onclick=\"toggleForm(null)\" style='padding:8px 12px'>取消</button></div>";
     html+="</div><div class='fh'>💡 若代號已存在，股數和成本會自動加權合併</div></div>";
   }
-  html+="<div class='panel'><div class='sx sy'><table><thead><tr>";
-  html+=th("sym","代號")+th("shares","股數")+th("cost","均成本")+"<th>現價(點擊)</th>"+th("chg","今日漲跌")+th("mkt","市值")+th("ur","未實現")+th("realized","已實現")+th("div","股息")+th("ret","報酬率")+"<th>年化</th><th>台幣成本</th><th></th>";
+  var ex=S.showExtraCols;
+  html+="<div class='panel'>";
+  html+="<div class='ph' style='padding:5px 11px;display:flex;justify-content:space-between;align-items:center'><span style='font-size:11px;color:var(--text2)'>"+(viewH.length)+" 支持倉</span><button class='btn-sm' onclick='S.showExtraCols=!S.showExtraCols;render()'>"+(ex?"← 收起":"更多欄位 →")+"</button></div>";
+  html+="<div class='sx sy'><table><thead><tr>";
+  html+=th("sym","代號")+th("shares","股數")+th("cost","均成本")+"<th>現價(點擊)</th>"+th("chg","今日漲跌")+th("mkt","市值")+th("ur","未實現")+th("ret","報酬率");
+  if(ex)html+=th("realized","已實現")+th("div","股息")+"<th>年化</th><th>台幣成本</th>";
+  html+="<th></th>";
   html+="</tr></thead><tbody>";
   rows.forEach(function(h){
     var mv=mktVal(h),ur=mv-costBasis(h),ret=h.cost>0?(h.price*(h.isOption?100:1)-h.cost)/h.cost:0,ann=annualReturn(h.cost,h.price*(h.isOption?100:1),h.fd),isE=S.editPriceId===h.id;
@@ -1038,11 +1060,13 @@ function rHoldings(){
     html+="<td class='num "+cv(h.chg)+"'>"+(h.chg>=0?"+":"")+fn(h.chg,2)+"</td>";
     html+="<td class='num'>"+(h.shares>0?"$"+fn(mv,0):"—")+"</td>";
     html+="<td class='num "+cv(ur)+"'>"+(h.shares>0?(ur>=0?"+":"")+"$"+fn(ur,2):"—")+"</td>";
-    html+="<td class='num "+cv(h.realized||0)+"'>"+(h.realized?(h.realized>=0?"+":"")+"$"+fn(h.realized,2):"—")+"</td>";
-    html+="<td class='num "+cv(h.div||0)+"'>"+(h.div?"$"+fn(h.div,2):"—")+"</td>";
     html+="<td class='num "+cv(ret)+"'>"+(h.shares>0?(ret>=0?"+":"")+fp(ret):"—")+"</td>";
-    html+="<td class='num "+(ann!==null?cv(ann):"neu")+"'>"+(ann!==null?(ann>=0?"+":"")+fp(ann):"—")+"</td>";
-    html+="<td class='num' style='color:var(--text2)'>"+(h.shares>0?"NT$"+fn(h.shares*h.cost*fx,0):"—")+"</td>";
+    if(ex){
+      html+="<td class='num "+cv(h.realized||0)+"'>"+(h.realized?(h.realized>=0?"+":"")+"$"+fn(h.realized,2):"—")+"</td>";
+      html+="<td class='num "+cv(h.div||0)+"'>"+(h.div?"$"+fn(h.div,2):"—")+"</td>";
+      html+="<td class='num "+(ann!==null?cv(ann):"neu")+"'>"+(ann!==null?(ann>=0?"+":"")+fp(ann):"—")+"</td>";
+      html+="<td class='num' style='color:var(--text2)'>"+(h.shares>0?"NT$"+fn(h.shares*h.cost*fx,0):"—")+"</td>";
+    }
     html+="<td><button class='btn-red' onclick=\"delHolding('"+h.id+"')\">刪除</button></td></tr>";
   });
   html+="</tbody></table></div></div><p style='font-size:11px;color:var(--text2);margin-top:6px'>💡 點現價修改 · 點標題排序 · 台幣成本匯率 "+fx.toFixed(3)+"</p>";
@@ -1095,39 +1119,55 @@ function rFX(){
   S.E.forEach(function(e){tu+=e.usd;tt+=e.twd;});
   var avg=tu?tt/tu:0;
   var html="<div class='cards' style='margin-bottom:14px'>";
-  html+=rCard("累計換出台幣","NT$"+fn(tt,0),"");html+=rCard("累計換入美金","$"+fn(tu,0),"");
-  html+=rCard("加權平均匯率",avg.toFixed(4),"");html+=rCard("換匯次數",S.E.length+" 次","");
+  html+=rCard("累計換出(NTD)","NT$"+fn(tt,0),"");html+=rCard("累計入金(USD)","$"+fn(tu,0),"");
+  html+=rCard("加權平均匯率",avg.toFixed(4),"");html+=rCard("出入金筆數",S.E.length+" 次","");
+  // sort by date desc, fallback to insertion order
+  var sortedE=S.E.slice().sort(function(a,b){return(b.date||"").localeCompare(a.date||"");});
   html+="</div><div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px'>";
-  html+="<span style='color:var(--text2);font-size:13px'>換匯紀錄（最新優先）</span>";
+  html+="<span style='color:var(--text2);font-size:13px'>出入金紀錄（依日期新→舊）</span>";
   html+="<button class='btn btn-blue' onclick=\"S.editFxId=null;toggleForm('e')\">＋ 新增</button></div>";
   var BANKS=["台灣銀行","合作金庫","第一銀行","華南銀行","彰化銀行","玉山銀行","永豐銀行","國泰世華","富邦銀行","中信銀行","兆豐銀行","其他"];
   function fxForm(e){
     var isNew=!e;
+    var mode=S.fxMode||(e&&!e.twd?"usd":"twd");
     var bankSel="<select id='fe-bank'><option value=''>請選擇…</option>"+BANKS.map(function(b){return"<option"+(e&&e.bank===b?" selected":"")+">"+b+"</option>";}).join("")+"</select>";
-    var h="<div class='fb'><div style='font-size:13px;font-weight:500;margin-bottom:10px'>"+(isNew?"新增換匯紀錄":"編輯換匯紀錄")+"</div><div class='fg'>";
+    var modeToggle="<div style='display:flex;gap:6px;margin-bottom:12px'>"
+      +"<button class='"+(mode==="twd"?"btn btn-blue":"btn-sm")+"' onclick=\"S.fxMode='twd';render()\" style='flex:1;font-size:12px'>台幣換美金</button>"
+      +"<button class='"+(mode==="usd"?"btn btn-blue":"btn-sm")+"' onclick=\"S.fxMode='usd';render()\" style='flex:1;font-size:12px'>美金＋匯率</button>"
+      +"</div>";
+    var h="<div class='fb'><div style='font-size:13px;font-weight:500;margin-bottom:10px'>"+(isNew?"新增出入金紀錄":"編輯出入金紀錄")+"</div>"+modeToggle+"<div class='fg'>";
     h+="<div><div class='fl'>日期</div><input id='fe-date' type='date' value='"+(e&&e.date?e.date:today())+"'></div>";
-    h+="<div><div class='fl'>銀行</div>"+bankSel+"</div>";
-    h+="<div><div class='fl'>台幣(NTD)</div><input id='fe-twd' type='number' placeholder='10000' value='"+(e?e.twd:"")+"'></div>";
-    h+="<div><div class='fl'>美金(USD)</div><input id='fe-usd' type='number' placeholder='316' value='"+(e?e.usd:"")+"'></div>";
-    h+="<div><div class='fl'>匯率（留空自動算）</div><input id='fe-rate' type='number' step='0.001' value='"+(e?e.rate:"")+"'></div>";
+    h+="<div><div class='fl'>銀行／來源</div>"+bankSel+"</div>";
+    if(mode==="twd"){
+      h+="<div><div class='fl'>台幣(NTD)</div><input id='fe-twd' type='number' placeholder='310000' value='"+(e&&e.twd?e.twd:"")+"'></div>";
+      h+="<div><div class='fl'>美金(USD)</div><input id='fe-usd' type='number' placeholder='10000' value='"+(e?e.usd:"")+"'></div>";
+      h+="<div><div class='fl'>匯率（留空自動算）</div><input id='fe-rate' type='number' step='0.001' value='"+(e?e.rate:"")+"'></div>";
+    }else{
+      h+="<div><div class='fl'>美金(USD)</div><input id='fe-usd' type='number' placeholder='10000' value='"+(e?e.usd:"")+"'></div>";
+      h+="<div><div class='fl'>匯率（NTD/USD）</div><input id='fe-rate' type='number' step='0.001' placeholder='31.5' value='"+(e?e.rate:"")+"'></div>";
+      h+="<div style='grid-column:span 2'><div class='fl'>⚡ 台幣將自動換算（美金 × 匯率）</div><div id='fe-twd-preview' style='font-size:13px;color:var(--text2);padding:6px 0'>填入美金和匯率後自動計算</div></div>";
+      h+="<input type='hidden' id='fe-twd' value='"+(e&&e.twd?e.twd:"0")+"'>";
+    }
     h+="<div><div class='fl'>備註（選填）</div><input id='fe-note' placeholder='補充說明…' value='"+esc(e&&e.note?e.note:"")+"'></div>";
     h+="<div style='display:flex;align-items:flex-end;gap:8px'>";
     if(isNew){h+="<button class=\"btn btn-blue\" onclick='addFX()' style='flex:1'>確認新增</button><button class='btn-sm' onclick=\"S.showForm=null;render()\" style='padding:8px 12px'>取消</button>";}
     else{h+="<button class=\"btn btn-blue\" onclick=\"saveEditFX('"+e.id+"')\" style='flex:1'>儲存修改</button><button class='btn-sm' onclick=\"S.editFxId=null;render()\" style='padding:8px 12px'>取消</button>";}
     h+="</div></div></div>";
+    if(mode==="usd"){
+      h+="<script>setTimeout(function(){var u=document.getElementById('fe-usd'),r=document.getElementById('fe-rate'),p=document.getElementById('fe-twd-preview'),t=document.getElementById('fe-twd');function upd(){var uv=parseFloat(u&&u.value)||0,rv=parseFloat(r&&r.value)||0;var tw=uv&&rv?uv*rv:0;if(t)t.value=tw.toFixed(2);if(p)p.textContent=tw>0?'NT$ '+tw.toFixed(0)+' 元':'填入美金和匯率後自動計算';}if(u)u.addEventListener('input',upd);if(r)r.addEventListener('input',upd);upd();},50);<\/script>";
+    }
     return h;
   }
   if(S.showForm==="e"&&!S.editFxId)html+=fxForm(null);
   html+="<div class='panel'><div class='sx sy'><table><thead><tr><th>#</th><th>日期</th><th>銀行</th><th class='num'>台幣(NTD)</th><th class='num'>美金(USD)</th><th class='num'>匯率</th><th>備註</th><th></th></tr></thead><tbody>";
-  var rev=S.E.slice().reverse();
-  rev.forEach(function(e,i){
+  sortedE.forEach(function(e,i){
     var isEd=S.editFxId===e.id;
     if(isEd){
       html+="<tr><td colspan='8' style='padding:0'><div style='padding:10px'>"+fxForm(e)+"</div></td></tr>";
     }else{
-      html+="<tr><td style='color:var(--text2)'>"+(S.E.length-i)+"</td>";
+      html+="<tr><td style='color:var(--text2)'>"+(i+1)+"</td>";
       html+="<td style='font-size:12px;color:var(--text2);white-space:nowrap'>"+(e.date||"—")+"</td>";
-      html+="<td><span class='badge bb' style='font-size:11px'>"+(e.bank||e.note||"—")+"</span></td>";
+      html+="<td><span class='badge br' style='font-size:11px'>"+(e.bank||e.note||"—")+"</span></td>";
       html+="<td class='num'>NT$"+fn(e.twd,0)+"</td><td class='num'>$"+fn(e.usd,2)+"</td><td class='num'>"+e.rate.toFixed(3)+"</td>";
       html+="<td style='font-size:12px;color:var(--text2)'>"+(e.bank&&e.note?esc(e.note):"")+"</td>";
       html+="<td><div style='display:flex;gap:4px'><button class='btn-sm' onclick=\"S.showForm=null;S.editFxId='"+e.id+"';render()\">編輯</button><button class='btn-red' onclick=\"delFX('"+e.id+"')\">刪除</button></div></td></tr>";
@@ -1282,7 +1322,7 @@ function submitQuickTrade(){
   }
   var fee=parseFloat(document.getElementById("qt-fee").value)||0;
   var amt=qt.type==="買入"?-(shares*price+fee):(shares*price-fee);
-  var t={id:gid(),date:date,type:qt.type,sym:h.sym,shares:shares,price:price,fee:fee,amt:parseFloat(amt.toFixed(2)),wire:0,source:h.acct==="Schwab"?"Schwab":"FT"};
+  var t={id:gid(),date:date,type:qt.type,sym:h.sym,shares:shares,price:price,fee:fee,amt:parseFloat(amt.toFixed(2)),wire:0,source:h.acct||"FT"};
   // Update holding
   if(qt.type==="買入"){
     var ns=h.shares+shares,nc=(h.shares*h.cost+shares*price)/ns;
@@ -1293,7 +1333,7 @@ function submitQuickTrade(){
   }
   S.T.push(t);
   sv("H");sv("T");
-  if(h.acct==="FT")recalcCash();
+  if(!h.acct||h.acct==="FT")recalcCash();
   S.quickTrade=null;
   toast("✅ "+(qt.type==="買入"?"買入":"賣出")+" "+h.sym+" "+shares+"股 @ $"+price);
   render();
@@ -1348,7 +1388,7 @@ function addHolding(){
     S.H=S.H.map(function(h,j){return j===i?Object.assign({},h,{shares:ns,cost:parseFloat(nc.toFixed(6)),price:price||h.price,realized:(h.realized||0)+(parseFloat(document.getElementById("fh-real").value)||0),note:document.getElementById("fh-note").value||h.note,fd:h.fd||fd}):h;});
     toast("✅ 已合併 "+sym+"（"+ns+" 股，均成本 $"+nc.toFixed(4)+"）");
   }else{
-    S.H.push({id:gid(),sym:sym,shares:shares,cost:cost,price:price||cost,chg:parseFloat(document.getElementById("fh-chg").value)||0,div:0,realized:parseFloat(document.getElementById("fh-real").value)||0,note:document.getElementById("fh-note").value,fd:fd});
+    S.H.push({id:gid(),sym:sym,shares:shares,cost:cost,price:price||cost,chg:parseFloat(document.getElementById("fh-chg").value)||0,div:0,realized:parseFloat(document.getElementById("fh-real").value)||0,note:document.getElementById("fh-note").value,fd:fd,acct:acct});
     toast("✅ 已新增 "+sym);
   }
   sv("H");S.showForm=null;render();
@@ -1380,23 +1420,44 @@ function saveEditTx(){
 function cancelTxEdit(){S.editTxId=null;S.showForm=null;render();}
 function delTx(id){if(!confirm("確定刪除？\n不會自動反向更新持倉，如需同步請用「從交易重建」。"))return;S.T=S.T.filter(function(t){return t.id!==id;});sv("T");render();}
 function addFX(){
-  var twd=parseFloat(document.getElementById("fe-twd").value)||0,usd=parseFloat(document.getElementById("fe-usd").value)||0;
+  var usd=parseFloat(document.getElementById("fe-usd").value)||0;
   if(!usd){alert("請輸入美金金額");return;}
-  var ri=parseFloat(document.getElementById("fe-rate").value),rate=(!isNaN(ri)&&ri>0)?ri:parseFloat((twd/usd).toFixed(4));
+  var ri=parseFloat(document.getElementById("fe-rate").value)||0;
+  var mode=S.fxMode||"twd";
+  var twd, rate;
+  if(mode==="usd"){
+    if(!ri){alert("美金+匯率模式需輸入匯率");return;}
+    twd=parseFloat((usd*ri).toFixed(2));
+    rate=ri;
+  }else{
+    twd=parseFloat(document.getElementById("fe-twd").value)||0;
+    rate=(ri>0)?ri:parseFloat((twd&&usd?twd/usd:0).toFixed(4));
+  }
   var note=(document.getElementById("fe-note")&&document.getElementById("fe-note").value)||"";
   var bank=(document.getElementById("fe-bank")&&document.getElementById("fe-bank").value)||"";
   var date=(document.getElementById("fe-date")&&document.getElementById("fe-date").value)||today();
-  S.E.push({id:gid(),date:date,bank:bank,twd:twd,usd:usd,rate:rate,note:note});sv("E");S.showForm=null;toast("✅ 已新增換匯紀錄");render();
+  S.E.push({id:gid(),date:date,bank:bank,twd:twd,usd:usd,rate:rate,note:note,mode:mode});
+  sv("E");S.showForm=null;S.fxMode="twd";toast("✅ 已新增出入金紀錄");render();
 }
 function saveEditFX(id){
-  var twd=parseFloat(document.getElementById("fe-twd").value)||0,usd=parseFloat(document.getElementById("fe-usd").value)||0;
+  var usd=parseFloat(document.getElementById("fe-usd").value)||0;
   if(!usd){alert("請輸入美金金額");return;}
-  var ri=parseFloat(document.getElementById("fe-rate").value),rate=(!isNaN(ri)&&ri>0)?ri:parseFloat((twd/usd).toFixed(4));
+  var ri=parseFloat(document.getElementById("fe-rate").value)||0;
+  var mode=S.fxMode||"twd";
+  var twd, rate;
+  if(mode==="usd"){
+    if(!ri){alert("美金+匯率模式需輸入匯率");return;}
+    twd=parseFloat((usd*ri).toFixed(2));
+    rate=ri;
+  }else{
+    twd=parseFloat(document.getElementById("fe-twd").value)||0;
+    rate=(ri>0)?ri:parseFloat((twd&&usd?twd/usd:0).toFixed(4));
+  }
   var note=(document.getElementById("fe-note")&&document.getElementById("fe-note").value)||"";
   var bank=(document.getElementById("fe-bank")&&document.getElementById("fe-bank").value)||"";
   var date=(document.getElementById("fe-date")&&document.getElementById("fe-date").value)||today();
-  S.E=S.E.map(function(e){return e.id===id?Object.assign({},e,{date:date,bank:bank,twd:twd,usd:usd,rate:rate,note:note}):e;});
-  sv("E");S.editFxId=null;toast("✅ 換匯紀錄已更新");render();
+  S.E=S.E.map(function(e){return e.id===id?Object.assign({},e,{date:date,bank:bank,twd:twd,usd:usd,rate:rate,note:note,mode:mode}):e;});
+  sv("E");S.editFxId=null;S.fxMode="twd";toast("✅ 出入金紀錄已更新");render();
 }
 function delFX(id){if(!confirm("確定刪除？"))return;S.E=S.E.filter(function(e){return e.id!==id;});sv("E");render();}
 
@@ -1405,9 +1466,12 @@ S.H=ld("H")||JSON.parse(JSON.stringify(INIT_H));
 S.T=ld("T")||JSON.parse(JSON.stringify(INIT_T));
 S.E=ld("E")||JSON.parse(JSON.stringify(INIT_E));
 S.acc=ld("acc")||{cash:0,cashFT:0,cashSchwab:0,cashCathay:0,rate:31.5665};
-// migrate old data - only if cashFT not yet defined
+// migrate old data
 if(S.acc.cashFT===undefined){S.acc.cashFT=0;S.acc.cashSchwab=0;}
-if(S.acc.cashCathay===undefined){S.acc.cashCathay=0;}
+if(S.acc.cashCathay===undefined){
+  var _savedCathay=parseFloat(localStorage.getItem("ft_cashCathay")||"0");
+  S.acc.cashCathay=_savedCathay;
+}
 // cashSchwab is in S.acc (from localStorage or GitHub)
 // cashFT is always recalculated from transactions
 if(S.T.length>0)recalcCash();
@@ -1418,14 +1482,15 @@ S.ghRepo=localStorage.getItem("ft_ghRepo")||"";
 S.ghSHA=localStorage.getItem("ft_ghSHA")||"";
 document.querySelectorAll(".tab").forEach(function(b){b.addEventListener("click",function(){setTab(b.dataset.tab);});});
 document.getElementById("ir").value=S.acc.rate;
-var _cft=document.getElementById("ic-ft");var _csw=document.getElementById("ic-sw");if(_cft)_cft.value=S.acc.cashFT||0;if(_csw)_csw.value=S.acc.cashSchwab||0;
+var _cft=document.getElementById("ic-ft");var _csw=document.getElementById("ic-sw");var _cct=document.getElementById("ic-ct");if(_cft)_cft.value=S.acc.cashFT||0;if(_csw)_csw.value=S.acc.cashSchwab||0;if(_cct)_cct.value=S.acc.cashCathay||0;
 render();
+document.addEventListener("click",function(e){var p=document.getElementById("cash-panel");if(p&&!p.contains(e.target)&&!e.target.closest("[onclick*='cash-panel']"))p.classList.remove("open");});
 if(S.ghToken&&S.ghUser&&S.ghRepo){
   loadFromGitHub().then(function(ok){
     if(ok){
-      // cashSchwab comes from GitHub, cashFT is always recalculated
+      // cashSchwab+cashCathay come from GitHub, cashFT is always recalculated
       recalcCash();
-      S.acc.cash=S.acc.cashFT+(S.acc.cashSchwab||0);
+      S.acc.cash=S.acc.cashFT+(S.acc.cashSchwab||0)+(S.acc.cashCathay||0);
       toast("☁️ 已從 GitHub 載入最新資料");render();
     }
   });

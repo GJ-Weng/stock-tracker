@@ -5831,8 +5831,10 @@
       "usd": 1000,
       "rate": 31.638,
       "date": "2026-02-05",
-      "bank": "其他",
-      "note": ""
+      "bank": "Line Bank",
+      "note": "",
+      "acct": "FT",
+      "mode": "twd"
     },
     {
       "id": "1780373371365-qho0",

@@ -5558,8 +5558,10 @@
       "usd": 317.58,
       "rate": 31.488,
       "date": "2026-01-01",
-      "bank": "其他",
-      "note": ""
+      "bank": "Line Bank",
+      "note": "",
+      "acct": "FT",
+      "mode": "twd"
     },
     {
       "id": "e20",

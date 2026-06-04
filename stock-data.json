@@ -5813,8 +5813,10 @@
       "usd": 78.75,
       "rate": 31.66,
       "date": "2026-02-03",
-      "bank": "其他",
-      "note": ""
+      "bank": "Line Bank",
+      "note": "",
+      "acct": "FT",
+      "mode": "twd"
     },
     {
       "id": "e49",

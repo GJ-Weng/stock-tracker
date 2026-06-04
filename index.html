@@ -94,9 +94,10 @@ tr:hover td{background:var(--bg3)}
       <button class="btn" onclick="document.getElementById('cash-panel').classList.toggle('open')" style="font-size:12px;padding:4px 10px" title="由交易紀錄自動計算">💰 現金餘額 ▾</button>
       <div id="cash-panel" style="display:none;position:absolute;right:0;top:34px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:12px 14px;z-index:200;min-width:220px;box-shadow:0 4px 16px rgba(0,0,0,.12)">
         <div style="font-size:11px;color:var(--text2);font-weight:500;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">帳戶現金（由交易自動計算）</div>
-        <div class="ai" style="margin-bottom:6px"><span style="min-width:60px">Firstrade</span><input type="number" id="ic-ft" readonly style="width:110px;opacity:0.6;cursor:default"></div>
-        <div class="ai" style="margin-bottom:6px"><span style="min-width:60px">嘉信</span><input type="number" id="ic-sw" readonly style="width:110px;opacity:0.6;cursor:default"></div>
-        <div class="ai"><span style="min-width:60px">國泰複委托</span><input type="number" id="ic-ct" readonly style="width:110px;opacity:0.6;cursor:default"></div>
+        <div style="font-size:10px;color:var(--text2);margin-bottom:6px;display:grid;grid-template-columns:70px 90px 80px;gap:4px;text-align:center"><span></span><span>自動計算</span><span>手動調整</span></div>
+        <div style="display:grid;grid-template-columns:70px 90px 80px;gap:4px;align-items:center;margin-bottom:5px"><span style="font-size:12px">Firstrade</span><input type="number" id="ic-ft" readonly style="opacity:0.6;cursor:default;font-size:12px"><input type="number" id="ic-ft-adj" step="0.01" placeholder="±0" style="font-size:12px" onchange="onCashAdj('FT',this.value)" value="0"></div>
+        <div style="display:grid;grid-template-columns:70px 90px 80px;gap:4px;align-items:center;margin-bottom:5px"><span style="font-size:12px">嘉信</span><input type="number" id="ic-sw" readonly style="opacity:0.6;cursor:default;font-size:12px"><input type="number" id="ic-sw-adj" step="0.01" placeholder="±0" style="font-size:12px" onchange="onCashAdj('Schwab',this.value)" value="0"></div>
+        <div style="display:grid;grid-template-columns:70px 90px 80px;gap:4px;align-items:center"><span style="font-size:12px">國泰複委托</span><input type="number" id="ic-ct" readonly style="opacity:0.6;cursor:default;font-size:12px"><input type="number" id="ic-ct-adj" step="0.01" placeholder="±0" style="font-size:12px" onchange="onCashAdj('GT',this.value)" value="0"></div>
       </div>
     </div>
     <button class="btn" onclick="doExport()">⬇ 匯出</button>
@@ -425,28 +426,41 @@ function applyTx(tx){
 }
 
 function recalcCash(){
-  // Compute cash for each account live from transactions
+  // Step 1: start from FX deposit records (S.E) per account
   var cashFT=0, cashSchwab=0, cashGT=0;
+  S.E.forEach(function(e){
+    var acct=e.acct||"GT";
+    var usd=e.usd||0;
+    if(acct==="FT")cashFT+=usd;
+    else if(acct==="Schwab")cashSchwab+=usd;
+    else if(acct==="GT"||acct==="Cathay")cashGT+=usd;
+  });
+  // Step 2: apply manual adjustments
+  var adj=S.acc.cashAdj||{FT:0,Schwab:0,GT:0};
+  cashFT+=adj.FT||0;
+  cashSchwab+=adj.Schwab||0;
+  cashGT+=adj.GT||0;
+  // Step 3: apply trade transactions (買入/賣出/配息 etc, skip 入金 which is already in S.E)
   S.T.forEach(function(t){
     var d=(t.desc||"").toUpperCase();
     var amt=t.amt||0;
     var src=t.source||"FT";
+    if(t.type==="入金")return; // already counted via S.E
     if(d.includes("XFER CASH TO MARGIN")&&amt>0)return;
     if(src==="FT")cashFT+=amt;
     else if(src==="Schwab")cashSchwab+=amt;
-    else if(src==="GT")cashGT+=amt;
+    else if(src==="GT"||src==="Cathay")cashGT+=amt;
   });
   S.acc.cashFT=parseFloat(cashFT.toFixed(2));
   S.acc.cashSchwab=parseFloat(cashSchwab.toFixed(2));
   S.acc.cashCathay=parseFloat(cashGT.toFixed(2));
   S.acc.cash=S.acc.cashFT+S.acc.cashSchwab+S.acc.cashCathay;
-  // Update header inputs
   var eft=document.getElementById("ic-ft");
   var esw=document.getElementById("ic-sw");
   var ect=document.getElementById("ic-ct");
-  if(eft)eft.value=S.acc.cashFT;
-  if(esw)esw.value=S.acc.cashSchwab;
-  if(ect)ect.value=S.acc.cashCathay;
+  if(eft)eft.value=S.acc.cashFT.toFixed(2);
+  if(esw)esw.value=S.acc.cashSchwab.toFixed(2);
+  if(ect)ect.value=S.acc.cashCathay.toFixed(2);
   return S.acc.cashFT;
 }
 function rebuildFromTx(){
@@ -1275,6 +1289,11 @@ function render(){
     if(cft&&document.activeElement!==cft)cft.value=S.acc.cashFT||0;
     if(csw&&document.activeElement!==csw)csw.value=S.acc.cashSchwab||0;
     if(cct&&document.activeElement!==cct)cct.value=S.acc.cashCathay||0;
+    var adj=S.acc.cashAdj||{FT:0,Schwab:0,GT:0};
+    var efa=document.getElementById("ic-ft-adj"),esa=document.getElementById("ic-sw-adj"),eca=document.getElementById("ic-ct-adj");
+    if(efa&&document.activeElement!==efa)efa.value=adj.FT||0;
+    if(esa&&document.activeElement!==esa)esa.value=adj.Schwab||0;
+    if(eca&&document.activeElement!==eca)eca.value=adj.GT||0;
     document.querySelectorAll(".tab").forEach(function(b){b.classList.toggle("active",b.dataset.tab===S.tab);});
     var p=calc(),m=document.getElementById("main");
     if(S.tab==="dash")m.innerHTML=rDash(p);
@@ -1356,8 +1375,12 @@ function setTab(t){S.tab=t;S.showForm=null;S.editTxId=null;S.editPriceId=null;re
 function toggleForm(f){S.showForm=S.showForm===f?null:f;S.editTxId=null;render();}
 function setFilter(f){S.filterType=f;render();}
 function onAcc(k,v){
-  // Only rate is manually editable; cash fields are all auto-calculated from transactions
   if(k==="rate"){S.acc.rate=parseFloat(v)||31.5;sv("acc");render();}
+}
+function onCashAdj(acct,v){
+  if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
+  S.acc.cashAdj[acct]=parseFloat(v)||0;
+  sv("acc");recalcCash();render();
 }
 function saveApiKey(){S.apiKey=document.getElementById("api-key-inp").value.trim();localStorage.setItem("ft_apiKey",S.apiKey);toast("✅ API Key 已儲存");}
 function sortH(col){S.sortDir=S.sortCol===col?S.sortDir*-1:-1;S.sortCol=col;render();}
@@ -1548,13 +1571,14 @@ function delFX(id){if(!confirm("確定刪除？"))return;S.E=S.E.filter(function
 S.H=ld("H")||JSON.parse(JSON.stringify(INIT_H));
 S.T=ld("T")||JSON.parse(JSON.stringify(INIT_T));
 S.E=ld("E")||JSON.parse(JSON.stringify(INIT_E));
-S.acc=ld("acc")||{cash:0,cashFT:0,cashSchwab:0,cashCathay:0,rate:31.5665};
+S.acc=ld("acc")||{cash:0,cashFT:0,cashSchwab:0,cashCathay:0,cashAdj:{FT:0,Schwab:0,GT:0},rate:31.5665};
 // migrate old data
 if(S.acc.cashFT===undefined){S.acc.cashFT=0;S.acc.cashSchwab=0;}
 if(S.acc.cashCathay===undefined){
   var _savedCathay=parseFloat(localStorage.getItem("ft_cashCathay")||"0");
   S.acc.cashCathay=_savedCathay;
 }
+if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
 // cashSchwab is in S.acc (from localStorage or GitHub)
 // cashFT is always recalculated from transactions
 if(S.T.length>0)recalcCash();

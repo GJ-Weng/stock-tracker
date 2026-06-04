@@ -5824,8 +5824,10 @@
       "usd": 1000,
       "rate": 31.585,
       "date": "2026-02-03",
-      "bank": "其他",
-      "note": ""
+      "bank": "Line Bank",
+      "note": "",
+      "acct": "FT",
+      "mode": "twd"
     },
     {
       "id": "e50",

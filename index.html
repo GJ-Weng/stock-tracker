@@ -1428,18 +1428,20 @@ function autoCalcAmt(){
   if(!hiddenAmt)return;
   var isNeg=TX_OUT.indexOf(type)>=0;
   var absVal;
-  if(absInput&&absInput.value!==""){
-    absVal=parseFloat(absInput.value)||0;
-  }else if(shares>0&&price>0){
+  // If shares+price are filled, always auto-calc (fee changes should update amt)
+  // Only use manual absInput if shares or price are missing
+  if(shares>0&&price>0){
     absVal=parseFloat((shares*price+(isNeg?fee:-fee)).toFixed(2));
-    if(absInput)absInput.value=absVal;
+    if(absInput)absInput.value=absVal; // keep display in sync
+  }else if(absInput&&absInput.value!==""){
+    // no shares/price - trust whatever was typed manually
+    absVal=parseFloat(absInput.value)||0;
   }else{
     absVal=0;
   }
   hiddenAmt.value=isNeg?-absVal:absVal;
-  // show preview
   var sign=document.getElementById("ft-amt-sign");
-  if(sign&&absVal>0)sign.textContent=(isNeg?"− $"+absVal.toFixed(2)+" (支出)":"＋ $"+absVal.toFixed(2)+" (收入)");
+  if(sign)sign.textContent=absVal>0?(isNeg?"− $"+absVal.toFixed(2)+" (支出)":"＋ $"+absVal.toFixed(2)+" (收入)"):(isNeg?"−（支出，自動計算）":"＋（收入，自動計算）");
 }
 
 function addTx(){

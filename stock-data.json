@@ -196,20 +196,46 @@
       "acct": "GT"
     },
     {
-      "id": "1780558801321-nnas",
+      "id": "1780559127379-2hpa",
       "sym": "ALAB",
       "shares": 0,
-      "cost": 0,
+      "cost": 156.928125,
       "price": 0,
       "chg": 0,
       "div": 0,
-      "realized": 16152,
+      "realized": 1086.9,
       "note": "",
-      "fd": "2026-01-20",
+      "fd": "2025-10-15",
       "acct": "FT"
     },
     {
-      "id": "1780558801321-k6fv",
+      "id": "1780559127379-v7dt",
+      "sym": "AMZN",
+      "shares": 0,
+      "cost": 222.791667,
+      "price": 0,
+      "chg": 0,
+      "div": 0,
+      "realized": 178,
+      "note": "",
+      "fd": "2025-10-15",
+      "acct": "FT"
+    },
+    {
+      "id": "1780559127379-l3v8",
+      "sym": "ONDS",
+      "shares": 1200,
+      "cost": 10.358333,
+      "price": 0,
+      "chg": 0,
+      "div": 0,
+      "realized": 0,
+      "note": "",
+      "fd": "2026-01-23",
+      "acct": "FT"
+    },
+    {
+      "id": "1780559127379-ygap",
       "sym": "ONDS CALL/PUT",
       "shares": 1,
       "cost": 7,
@@ -222,25 +248,12 @@
       "acct": "FT"
     },
     {
-      "id": "1780558801321-59mi",
-      "sym": "ONDS",
-      "shares": 1200,
-      "cost": 10.358333,
-      "price": 11.61,
-      "chg": -1.97,
-      "div": 0,
-      "realized": 0,
-      "note": "",
-      "fd": "2026-01-23",
-      "acct": "FT"
-    },
-    {
-      "id": "1780558801321-devw",
+      "id": "1780559127379-ui0e",
       "sym": "SOFI",
       "shares": 100,
       "cost": 24.5,
-      "price": 16.68,
-      "chg": -1.06,
+      "price": 0,
+      "chg": 0,
       "div": 0,
       "realized": 0,
       "note": "",
@@ -248,12 +261,12 @@
       "acct": "FT"
     },
     {
-      "id": "1780558801321-clyv",
+      "id": "1780559127379-y8bi",
       "sym": "TSLA",
       "shares": 10,
       "cost": 389,
-      "price": 423.7,
-      "chg": -0.04,
+      "price": 0,
+      "chg": 0,
       "div": 0,
       "realized": 0,
       "note": "",
@@ -261,12 +274,12 @@
       "acct": "FT"
     },
     {
-      "id": "1780558801321-8rmc",
+      "id": "1780559127379-u489",
       "sym": "RMBS",
       "shares": 5,
       "cost": 102,
-      "price": 170.66,
-      "chg": 3.88,
+      "price": 0,
+      "chg": 0,
       "div": 0,
       "realized": 0,
       "note": "",
@@ -274,12 +287,12 @@
       "acct": "FT"
     },
     {
-      "id": "1780558801321-fcfb",
+      "id": "1780559127379-o2o8",
       "sym": "NVDA",
       "shares": 32,
       "cost": 183.875,
-      "price": 214.75,
-      "chg": -8.07,
+      "price": 0,
+      "chg": 0,
       "div": 0,
       "realized": 0,
       "note": "",
@@ -287,12 +300,12 @@
       "acct": "FT"
     },
     {
-      "id": "1780558801321-wrdz",
+      "id": "1780559127379-ctu8",
       "sym": "IREN",
       "shares": 5,
       "cost": 59,
-      "price": 65.48,
-      "chg": -1.12,
+      "price": 0,
+      "chg": 0,
       "div": 0,
       "realized": 0,
       "note": "",
@@ -300,12 +313,12 @@
       "acct": "FT"
     },
     {
-      "id": "1780558801321-7qk3",
+      "id": "1780559127379-xykp",
       "sym": "MU",
       "shares": 4,
       "cost": 710,
-      "price": 1079.57,
-      "chg": 15.47,
+      "price": 0,
+      "chg": 0,
       "div": 0,
       "realized": 0,
       "note": "",
@@ -313,25 +326,12 @@
       "acct": "FT"
     },
     {
-      "id": "1780558801321-705r",
-      "sym": "MSFT",
-      "shares": 2,
-      "cost": 418.5,
-      "price": 427.34,
-      "chg": -13.97,
-      "div": 0,
-      "realized": 0,
-      "note": "",
-      "fd": "2026-05-18",
-      "acct": "FT"
-    },
-    {
-      "id": "1780558801321-w5zs",
+      "id": "1780559127379-ohh2",
       "sym": "SATS",
       "shares": 5,
       "cost": 142,
-      "price": 120.92,
-      "chg": -2.63,
+      "price": 0,
+      "chg": 0,
       "div": 0,
       "realized": 0,
       "note": "",
@@ -339,12 +339,25 @@
       "acct": "FT"
     },
     {
-      "id": "1780558801321-w57g",
-      "sym": "PLTR",
-      "shares": 10,
-      "cost": 133,
-      "price": 142.2,
-      "chg": -9.97,
+      "id": "1780559127379-24kx",
+      "sym": "MSFT",
+      "shares": 2,
+      "cost": 418.5,
+      "price": 0,
+      "chg": 0,
+      "div": 0,
+      "realized": 0,
+      "note": "",
+      "fd": "2026-05-18",
+      "acct": "FT"
+    },
+    {
+      "id": "1780559127379-vqyc",
+      "sym": "NOK",
+      "shares": 100,
+      "cost": 15.7,
+      "price": 0,
+      "chg": 0,
       "div": 0,
       "realized": 0,
       "note": "",
@@ -352,12 +365,12 @@
       "acct": "FT"
     },
     {
-      "id": "1780558801321-h4sq",
-      "sym": "NOK",
-      "shares": 100,
-      "cost": 15.7,
-      "price": 16.73,
-      "chg": -0.12,
+      "id": "1780559127379-ydwl",
+      "sym": "PLTR",
+      "shares": 10,
+      "cost": 133,
+      "price": 0,
+      "chg": 0,
       "div": 0,
       "realized": 0,
       "note": "",
@@ -3652,7 +3665,217 @@
       "source": "Schwab"
     },
     {
-      "id": "1780558801320-m2io",
+      "id": "1780559127378-1i23",
+      "source": "FT",
+      "date": "2025-09-26",
+      "type": "入金",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 15000,
+      "wire": 0,
+      "skip": false,
+      "desc": "TRANSFER FROM CHARLES SCHWA ACAT20252670043617 BOS 0164"
+    },
+    {
+      "id": "1780559127378-0zot",
+      "source": "FT",
+      "date": "2025-10-15",
+      "type": "買入",
+      "sym": "ALAB",
+      "shares": 10,
+      "price": 168.54,
+      "fee": 0,
+      "amt": -1685.4,
+      "wire": 0,
+      "skip": false,
+      "desc": "ASTERA LABS INC                COMMON STOCK                   UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-w996",
+      "source": "FT",
+      "date": "2025-10-15",
+      "type": "買入",
+      "sym": "AMZN",
+      "shares": 10,
+      "price": 215,
+      "fee": 0,
+      "amt": -2150,
+      "wire": 0,
+      "skip": false,
+      "desc": "AMAZON.COM INC                 UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-bkmf",
+      "source": "FT",
+      "date": "2025-10-15",
+      "type": "買入",
+      "sym": "ALAB",
+      "shares": 10,
+      "price": 160,
+      "fee": 0,
+      "amt": -1600,
+      "wire": 0,
+      "skip": false,
+      "desc": "ASTERA LABS INC                COMMON STOCK                   UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-tf48",
+      "source": "FT",
+      "date": "2025-10-15",
+      "type": "買入",
+      "sym": "ALAB",
+      "shares": 5,
+      "price": 165,
+      "fee": 0,
+      "amt": -825,
+      "wire": 0,
+      "skip": false,
+      "desc": "ASTERA LABS INC                COMMON STOCK                   UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-mout",
+      "source": "FT",
+      "date": "2025-10-16",
+      "type": "現金利息",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 1.25,
+      "wire": 0,
+      "skip": false,
+      "desc": "INTEREST ON CREDIT BALANCE AT  0.150  09/26 THRU 10/15"
+    },
+    {
+      "id": "1780559127378-6gmx",
+      "source": "FT",
+      "date": "2025-10-23",
+      "type": "其他",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": -15001.25,
+      "wire": 0,
+      "skip": false,
+      "desc": "TFR Cash to Type 1"
+    },
+    {
+      "id": "1780559127378-9lxs",
+      "source": "FT",
+      "date": "2025-10-23",
+      "type": "其他",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 15001.25,
+      "wire": 0,
+      "skip": false,
+      "desc": "TFR Cash From Type 2"
+    },
+    {
+      "id": "1780559127378-v31r",
+      "source": "FT",
+      "date": "2025-10-30",
+      "type": "買入",
+      "sym": "AMZN",
+      "shares": 10,
+      "price": 224.9,
+      "fee": 0,
+      "amt": -2249,
+      "wire": 0,
+      "skip": false,
+      "desc": "AMAZON.COM INC                 UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-7wpw",
+      "source": "FT",
+      "date": "2025-10-30",
+      "type": "買入",
+      "sym": "AMZN",
+      "shares": 10,
+      "price": 224.5,
+      "fee": 0,
+      "amt": -2245,
+      "wire": 0,
+      "skip": false,
+      "desc": "AMAZON.COM INC                 UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-jrre",
+      "source": "FT",
+      "date": "2025-10-30",
+      "type": "買入",
+      "sym": "AMZN",
+      "shares": 10,
+      "price": 225,
+      "fee": 0,
+      "amt": -2250,
+      "wire": 0,
+      "skip": false,
+      "desc": "AMAZON.COM INC                 UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-zbz6",
+      "source": "FT",
+      "date": "2025-10-30",
+      "type": "買入",
+      "sym": "AMZN",
+      "shares": 8,
+      "price": 225,
+      "fee": 0,
+      "amt": -1800,
+      "wire": 0,
+      "skip": false,
+      "desc": "AMAZON.COM INC                 UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-6uim",
+      "source": "FT",
+      "date": "2025-11-20",
+      "type": "買入",
+      "sym": "ALAB",
+      "shares": 35,
+      "price": 158.5,
+      "fee": 0,
+      "amt": -5547.5,
+      "wire": 0,
+      "skip": false,
+      "desc": "ASTERA LABS INC                COMMON STOCK                   UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-t73o",
+      "source": "FT",
+      "date": "2025-11-20",
+      "type": "賣出",
+      "sym": "AMZN",
+      "shares": 48,
+      "price": 226.5,
+      "fee": 0,
+      "amt": 10872,
+      "wire": 0,
+      "skip": false,
+      "desc": "AMAZON.COM INC                 UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-p477",
+      "source": "FT",
+      "date": "2025-11-20",
+      "type": "買入",
+      "sym": "ALAB",
+      "shares": 36,
+      "price": 150.2,
+      "fee": 0,
+      "amt": -5407.2,
+      "wire": 0,
+      "skip": false,
+      "desc": "ASTERA LABS INC                COMMON STOCK                   UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-39t5",
       "source": "FT",
       "date": "2026-01-08",
       "type": "入金",
@@ -3666,7 +3889,7 @@
       "desc": "Wire Funds Received FedRef 20260108MMQFMP2M000842 SEN(20260108045187)"
     },
     {
-      "id": "1780558801320-j02u",
+      "id": "1780559127378-uls0",
       "source": "FT",
       "date": "2026-01-12",
       "type": "匯費補貼",
@@ -3680,7 +3903,7 @@
       "desc": "rebate for wire 2026-01-08"
     },
     {
-      "id": "1780558801320-njw6",
+      "id": "1780559127378-pevx",
       "source": "FT",
       "date": "2026-01-12",
       "type": "入金",
@@ -3694,21 +3917,7 @@
       "desc": "Wire Funds Received FedRef 20260112MMQFMP2M004394 SEN(20260112103525)"
     },
     {
-      "id": "1780558801320-lo7y",
-      "source": "FT",
-      "date": "2026-01-13",
-      "type": "入金",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": 1000,
-      "wire": 0,
-      "skip": false,
-      "desc": "Wire Funds Received FedRef 20260113MMQFMP2N011452 SEN(20260113103757)"
-    },
-    {
-      "id": "1780558801320-7sgh",
+      "id": "1780559127378-ncam",
       "source": "FT",
       "date": "2026-01-13",
       "type": "匯費補貼",
@@ -3722,9 +3931,9 @@
       "desc": "REBATE FOR WIRE 2026-01-12"
     },
     {
-      "id": "1780558801320-ix6w",
+      "id": "1780559127378-yrp6",
       "source": "FT",
-      "date": "2026-01-14",
+      "date": "2026-01-13",
       "type": "入金",
       "sym": "",
       "shares": 0,
@@ -3733,10 +3942,10 @@
       "amt": 1000,
       "wire": 0,
       "skip": false,
-      "desc": "Wire Funds Received FedRef 20260114MMQFMP2N004259 SEN(20260114086415)"
+      "desc": "Wire Funds Received FedRef 20260113MMQFMP2N011452 SEN(20260113103757)"
     },
     {
-      "id": "1780558801320-ahnb",
+      "id": "1780559127378-2q8a",
       "source": "FT",
       "date": "2026-01-14",
       "type": "匯費補貼",
@@ -3750,9 +3959,9 @@
       "desc": "REBATE FOR WIRE 2026-01-13"
     },
     {
-      "id": "1780558801320-5977",
+      "id": "1780559127378-w60e",
       "source": "FT",
-      "date": "2026-01-15",
+      "date": "2026-01-14",
       "type": "入金",
       "sym": "",
       "shares": 0,
@@ -3761,10 +3970,10 @@
       "amt": 1000,
       "wire": 0,
       "skip": false,
-      "desc": "Wire Funds Received FedRef 20260115MMQFMP2M015502 SEN(20260115085945)"
+      "desc": "Wire Funds Received FedRef 20260114MMQFMP2N004259 SEN(20260114086415)"
     },
     {
-      "id": "1780558801320-znox",
+      "id": "1780559127378-y1o2",
       "source": "FT",
       "date": "2026-01-15",
       "type": "匯費補貼",
@@ -3778,7 +3987,21 @@
       "desc": "REBATE FOR WIRE 2026-01-14"
     },
     {
-      "id": "1780558801320-3ekc",
+      "id": "1780559127378-u1l1",
+      "source": "FT",
+      "date": "2026-01-15",
+      "type": "入金",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 1000,
+      "wire": 0,
+      "skip": false,
+      "desc": "Wire Funds Received FedRef 20260115MMQFMP2M015502 SEN(20260115085945)"
+    },
+    {
+      "id": "1780559127378-phoz",
       "source": "FT",
       "date": "2026-01-16",
       "type": "入金",
@@ -3792,35 +4015,7 @@
       "desc": "Wire Funds Received FedRef 20260116MMQFMP2K004272 SEN(20260116109761)"
     },
     {
-      "id": "1780558801320-xz5g",
-      "source": "FT",
-      "date": "2026-01-20",
-      "type": "賣出",
-      "sym": "ALAB",
-      "shares": 36,
-      "price": 182,
-      "fee": 0,
-      "amt": 6552,
-      "wire": 0,
-      "skip": false,
-      "desc": "ASTERA LABS INC                COMMON STOCK                   UNSOLICITED"
-    },
-    {
-      "id": "1780558801320-f7kp",
-      "source": "FT",
-      "date": "2026-01-20",
-      "type": "匯費補貼",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": 25,
-      "wire": 0,
-      "skip": false,
-      "desc": "rebate for wire 2026-01-15"
-    },
-    {
-      "id": "1780558801320-105m",
+      "id": "1780559127378-y3k8",
       "source": "FT",
       "date": "2026-01-20",
       "type": "匯費補貼",
@@ -3834,7 +4029,35 @@
       "desc": "rebate for wire 2026-01-16"
     },
     {
-      "id": "1780558801320-5b6x",
+      "id": "1780559127378-a0ve",
+      "source": "FT",
+      "date": "2026-01-20",
+      "type": "匯費補貼",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 25,
+      "wire": 0,
+      "skip": false,
+      "desc": "rebate for wire 2026-01-15"
+    },
+    {
+      "id": "1780559127378-dz5h",
+      "source": "FT",
+      "date": "2026-01-20",
+      "type": "賣出",
+      "sym": "ALAB",
+      "shares": 36,
+      "price": 182,
+      "fee": 0,
+      "amt": 6552,
+      "wire": 0,
+      "skip": false,
+      "desc": "ASTERA LABS INC                COMMON STOCK                   UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-gluv",
       "source": "FT",
       "date": "2026-01-21",
       "type": "入金",
@@ -3848,7 +4071,7 @@
       "desc": "Wire Funds Received FedRef 20260121MMQFMP2L000531 SEN(20260121033673)"
     },
     {
-      "id": "1780558801320-t53p",
+      "id": "1780559127378-8lw7",
       "source": "FT",
       "date": "2026-01-22",
       "type": "入金",
@@ -3862,91 +4085,7 @@
       "desc": "Wire Funds Received FedRef 20260122MMQFMP2K001791 SEN(20260122039609)"
     },
     {
-      "id": "1780558801320-asp4",
-      "source": "FT",
-      "date": "2026-01-23",
-      "type": "其他",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": -13816.15,
-      "wire": 0,
-      "skip": false,
-      "desc": "TFR TO TYPE 2"
-    },
-    {
-      "id": "1780558801320-b8uq",
-      "source": "FT",
-      "date": "2026-01-23",
-      "type": "其他",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": 13816.15,
-      "wire": 0,
-      "skip": false,
-      "desc": "TFR FROM TYPE 1"
-    },
-    {
-      "id": "1780558801320-w8mi",
-      "source": "FT",
-      "date": "2026-01-23",
-      "type": "其他",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": -50,
-      "wire": 0,
-      "skip": false,
-      "desc": "XFER CASH TO MARGIN"
-    },
-    {
-      "id": "1780558801320-hsj5",
-      "source": "FT",
-      "date": "2026-01-23",
-      "type": "買入",
-      "sym": "ONDS CALL/PUT",
-      "shares": 1,
-      "price": 7,
-      "fee": 0,
-      "amt": -700.02,
-      "wire": 0,
-      "skip": false,
-      "desc": "CALL ONDS   01/15/27     7.50  ONDAS INC                      UNSOLICITED                    OPEN CONTRACT"
-    },
-    {
-      "id": "1780558801320-jtqr",
-      "source": "FT",
-      "date": "2026-01-23",
-      "type": "入金",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": 1000,
-      "wire": 0,
-      "skip": false,
-      "desc": "Wire Funds Received FedRef 20260123MMQFMP2N017157 SEN(20260123178816)"
-    },
-    {
-      "id": "1780558801320-2z56",
-      "source": "FT",
-      "date": "2026-01-23",
-      "type": "匯費補貼",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": 25,
-      "wire": 0,
-      "skip": false,
-      "desc": "rebate for wire 2026-01-21"
-    },
-    {
-      "id": "1780558801320-jr0m",
+      "id": "1780559127378-nqj2",
       "source": "FT",
       "date": "2026-01-23",
       "type": "其他",
@@ -3960,7 +4099,7 @@
       "desc": "ASTERA LABS INC COMMON STOCK TFR TO TYPE 2"
     },
     {
-      "id": "1780558801320-8u9k",
+      "id": "1780559127378-zrp5",
       "source": "FT",
       "date": "2026-01-23",
       "type": "匯費補貼",
@@ -3974,21 +4113,7 @@
       "desc": "rebate for wire 2026-01-22"
     },
     {
-      "id": "1780558801320-544c",
-      "source": "FT",
-      "date": "2026-01-23",
-      "type": "買入",
-      "sym": "ONDS",
-      "shares": 100,
-      "price": 12,
-      "fee": 0,
-      "amt": -1200,
-      "wire": 0,
-      "skip": false,
-      "desc": "ONDAS INC                      COMMON STOCK                   UNSOLICITED"
-    },
-    {
-      "id": "1780558801320-7265",
+      "id": "1780559127378-5om6",
       "source": "FT",
       "date": "2026-01-23",
       "type": "其他",
@@ -4002,7 +4127,7 @@
       "desc": "ASTERA LABS INC COMMON STOCK TFR FROM TYPE 1"
     },
     {
-      "id": "1780558801320-e5yv",
+      "id": "1780559127378-nc03",
       "source": "FT",
       "date": "2026-01-23",
       "type": "其他",
@@ -4016,10 +4141,94 @@
       "desc": "XFER MARGIN TO CASH"
     },
     {
-      "id": "1780558801320-rzwd",
+      "id": "1780559127378-q6ml",
       "source": "FT",
-      "date": "2026-01-26",
+      "date": "2026-01-23",
+      "type": "買入",
+      "sym": "ONDS",
+      "shares": 100,
+      "price": 12,
+      "fee": 0,
+      "amt": -1200,
+      "wire": 0,
+      "skip": false,
+      "desc": "ONDAS INC                      COMMON STOCK                   UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-cvcg",
+      "source": "FT",
+      "date": "2026-01-23",
       "type": "其他",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": -13816.15,
+      "wire": 0,
+      "skip": false,
+      "desc": "TFR TO TYPE 2"
+    },
+    {
+      "id": "1780559127378-tsoj",
+      "source": "FT",
+      "date": "2026-01-23",
+      "type": "買入",
+      "sym": "ONDS CALL/PUT",
+      "shares": 1,
+      "price": 7,
+      "fee": 0,
+      "amt": -700.02,
+      "wire": 0,
+      "skip": false,
+      "desc": "CALL ONDS   01/15/27     7.50  ONDAS INC                      UNSOLICITED                    OPEN CONTRACT"
+    },
+    {
+      "id": "1780559127378-46kd",
+      "source": "FT",
+      "date": "2026-01-23",
+      "type": "其他",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 13816.15,
+      "wire": 0,
+      "skip": false,
+      "desc": "TFR FROM TYPE 1"
+    },
+    {
+      "id": "1780559127378-4y76",
+      "source": "FT",
+      "date": "2026-01-23",
+      "type": "其他",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": -50,
+      "wire": 0,
+      "skip": false,
+      "desc": "XFER CASH TO MARGIN"
+    },
+    {
+      "id": "1780559127378-bafd",
+      "source": "FT",
+      "date": "2026-01-23",
+      "type": "入金",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 1000,
+      "wire": 0,
+      "skip": false,
+      "desc": "Wire Funds Received FedRef 20260123MMQFMP2N017157 SEN(20260123178816)"
+    },
+    {
+      "id": "1780559127378-sudv",
+      "source": "FT",
+      "date": "2026-01-23",
+      "type": "匯費補貼",
       "sym": "",
       "shares": 0,
       "price": 0,
@@ -4027,38 +4236,10 @@
       "amt": 25,
       "wire": 0,
       "skip": false,
-      "desc": "XFER MARGIN TO CASH"
+      "desc": "rebate for wire 2026-01-21"
     },
     {
-      "id": "1780558801320-iuv8",
-      "source": "FT",
-      "date": "2026-01-26",
-      "type": "其他",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": -25,
-      "wire": 0,
-      "skip": false,
-      "desc": "XFER CASH TO MARGIN"
-    },
-    {
-      "id": "1780558801320-ep4q",
-      "source": "FT",
-      "date": "2026-01-26",
-      "type": "買入",
-      "sym": "ONDS",
-      "shares": 200,
-      "price": 11,
-      "fee": 0,
-      "amt": -2200,
-      "wire": 0,
-      "skip": false,
-      "desc": "ONDAS INC                      COMMON STOCK                   UNSOLICITED"
-    },
-    {
-      "id": "1780558801320-33kp",
+      "id": "1780559127378-pjl2",
       "source": "FT",
       "date": "2026-01-26",
       "type": "匯費補貼",
@@ -4072,7 +4253,7 @@
       "desc": "rebate for wire 2026-01-23"
     },
     {
-      "id": "1780558801320-zza8",
+      "id": "1780559127378-0plw",
       "source": "FT",
       "date": "2026-01-26",
       "type": "入金",
@@ -4086,7 +4267,49 @@
       "desc": "Wire Funds Received FedRef 20260126MMQFMP2K001312 SEN(20260126054259)"
     },
     {
-      "id": "1780558801320-wi8k",
+      "id": "1780559127378-mkpn",
+      "source": "FT",
+      "date": "2026-01-26",
+      "type": "其他",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 25,
+      "wire": 0,
+      "skip": false,
+      "desc": "XFER MARGIN TO CASH"
+    },
+    {
+      "id": "1780559127378-wyls",
+      "source": "FT",
+      "date": "2026-01-26",
+      "type": "買入",
+      "sym": "ONDS",
+      "shares": 200,
+      "price": 11,
+      "fee": 0,
+      "amt": -2200,
+      "wire": 0,
+      "skip": false,
+      "desc": "ONDAS INC                      COMMON STOCK                   UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-8op1",
+      "source": "FT",
+      "date": "2026-01-26",
+      "type": "其他",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": -25,
+      "wire": 0,
+      "skip": false,
+      "desc": "XFER CASH TO MARGIN"
+    },
+    {
+      "id": "1780559127378-zufo",
       "source": "FT",
       "date": "2026-01-26",
       "type": "買入",
@@ -4100,7 +4323,21 @@
       "desc": "ONDAS INC                      COMMON STOCK                   UNSOLICITED"
     },
     {
-      "id": "1780558801320-nl9v",
+      "id": "1780559127378-6oky",
+      "source": "FT",
+      "date": "2026-01-27",
+      "type": "其他",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 25,
+      "wire": 0,
+      "skip": false,
+      "desc": "XFER MARGIN TO CASH"
+    },
+    {
+      "id": "1780559127378-4knj",
       "source": "FT",
       "date": "2026-01-27",
       "type": "其他",
@@ -4114,7 +4351,7 @@
       "desc": "XFER CASH TO MARGIN"
     },
     {
-      "id": "1780558801320-2g1e",
+      "id": "1780559127378-g4q0",
       "source": "FT",
       "date": "2026-01-27",
       "type": "入金",
@@ -4128,7 +4365,7 @@
       "desc": "Wire Funds Received FedRef 20260127MMQFMP2L009080 SEN(20260127064839)"
     },
     {
-      "id": "1780558801320-tr3n",
+      "id": "1780559127378-iins",
       "source": "FT",
       "date": "2026-01-27",
       "type": "匯費補貼",
@@ -4142,21 +4379,7 @@
       "desc": "rebate for wire 2026-01-26"
     },
     {
-      "id": "1780558801320-z00x",
-      "source": "FT",
-      "date": "2026-01-27",
-      "type": "其他",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": 25,
-      "wire": 0,
-      "skip": false,
-      "desc": "XFER MARGIN TO CASH"
-    },
-    {
-      "id": "1780558801320-ovak",
+      "id": "1780559127378-rt8a",
       "source": "FT",
       "date": "2026-01-28",
       "type": "入金",
@@ -4170,49 +4393,7 @@
       "desc": "Wire Funds Received FedRef 20260128MMQFMP2K011887 SEN(20260128072641)"
     },
     {
-      "id": "1780558801320-20sx",
-      "source": "FT",
-      "date": "2026-01-29",
-      "type": "買入",
-      "sym": "SOFI",
-      "shares": 100,
-      "price": 24.5,
-      "fee": 0,
-      "amt": -2450,
-      "wire": 0,
-      "skip": false,
-      "desc": "SOFI TECHNOLOGIES INC          COMMON STOCK                   UNSOLICITED"
-    },
-    {
-      "id": "1780558801320-6cky",
-      "source": "FT",
-      "date": "2026-01-29",
-      "type": "其他",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": -25,
-      "wire": 0,
-      "skip": false,
-      "desc": "XFER CASH TO MARGIN"
-    },
-    {
-      "id": "1780558801320-bwz9",
-      "source": "FT",
-      "date": "2026-01-29",
-      "type": "其他",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": 25,
-      "wire": 0,
-      "skip": false,
-      "desc": "XFER MARGIN TO CASH"
-    },
-    {
-      "id": "1780558801320-h0hp",
+      "id": "1780559127378-yv0d",
       "source": "FT",
       "date": "2026-01-29",
       "type": "匯費補貼",
@@ -4226,7 +4407,7 @@
       "desc": "rebate for wire 2026-01-27"
     },
     {
-      "id": "1780558801320-4gv4",
+      "id": "1780559127378-tkts",
       "source": "FT",
       "date": "2026-01-29",
       "type": "入金",
@@ -4240,49 +4421,49 @@
       "desc": "Wire Funds Received FedRef 20260129MMQFMP2K015031 SEN(20260129109499)"
     },
     {
-      "id": "1780558801320-en7g",
+      "id": "1780559127378-duyy",
       "source": "FT",
-      "date": "2026-01-30",
-      "type": "買入",
-      "sym": "ONDS",
-      "shares": 300,
-      "price": 10.2,
-      "fee": 0,
-      "amt": -3060,
-      "wire": 0,
-      "skip": false,
-      "desc": "ONDAS INC                      COMMON STOCK                   UNSOLICITED"
-    },
-    {
-      "id": "1780558801320-qlxg",
-      "source": "FT",
-      "date": "2026-01-30",
-      "type": "賣出",
-      "sym": "ALAB",
-      "shares": 60,
-      "price": 160,
-      "fee": 0,
-      "amt": 9600,
-      "wire": 0,
-      "skip": false,
-      "desc": "ASTERA LABS INC                COMMON STOCK                   UNSOLICITED"
-    },
-    {
-      "id": "1780558801320-6lgv",
-      "source": "FT",
-      "date": "2026-01-30",
-      "type": "入金",
+      "date": "2026-01-29",
+      "type": "其他",
       "sym": "",
       "shares": 0,
       "price": 0,
       "fee": 0,
-      "amt": 1000,
+      "amt": -25,
       "wire": 0,
       "skip": false,
-      "desc": "Wire Funds Received FedRef 20260130MMQFMP2N027873 SEN(20260130109995)"
+      "desc": "XFER CASH TO MARGIN"
     },
     {
-      "id": "1780558801320-5rqf",
+      "id": "1780559127378-gmis",
+      "source": "FT",
+      "date": "2026-01-29",
+      "type": "買入",
+      "sym": "SOFI",
+      "shares": 100,
+      "price": 24.5,
+      "fee": 0,
+      "amt": -2450,
+      "wire": 0,
+      "skip": false,
+      "desc": "SOFI TECHNOLOGIES INC          COMMON STOCK                   UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-yitx",
+      "source": "FT",
+      "date": "2026-01-29",
+      "type": "其他",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 25,
+      "wire": 0,
+      "skip": false,
+      "desc": "XFER MARGIN TO CASH"
+    },
+    {
+      "id": "1780559127378-7690",
       "source": "FT",
       "date": "2026-01-30",
       "type": "買入",
@@ -4296,21 +4477,49 @@
       "desc": "ONDAS INC                      COMMON STOCK                   UNSOLICITED"
     },
     {
-      "id": "1780558801320-zoua",
+      "id": "1780559127378-wq3i",
       "source": "FT",
-      "date": "2026-02-02",
-      "type": "其他",
+      "date": "2026-01-30",
+      "type": "入金",
       "sym": "",
       "shares": 0,
       "price": 0,
       "fee": 0,
-      "amt": 25,
+      "amt": 1000,
       "wire": 0,
       "skip": false,
-      "desc": "XFER MARGIN TO CASH"
+      "desc": "Wire Funds Received FedRef 20260130MMQFMP2N027873 SEN(20260130109995)"
     },
     {
-      "id": "1780558801320-p6dy",
+      "id": "1780559127378-7vtv",
+      "source": "FT",
+      "date": "2026-01-30",
+      "type": "賣出",
+      "sym": "ALAB",
+      "shares": 60,
+      "price": 160,
+      "fee": 0,
+      "amt": 9600,
+      "wire": 0,
+      "skip": false,
+      "desc": "ASTERA LABS INC                COMMON STOCK                   UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-safj",
+      "source": "FT",
+      "date": "2026-01-30",
+      "type": "買入",
+      "sym": "ONDS",
+      "shares": 300,
+      "price": 10.2,
+      "fee": 0,
+      "amt": -3060,
+      "wire": 0,
+      "skip": false,
+      "desc": "ONDAS INC                      COMMON STOCK                   UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-7fxr",
       "source": "FT",
       "date": "2026-02-02",
       "type": "其他",
@@ -4324,7 +4533,7 @@
       "desc": "XFER CASH TO MARGIN"
     },
     {
-      "id": "1780558801320-j0d3",
+      "id": "1780559127378-3dcr",
       "source": "FT",
       "date": "2026-02-02",
       "type": "匯費補貼",
@@ -4338,9 +4547,9 @@
       "desc": "rebate for wire 2026-01-28"
     },
     {
-      "id": "1780558801320-zctn",
+      "id": "1780559127378-jdnu",
       "source": "FT",
-      "date": "2026-02-03",
+      "date": "2026-02-02",
       "type": "其他",
       "sym": "",
       "shares": 0,
@@ -4352,21 +4561,7 @@
       "desc": "XFER MARGIN TO CASH"
     },
     {
-      "id": "1780558801320-y659",
-      "source": "FT",
-      "date": "2026-02-03",
-      "type": "匯費補貼",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": 25,
-      "wire": 0,
-      "skip": false,
-      "desc": "rebate for wire 2026-01-29"
-    },
-    {
-      "id": "1780558801320-ectm",
+      "id": "1780559127378-gmvn",
       "source": "FT",
       "date": "2026-02-03",
       "type": "入金",
@@ -4380,7 +4575,7 @@
       "desc": "Wire Funds Received FedRef 20260203MMQFMP2M000478 SEN(20260203160243)"
     },
     {
-      "id": "1780558801320-9ck0",
+      "id": "1780559127378-68de",
       "source": "FT",
       "date": "2026-02-03",
       "type": "其他",
@@ -4394,7 +4589,35 @@
       "desc": "XFER CASH TO MARGIN"
     },
     {
-      "id": "1780558801320-5ljn",
+      "id": "1780559127378-y2fk",
+      "source": "FT",
+      "date": "2026-02-03",
+      "type": "其他",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 25,
+      "wire": 0,
+      "skip": false,
+      "desc": "XFER MARGIN TO CASH"
+    },
+    {
+      "id": "1780559127378-cxqg",
+      "source": "FT",
+      "date": "2026-02-03",
+      "type": "匯費補貼",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 25,
+      "wire": 0,
+      "skip": false,
+      "desc": "rebate for wire 2026-01-29"
+    },
+    {
+      "id": "1780559127378-vwp5",
       "source": "FT",
       "date": "2026-02-04",
       "type": "買入",
@@ -4408,7 +4631,7 @@
       "desc": "ONDAS INC                      COMMON STOCK                   UNSOLICITED"
     },
     {
-      "id": "1780558801320-r73p",
+      "id": "1780559127378-lbs8",
       "source": "FT",
       "date": "2026-02-04",
       "type": "入金",
@@ -4422,91 +4645,7 @@
       "desc": "Wire Funds Received FedRef 20260204MMQFMP2M001644 SEN(20260204030966)"
     },
     {
-      "id": "1780558801320-decn",
-      "source": "FT",
-      "date": "2026-02-05",
-      "type": "買入",
-      "sym": "ONDS",
-      "shares": 100,
-      "price": 8.5,
-      "fee": 0,
-      "amt": -850,
-      "wire": 0,
-      "skip": false,
-      "desc": "ONDAS INC                      COMMON STOCK                   UNSOLICITED"
-    },
-    {
-      "id": "1780558801320-p38q",
-      "source": "FT",
-      "date": "2026-02-05",
-      "type": "匯費補貼",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": 25,
-      "wire": 0,
-      "skip": false,
-      "desc": "rebate for wire 2026-01-30"
-    },
-    {
-      "id": "1780558801320-p4r4",
-      "source": "FT",
-      "date": "2026-02-05",
-      "type": "買入",
-      "sym": "TSLA",
-      "shares": 5,
-      "price": 388,
-      "fee": 0,
-      "amt": -1940,
-      "wire": 0,
-      "skip": false,
-      "desc": "TESLA INC                      COMMON STOCK                   UNSOLICITED"
-    },
-    {
-      "id": "1780558801320-f5w9",
-      "source": "FT",
-      "date": "2026-02-05",
-      "type": "其他",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": 50,
-      "wire": 0,
-      "skip": false,
-      "desc": "XFER MARGIN TO CASH"
-    },
-    {
-      "id": "1780558801320-ilem",
-      "source": "FT",
-      "date": "2026-02-05",
-      "type": "入金",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": 1000,
-      "wire": 0,
-      "skip": false,
-      "desc": "Wire Funds Received FedRef 20260205MMQFMP2N000883 SEN(20260205052692)"
-    },
-    {
-      "id": "1780558801320-xebi",
-      "source": "FT",
-      "date": "2026-02-05",
-      "type": "買入",
-      "sym": "ONDS",
-      "shares": 100,
-      "price": 9,
-      "fee": 0,
-      "amt": -900,
-      "wire": 0,
-      "skip": false,
-      "desc": "ONDAS INC                      COMMON STOCK                   UNSOLICITED"
-    },
-    {
-      "id": "1780558801320-lchi",
+      "id": "1780559127378-wuwy",
       "source": "FT",
       "date": "2026-02-05",
       "type": "匯費補貼",
@@ -4520,7 +4659,21 @@
       "desc": "rebate for wire 2026-02-03"
     },
     {
-      "id": "1780558801320-m7s3",
+      "id": "1780559127378-dful",
+      "source": "FT",
+      "date": "2026-02-05",
+      "type": "買入",
+      "sym": "TSLA",
+      "shares": 5,
+      "price": 388,
+      "fee": 0,
+      "amt": -1940,
+      "wire": 0,
+      "skip": false,
+      "desc": "TESLA INC                      COMMON STOCK                   UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-k3s6",
       "source": "FT",
       "date": "2026-02-05",
       "type": "其他",
@@ -4534,23 +4687,23 @@
       "desc": "XFER CASH TO MARGIN"
     },
     {
-      "id": "1780558801320-bxfq",
+      "id": "1780559127378-z14s",
       "source": "FT",
-      "date": "2026-02-06",
-      "type": "入金",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
+      "date": "2026-02-05",
+      "type": "買入",
+      "sym": "ONDS",
+      "shares": 100,
+      "price": 9,
       "fee": 0,
-      "amt": 1000,
+      "amt": -900,
       "wire": 0,
       "skip": false,
-      "desc": "Wire Funds Received FedRef 20260206MMQFMP2M001898 SEN(20260206093727)"
+      "desc": "ONDAS INC                      COMMON STOCK                   UNSOLICITED"
     },
     {
-      "id": "1780558801320-r0sm",
+      "id": "1780559127378-v36l",
       "source": "FT",
-      "date": "2026-02-06",
+      "date": "2026-02-05",
       "type": "匯費補貼",
       "sym": "",
       "shares": 0,
@@ -4559,12 +4712,12 @@
       "amt": 25,
       "wire": 0,
       "skip": false,
-      "desc": "rebate for wire 2026-02-04"
+      "desc": "rebate for wire 2026-01-30"
     },
     {
-      "id": "1780558801320-4037",
+      "id": "1780559127378-cr6x",
       "source": "FT",
-      "date": "2026-02-06",
+      "date": "2026-02-05",
       "type": "其他",
       "sym": "",
       "shares": 0,
@@ -4576,7 +4729,35 @@
       "desc": "XFER MARGIN TO CASH"
     },
     {
-      "id": "1780558801320-t3a5",
+      "id": "1780559127378-n6oz",
+      "source": "FT",
+      "date": "2026-02-05",
+      "type": "買入",
+      "sym": "ONDS",
+      "shares": 100,
+      "price": 8.5,
+      "fee": 0,
+      "amt": -850,
+      "wire": 0,
+      "skip": false,
+      "desc": "ONDAS INC                      COMMON STOCK                   UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-hoj1",
+      "source": "FT",
+      "date": "2026-02-05",
+      "type": "入金",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 1000,
+      "wire": 0,
+      "skip": false,
+      "desc": "Wire Funds Received FedRef 20260205MMQFMP2N000883 SEN(20260205052692)"
+    },
+    {
+      "id": "1780559127378-q3iy",
       "source": "FT",
       "date": "2026-02-06",
       "type": "其他",
@@ -4590,7 +4771,7 @@
       "desc": "XFER CASH TO MARGIN"
     },
     {
-      "id": "1780558801320-h8ss",
+      "id": "1780559127378-kkuq",
       "source": "FT",
       "date": "2026-02-06",
       "type": "匯費補貼",
@@ -4604,7 +4785,63 @@
       "desc": "rebate for wire 2026-02-05"
     },
     {
-      "id": "1780558801320-lxyc",
+      "id": "1780559127378-u3dv",
+      "source": "FT",
+      "date": "2026-02-06",
+      "type": "入金",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 1000,
+      "wire": 0,
+      "skip": false,
+      "desc": "Wire Funds Received FedRef 20260206MMQFMP2M001898 SEN(20260206093727)"
+    },
+    {
+      "id": "1780559127378-v353",
+      "source": "FT",
+      "date": "2026-02-06",
+      "type": "匯費補貼",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 25,
+      "wire": 0,
+      "skip": false,
+      "desc": "rebate for wire 2026-02-04"
+    },
+    {
+      "id": "1780559127378-btyd",
+      "source": "FT",
+      "date": "2026-02-06",
+      "type": "其他",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 50,
+      "wire": 0,
+      "skip": false,
+      "desc": "XFER MARGIN TO CASH"
+    },
+    {
+      "id": "1780559127378-abkx",
+      "source": "FT",
+      "date": "2026-02-09",
+      "type": "其他",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": -25,
+      "wire": 0,
+      "skip": false,
+      "desc": "XFER CASH TO MARGIN"
+    },
+    {
+      "id": "1780559127378-88pr",
       "source": "FT",
       "date": "2026-02-09",
       "type": "其他",
@@ -4618,7 +4855,7 @@
       "desc": "XFER MARGIN TO CASH"
     },
     {
-      "id": "1780558801320-j87q",
+      "id": "1780559127378-45jr",
       "source": "FT",
       "date": "2026-02-09",
       "type": "匯費補貼",
@@ -4632,21 +4869,7 @@
       "desc": "rebate for wire 2026-02-06"
     },
     {
-      "id": "1780558801320-ryii",
-      "source": "FT",
-      "date": "2026-02-09",
-      "type": "其他",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": -25,
-      "wire": 0,
-      "skip": false,
-      "desc": "XFER CASH TO MARGIN"
-    },
-    {
-      "id": "1780558801320-br6i",
+      "id": "1780559127378-l8rt",
       "source": "FT",
       "date": "2026-02-17",
       "type": "現金利息",
@@ -4660,7 +4883,7 @@
       "desc": "INTEREST ON CREDIT BALANCE AT  0.150  01/16 THRU 02/15"
     },
     {
-      "id": "1780558801320-t8tz",
+      "id": "1780559127378-xyf9",
       "source": "FT",
       "date": "2026-02-18",
       "type": "其他",
@@ -4674,7 +4897,7 @@
       "desc": "TFR to Type 2"
     },
     {
-      "id": "1780558801320-0165",
+      "id": "1780559127378-1pl7",
       "source": "FT",
       "date": "2026-02-18",
       "type": "其他",
@@ -4688,7 +4911,7 @@
       "desc": "TFR from Type 1"
     },
     {
-      "id": "1780558801320-ysnb",
+      "id": "1780559127378-ditj",
       "source": "FT",
       "date": "2026-02-19",
       "type": "買入",
@@ -4702,7 +4925,7 @@
       "desc": "RAMBUS INC                     UNSOLICITED"
     },
     {
-      "id": "1780558801320-llhn",
+      "id": "1780559127378-zbnl",
       "source": "FT",
       "date": "2026-03-03",
       "type": "買入",
@@ -4716,21 +4939,7 @@
       "desc": "TESLA INC                      COMMON STOCK                   UNSOLICITED"
     },
     {
-      "id": "1780558801320-pxd4",
-      "source": "FT",
-      "date": "2026-03-11",
-      "type": "現金利息",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": 0.64,
-      "wire": 0,
-      "skip": false,
-      "desc": "FULLYPAID LENDING REBATE Feb2026 REBATE NON-RES TAX WITHHELD DUE 12/31/2035      0.000    $0.19"
-    },
-    {
-      "id": "1780558801320-aql9",
+      "id": "1780559127378-qvd8",
       "source": "FT",
       "date": "2026-03-11",
       "type": "其他",
@@ -4744,7 +4953,7 @@
       "desc": "XFER MARGIN TO CASH"
     },
     {
-      "id": "1780558801320-b4ed",
+      "id": "1780559127378-7nym",
       "source": "FT",
       "date": "2026-03-11",
       "type": "其他",
@@ -4758,21 +4967,21 @@
       "desc": "XFER CASH TO MARGIN"
     },
     {
-      "id": "1780558801320-noo7",
+      "id": "1780559127378-aycx",
       "source": "FT",
-      "date": "2026-03-12",
-      "type": "預扣稅",
+      "date": "2026-03-11",
+      "type": "現金利息",
       "sym": "",
       "shares": 0,
       "price": 0,
       "fee": 0,
-      "amt": -0.19,
+      "amt": 0.64,
       "wire": 0,
       "skip": false,
-      "desc": "XFER MARGIN TO CASH"
+      "desc": "FULLYPAID LENDING REBATE Feb2026 REBATE NON-RES TAX WITHHELD DUE 12/31/2035      0.000    $0.19"
     },
     {
-      "id": "1780558801320-yvqo",
+      "id": "1780559127378-sexq",
       "source": "FT",
       "date": "2026-03-12",
       "type": "其他",
@@ -4786,7 +4995,21 @@
       "desc": "XFER CASH TO MARGIN"
     },
     {
-      "id": "1780558801320-amcd",
+      "id": "1780559127378-we6t",
+      "source": "FT",
+      "date": "2026-03-12",
+      "type": "預扣稅",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": -0.19,
+      "wire": 0,
+      "skip": false,
+      "desc": "XFER MARGIN TO CASH"
+    },
+    {
+      "id": "1780559127378-yqqf",
       "source": "FT",
       "date": "2026-03-13",
       "type": "買入",
@@ -4800,7 +5023,7 @@
       "desc": "NVIDIA CORP                    UNSOLICITED"
     },
     {
-      "id": "1780558801320-r6qy",
+      "id": "1780559127378-67ao",
       "source": "FT",
       "date": "2026-03-16",
       "type": "現金利息",
@@ -4814,21 +5037,7 @@
       "desc": "INTEREST ON CREDIT BALANCE AT  0.150  02/16 THRU 03/15"
     },
     {
-      "id": "1780558801320-b6yk",
-      "source": "FT",
-      "date": "2026-03-17",
-      "type": "其他",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": 1.86,
-      "wire": 0,
-      "skip": false,
-      "desc": "TFR from Type 1"
-    },
-    {
-      "id": "1780558801320-m43u",
+      "id": "1780559127378-g4de",
       "source": "FT",
       "date": "2026-03-17",
       "type": "其他",
@@ -4842,21 +5051,21 @@
       "desc": "TFR to Type 2"
     },
     {
-      "id": "1780558801320-khf8",
+      "id": "1780559127378-1be6",
       "source": "FT",
-      "date": "2026-04-13",
-      "type": "現金利息",
+      "date": "2026-03-17",
+      "type": "其他",
       "sym": "",
       "shares": 0,
       "price": 0,
       "fee": 0,
-      "amt": 0.84,
+      "amt": 1.86,
       "wire": 0,
       "skip": false,
-      "desc": "FULLYPAID LENDING REBATE Mar2026 REBATE NON-RES TAX WITHHELD DUE 12/31/2035      0.000    $0.25"
+      "desc": "TFR from Type 1"
     },
     {
-      "id": "1780558801320-443m",
+      "id": "1780559127378-76sa",
       "source": "FT",
       "date": "2026-04-13",
       "type": "其他",
@@ -4870,7 +5079,7 @@
       "desc": "XFER CASH TO MARGIN"
     },
     {
-      "id": "1780558801320-s8c7",
+      "id": "1780559127378-n5g3",
       "source": "FT",
       "date": "2026-04-13",
       "type": "其他",
@@ -4884,21 +5093,21 @@
       "desc": "XFER MARGIN TO CASH"
     },
     {
-      "id": "1780558801320-o9ml",
+      "id": "1780559127378-lkeh",
       "source": "FT",
-      "date": "2026-04-14",
-      "type": "預扣稅",
+      "date": "2026-04-13",
+      "type": "現金利息",
       "sym": "",
       "shares": 0,
       "price": 0,
       "fee": 0,
-      "amt": -0.25,
+      "amt": 0.84,
       "wire": 0,
       "skip": false,
-      "desc": "XFER MARGIN TO CASH"
+      "desc": "FULLYPAID LENDING REBATE Mar2026 REBATE NON-RES TAX WITHHELD DUE 12/31/2035      0.000    $0.25"
     },
     {
-      "id": "1780558801320-soo7",
+      "id": "1780559127378-xbky",
       "source": "FT",
       "date": "2026-04-14",
       "type": "其他",
@@ -4912,7 +5121,21 @@
       "desc": "XFER CASH TO MARGIN"
     },
     {
-      "id": "1780558801320-ml69",
+      "id": "1780559127378-wgt8",
+      "source": "FT",
+      "date": "2026-04-14",
+      "type": "預扣稅",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": -0.25,
+      "wire": 0,
+      "skip": false,
+      "desc": "XFER MARGIN TO CASH"
+    },
+    {
+      "id": "1780559127378-9cbi",
       "source": "FT",
       "date": "2026-04-16",
       "type": "現金利息",
@@ -4926,21 +5149,7 @@
       "desc": "INTEREST ON CREDIT BALANCE AT  0.150  03/16 THRU 04/15"
     },
     {
-      "id": "1780558801320-9esv",
-      "source": "FT",
-      "date": "2026-04-17",
-      "type": "其他",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": -1.27,
-      "wire": 0,
-      "skip": false,
-      "desc": "TFR to Type 2"
-    },
-    {
-      "id": "1780558801320-kzvw",
+      "id": "1780559127378-1iuc",
       "source": "FT",
       "date": "2026-04-17",
       "type": "其他",
@@ -4954,7 +5163,21 @@
       "desc": "TFR from Type 1"
     },
     {
-      "id": "1780558801320-t2aj",
+      "id": "1780559127378-3mnf",
+      "source": "FT",
+      "date": "2026-04-17",
+      "type": "其他",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": -1.27,
+      "wire": 0,
+      "skip": false,
+      "desc": "TFR to Type 2"
+    },
+    {
+      "id": "1780559127378-u2l1",
       "source": "FT",
       "date": "2026-05-01",
       "type": "買入",
@@ -4968,7 +5191,7 @@
       "desc": "NVIDIA CORP                    UNSOLICITED"
     },
     {
-      "id": "1780558801320-4ksc",
+      "id": "1780559127378-7tti",
       "source": "FT",
       "date": "2026-05-08",
       "type": "買入",
@@ -4982,7 +5205,21 @@
       "desc": "***IREN LIMITED                ORDINARY SHARES                UNSOLICITED"
     },
     {
-      "id": "1780558801320-bxhi",
+      "id": "1780559127378-1tjk",
+      "source": "FT",
+      "date": "2026-05-12",
+      "type": "其他",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 0.78,
+      "wire": 0,
+      "skip": false,
+      "desc": "XFER MARGIN TO CASH"
+    },
+    {
+      "id": "1780559127378-x8tq",
       "source": "FT",
       "date": "2026-05-12",
       "type": "其他",
@@ -4996,7 +5233,7 @@
       "desc": "XFER CASH TO MARGIN"
     },
     {
-      "id": "1780558801320-ss3m",
+      "id": "1780559127378-higi",
       "source": "FT",
       "date": "2026-05-12",
       "type": "現金利息",
@@ -5010,35 +5247,7 @@
       "desc": "FULLYPAID LENDING REBATE Apr2026 REBATE NON-RES TAX WITHHELD DUE 12/31/2035      0.000    $0.23"
     },
     {
-      "id": "1780558801320-q0bx",
-      "source": "FT",
-      "date": "2026-05-12",
-      "type": "其他",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": 0.78,
-      "wire": 0,
-      "skip": false,
-      "desc": "XFER MARGIN TO CASH"
-    },
-    {
-      "id": "1780558801320-h9rk",
-      "source": "FT",
-      "date": "2026-05-13",
-      "type": "其他",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": 0.23,
-      "wire": 0,
-      "skip": false,
-      "desc": "XFER CASH TO MARGIN"
-    },
-    {
-      "id": "1780558801321-sfwv",
+      "id": "1780559127378-2zht",
       "source": "FT",
       "date": "2026-05-13",
       "type": "預扣稅",
@@ -5052,7 +5261,21 @@
       "desc": "XFER MARGIN TO CASH"
     },
     {
-      "id": "1780558801321-vwpl",
+      "id": "1780559127378-oij5",
+      "source": "FT",
+      "date": "2026-05-13",
+      "type": "其他",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": 0.23,
+      "wire": 0,
+      "skip": false,
+      "desc": "XFER CASH TO MARGIN"
+    },
+    {
+      "id": "1780559127378-w49q",
       "source": "FT",
       "date": "2026-05-15",
       "type": "買入",
@@ -5066,49 +5289,7 @@
       "desc": "MICRON TECHNOLOGY INC          UNSOLICITED                    EXEC TIME: 2026-05-15 15:46:25"
     },
     {
-      "id": "1780558801321-l8vu",
-      "source": "FT",
-      "date": "2026-05-18",
-      "type": "買入",
-      "sym": "MSFT",
-      "shares": 2,
-      "price": 418.5,
-      "fee": 0,
-      "amt": -837,
-      "wire": 0,
-      "skip": false,
-      "desc": "MICROSOFT CORP                 UNSOLICITED                    EXEC TIME: 2026-05-18 11:01:07"
-    },
-    {
-      "id": "1780558801321-nzsw",
-      "source": "FT",
-      "date": "2026-05-18",
-      "type": "現金利息",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": 1.18,
-      "wire": 0,
-      "skip": false,
-      "desc": "INTEREST ON CREDIT BALANCE AT  0.150  04/16 THRU 05/15"
-    },
-    {
-      "id": "1780558801321-8x1e",
-      "source": "FT",
-      "date": "2026-05-18",
-      "type": "買入",
-      "sym": "MU",
-      "shares": 2,
-      "price": 690,
-      "fee": 0,
-      "amt": -1380,
-      "wire": 0,
-      "skip": false,
-      "desc": "MICRON TECHNOLOGY INC          UNSOLICITED"
-    },
-    {
-      "id": "1780558801321-j6s7",
+      "id": "1780559127378-ry7a",
       "source": "FT",
       "date": "2026-05-18",
       "type": "買入",
@@ -5122,21 +5303,49 @@
       "desc": "ECHOSTAR CORPORATION           UNSOLICITED                    EXEC TIME: 2026-05-18 09:44:16"
     },
     {
-      "id": "1780558801321-6cc8",
+      "id": "1780559127378-jfk4",
       "source": "FT",
-      "date": "2026-05-19",
-      "type": "其他",
+      "date": "2026-05-18",
+      "type": "買入",
+      "sym": "MSFT",
+      "shares": 2,
+      "price": 418.5,
+      "fee": 0,
+      "amt": -837,
+      "wire": 0,
+      "skip": false,
+      "desc": "MICROSOFT CORP                 UNSOLICITED                    EXEC TIME: 2026-05-18 11:01:07"
+    },
+    {
+      "id": "1780559127378-145w",
+      "source": "FT",
+      "date": "2026-05-18",
+      "type": "現金利息",
       "sym": "",
       "shares": 0,
       "price": 0,
       "fee": 0,
-      "amt": -1.18,
+      "amt": 1.18,
       "wire": 0,
       "skip": false,
-      "desc": "TFR to Type 2"
+      "desc": "INTEREST ON CREDIT BALANCE AT  0.150  04/16 THRU 05/15"
     },
     {
-      "id": "1780558801321-pio8",
+      "id": "1780559127378-j3jo",
+      "source": "FT",
+      "date": "2026-05-18",
+      "type": "買入",
+      "sym": "MU",
+      "shares": 2,
+      "price": 690,
+      "fee": 0,
+      "amt": -1380,
+      "wire": 0,
+      "skip": false,
+      "desc": "MICRON TECHNOLOGY INC          UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-78gy",
       "source": "FT",
       "date": "2026-05-19",
       "type": "其他",
@@ -5150,21 +5359,21 @@
       "desc": "TFR from Type 1"
     },
     {
-      "id": "1780558801321-ir8m",
+      "id": "1780559127378-ya50",
       "source": "FT",
-      "date": "2026-05-27",
-      "type": "買入",
-      "sym": "PLTR",
-      "shares": 10,
-      "price": 133,
+      "date": "2026-05-19",
+      "type": "其他",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
       "fee": 0,
-      "amt": -1330,
+      "amt": -1.18,
       "wire": 0,
       "skip": false,
-      "desc": "PALANTIR TECHNOLOGIES INC      CLASS A COMMON STOCK           UNSOLICITED"
+      "desc": "TFR to Type 2"
     },
     {
-      "id": "1780558801321-glrr",
+      "id": "1780559127378-t6it",
       "source": "FT",
       "date": "2026-05-27",
       "type": "買入",
@@ -5178,7 +5387,21 @@
       "desc": "***NOKIA CORPORATION           SPONSORED ADR REPSTG 1 SER A   UNSOLICITED"
     },
     {
-      "id": "1780558801321-udgw",
+      "id": "1780559127378-na3g",
+      "source": "FT",
+      "date": "2026-05-27",
+      "type": "買入",
+      "sym": "PLTR",
+      "shares": 10,
+      "price": 133,
+      "fee": 0,
+      "amt": -1330,
+      "wire": 0,
+      "skip": false,
+      "desc": "PALANTIR TECHNOLOGIES INC      CLASS A COMMON STOCK           UNSOLICITED"
+    },
+    {
+      "id": "1780559127378-6d1i",
       "source": "FT",
       "date": "2026-06-01",
       "type": "入金",
@@ -5192,7 +5415,21 @@
       "desc": "Wire Funds Received FedRef 20260601MMQFMP2N018351 SEN(20260601309068)"
     },
     {
-      "id": "1780558801321-5tih",
+      "id": "1780559127378-1o27",
+      "source": "FT",
+      "date": "2026-06-02",
+      "type": "其他",
+      "sym": "",
+      "shares": 0,
+      "price": 0,
+      "fee": 0,
+      "amt": -25,
+      "wire": 0,
+      "skip": false,
+      "desc": "XFER CASH TO MARGIN"
+    },
+    {
+      "id": "1780559127378-2dnc",
       "source": "FT",
       "date": "2026-06-02",
       "type": "其他",
@@ -5206,7 +5443,7 @@
       "desc": "XFER MARGIN TO CASH"
     },
     {
-      "id": "1780558801321-wvs9",
+      "id": "1780559127378-ni76",
       "source": "FT",
       "date": "2026-06-02",
       "type": "匯費補貼",
@@ -5218,20 +5455,6 @@
       "wire": 0,
       "skip": false,
       "desc": "REBATE FOR WIRE 2026-06-01"
-    },
-    {
-      "id": "1780558801321-4tfk",
-      "source": "FT",
-      "date": "2026-06-02",
-      "type": "其他",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": -25,
-      "wire": 0,
-      "skip": false,
-      "desc": "XFER CASH TO MARGIN"
     }
   ],
   "E": [
@@ -5897,8 +6120,8 @@
     }
   ],
   "acc": {
-    "cash": 2886.41,
-    "cashFT": 2592.91,
+    "cash": -11999.44,
+    "cashFT": -12292.94,
     "cashSchwab": 186.8,
     "rate": 31.5,
     "cashCathay": 106.7,

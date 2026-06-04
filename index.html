@@ -1142,7 +1142,9 @@ function rFX(){
       +"</div>";
     var h="<div class='fb'><div style='font-size:13px;font-weight:500;margin-bottom:10px'>"+(isNew?"新增出入金紀錄":"編輯出入金紀錄")+"</div>"+modeToggle+"<div class='fg'>";
     h+="<div><div class='fl'>日期</div><input id='fe-date' type='date' value='"+(e&&e.date?e.date:today())+"'></div>";
+    var acctSel="<select id='fe-acct'>"+"<option value='FT'"+(e&&e.acct==='FT'?' selected':'')+">Firstrade</option>"+"<option value='Schwab'"+(e&&e.acct==='Schwab'?' selected':'')+">嘉信</option>"+"<option value='GT'"+(e&&e.acct==='GT'?' selected':'')+">國泰複委托</option>"+"<option value='Cathay'"+((!e||!e.acct||e.acct==='Cathay')?' selected':'')+">國泰</option>"+"</select>";
     h+="<div><div class='fl'>銀行／來源</div>"+bankSel+"</div>";
+    h+="<div><div class='fl'>匯入帳戶</div>"+acctSel+"</div>";
     if(mode==="twd"){
       h+="<div><div class='fl'>台幣(NTD)</div><input id='fe-twd' type='number' placeholder='310000' value='"+(e&&e.twd?e.twd:"")+"'></div>";
       h+="<div><div class='fl'>美金(USD)</div><input id='fe-usd' type='number' placeholder='10000' value='"+(e?e.usd:"")+"'></div>";
@@ -1172,7 +1174,8 @@ function rFX(){
     }else{
       html+="<tr><td style='color:var(--text2)'>"+(i+1)+"</td>";
       html+="<td style='font-size:12px;color:var(--text2);white-space:nowrap'>"+(e.date||"—")+"</td>";
-      html+="<td><span class='badge br' style='font-size:11px'>"+(e.bank||e.note||"—")+"</span></td>";
+      var acctLabel={"FT":"FT","Schwab":"嘉信","GT":"國泰複","Cathay":"國泰"};
+      html+="<td><span class='badge br' style='font-size:11px'>"+(e.bank||e.note||"—")+"</span><span class='badge bb' style='font-size:10px;margin-left:3px'>"+(acctLabel[e.acct||"Cathay"]||e.acct||"")+"</span></td>";
       html+="<td class='num'>NT$"+fn(e.twd,0)+"</td><td class='num'>$"+fn(e.usd,2)+"</td><td class='num'>"+e.rate.toFixed(3)+"</td>";
       html+="<td style='font-size:12px;color:var(--text2)'>"+(e.bank&&e.note?esc(e.note):"")+"</td>";
       html+="<td><div style='display:flex;gap:4px'><button class='btn-sm' onclick=\"S.showForm=null;S.editFxId='"+e.id+"';render()\">編輯</button><button class='btn-red' onclick=\"delFX('"+e.id+"')\">刪除</button></div></td></tr>";
@@ -1492,8 +1495,9 @@ function addFX(){
   }
   var note=(document.getElementById("fe-note")&&document.getElementById("fe-note").value)||"";
   var bank=(document.getElementById("fe-bank")&&document.getElementById("fe-bank").value)||"";
+  var acct=(document.getElementById("fe-acct")&&document.getElementById("fe-acct").value)||"Cathay";
   var date=(document.getElementById("fe-date")&&document.getElementById("fe-date").value)||today();
-  S.E.push({id:gid(),date:date,bank:bank,twd:twd,usd:usd,rate:rate,note:note,mode:mode});
+  S.E.push({id:gid(),date:date,bank:bank,acct:acct,twd:twd,usd:usd,rate:rate,note:note,mode:mode});
   sv("E");S.showForm=null;S.fxMode="twd";toast("✅ 已新增出入金紀錄");render();
 }
 function saveEditFX(id){
@@ -1512,8 +1516,9 @@ function saveEditFX(id){
   }
   var note=(document.getElementById("fe-note")&&document.getElementById("fe-note").value)||"";
   var bank=(document.getElementById("fe-bank")&&document.getElementById("fe-bank").value)||"";
+  var acct=(document.getElementById("fe-acct")&&document.getElementById("fe-acct").value)||"Cathay";
   var date=(document.getElementById("fe-date")&&document.getElementById("fe-date").value)||today();
-  S.E=S.E.map(function(e){return e.id===id?Object.assign({},e,{date:date,bank:bank,twd:twd,usd:usd,rate:rate,note:note,mode:mode}):e;});
+  S.E=S.E.map(function(e){return e.id===id?Object.assign({},e,{date:date,bank:bank,acct:acct,twd:twd,usd:usd,rate:rate,note:note,mode:mode}):e;});
   sv("E");S.editFxId=null;S.fxMode="twd";toast("✅ 出入金紀錄已更新");render();
 }
 function delFX(id){if(!confirm("確定刪除？"))return;S.E=S.E.filter(function(e){return e.id!==id;});sv("E");render();}

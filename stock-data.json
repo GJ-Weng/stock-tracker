@@ -419,8 +419,8 @@
     {
       "id": "1780559303503-nfmz",
       "sym": "MRVL",
-      "shares": 2,
-      "cost": 305,
+      "shares": 4,
+      "cost": 302.5,
       "price": 305,
       "chg": 0,
       "div": 0,
@@ -5517,6 +5517,18 @@
       "price": 305,
       "fee": 0,
       "amt": -610,
+      "wire": 0,
+      "source": "FT"
+    },
+    {
+      "id": "1780559313588-a39k",
+      "date": "2026-06-04",
+      "type": "買入",
+      "sym": "MRVL",
+      "shares": 2,
+      "price": 300,
+      "fee": 0,
+      "amt": -600,
       "wire": 0,
       "source": "FT"
     }

@@ -5898,11 +5898,12 @@
     {
       "id": "1780378230018-c1q4",
       "date": "2026-06-01",
-      "bank": "其他",
+      "bank": "Line Bank",
       "twd": 78573,
       "usd": 2500,
       "rate": 31.429,
-      "note": ""
+      "note": "",
+      "mode": "twd"
     },
     {
       "id": "1780385993463-ceb3",
@@ -5926,8 +5927,8 @@
     }
   ],
   "acc": {
-    "cash": 0,
-    "cashFT": 0,
+    "cash": 573.18,
+    "cashFT": 573.18,
     "cashSchwab": 0,
     "rate": 31.5,
     "cashCathay": 0

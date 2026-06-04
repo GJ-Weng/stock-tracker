@@ -5850,7 +5850,9 @@
       "twd": 25360,
       "usd": 800,
       "rate": 31.7,
-      "note": "KBSX"
+      "note": "KBSX",
+      "acct": "GT",
+      "mode": "twd"
     },
     {
       "id": "1780375771122-imwa",

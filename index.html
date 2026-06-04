@@ -287,12 +287,9 @@ function calc(){
   var real=0,div=0;
   S.H.forEach(function(h){real+=(h.realized||0);div+=(h.div||0);});
   var totalCash=(S.acc.cashFT||0)+(S.acc.cashSchwab||0)+(S.acc.cashCathay||0);
-  // totalInvested = sum of all 入金 transactions (in USD)
-  var totalInvested=0;
-  S.T.forEach(function(t){if(t.type==="入金")totalInvested+=t.amt||0;});
-  // twdInvested = total TWD spent (from FX records; supports USD+rate mode too)
-  var twdInvested=0;
-  S.E.forEach(function(e){twdInvested+=e.twd||0;});
+  // totalInvested = sum of USD actually deposited via FX (S.E), i.e. real capital invested
+  var totalInvested=0, twdInvested=0;
+  S.E.forEach(function(e){totalInvested+=e.usd||0; twdInvested+=e.twd||0;});
   return{mkt:mkt,cost:cost,unreal:mkt-cost,real:real,div:div,todayChg:todayChg,
     totalUSD:mkt+totalCash,totalTWD:(mkt+totalCash)*S.acc.rate,fxRate:avgFx(),act:act,cash:totalCash,
     totalInvested:totalInvested,twdInvested:twdInvested};
@@ -897,7 +894,7 @@ function rDash(p){
   html+=rCard("今日損益",(p.todayChg>=0?"+":"-")+"$"+fn(Math.abs(p.todayChg),2),"市場波動",cv(p.todayChg));
   var cashROI=p.totalInvested>0?((p.totalUSD-p.totalInvested)/p.totalInvested):0;
   html+=rCard("帳戶現金","$"+fn(p.cash,2),"FT·嘉信·國泰合計");
-  html+=rCard("累計入金(USD)","$"+fn(p.totalInvested,2),(p.twdInvested?"NT$"+fn(p.twdInvested,0)+" 出入金紀錄合計":"出入金紀錄：無資料"));
+  html+=rCard("累計入金(USD)","$"+fn(p.totalInvested,2),(p.twdInvested?"≈ NT$"+fn(p.twdInvested,0)+" 換匯投入":"尚無出入金紀錄"));
   if(cashROI!==0)html+=rCard("整體報酬率",(cashROI>=0?"+":"")+fp(cashROI),"以入金USD計算",cv(cashROI));
   html+="</div>";
   var retPct=Math.min(p.totalUSD/1000000*100,100),retLeft=Math.max(1000000-p.totalUSD,0);

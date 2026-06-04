@@ -5630,8 +5630,10 @@
       "usd": 315.52,
       "rate": 31.694,
       "date": "2026-01-12",
-      "bank": "其他",
-      "note": ""
+      "bank": "Line Bank",
+      "note": "",
+      "acct": "FT",
+      "mode": "twd"
     },
     {
       "id": "e28",

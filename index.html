@@ -314,14 +314,16 @@ function loadFromGitHub(force){
     var json=decodeURIComponent(escape(atob(b64)));
     var data=JSON.parse(json);
     if(data.H)S.H=data.H;if(data.T)S.T=data.T;if(data.E)S.E=data.E;if(data.acc)S.acc=data.acc;
+    if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
     ["H","T","E","acc"].forEach(function(k){localStorage.setItem("ft_"+k,JSON.stringify(S[k]));});
+    recalcCash();
     return true;
   }).catch(function(e){console.error("GH load",e);return false;});
 }
 function syncToGitHub(){
   if(!S.ghToken||!S.ghUser||!S.ghRepo)return;
   S.syncing=true;setSyncStatus("syncing");
-  var data=JSON.stringify({H:S.H,T:S.T,E:S.E,acc:S.acc},null,2);
+  var data=JSON.stringify({v:1,H:S.H,T:S.T,E:S.E,acc:S.acc},null,2);
   var content=btoa(unescape(encodeURIComponent(data)));
   var body={message:"sync "+new Date().toISOString().slice(0,16),content:content};
   if(S.ghSHA)body.sha=S.ghSHA;
@@ -417,7 +419,9 @@ function applyTx(tx){
     S.H=S.H.map(function(h,j){return j===i?Object.assign({},h,{shares:Math.max(0,h.shares-shares),realized:parseFloat(((h.realized||0)+gain).toFixed(2))}):h;});
 
   }else if(type==="配息"&&sym&&amt>0){
-    i=S.H.findIndex(function(h){return h.sym===sym;});
+    var divAcct=tx.source||"FT";
+    i=S.H.findIndex(function(h){return h.sym===sym&&(h.acct===divAcct||!h.acct);});
+    if(i<0)i=S.H.findIndex(function(h){return h.sym===sym;});
     if(i>=0){
       S.H=S.H.map(function(h,j){return j===i?Object.assign({},h,{div:parseFloat(((h.div||0)+amt).toFixed(2))}):h;});
     }
@@ -603,14 +607,17 @@ function rSchwabPanel(){
   return html;
 }
 function schwabSetCash(){
+  // Manual Schwab cash override → stored as cashAdj.Schwab so recalcCash() still owns the logic
   var v=parseFloat(document.getElementById("schwab-cash").value)||0;
-  S.acc.cashSchwab=v;
-  S.acc.cash=(S.acc.cashFT||0)+v;
-  sv("acc");  // syncs cashSchwab to GitHub
-  var el=document.getElementById("ic-sw");if(el)el.value=v;
+  if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
+  // adj = desired cash - what transactions already compute
+  var txSchwab=0;
+  S.T.filter(function(t){return t.source==="Schwab"&&t.type!=="入金";}).forEach(function(t){txSchwab+=t.amt||0;});
+  S.acc.cashAdj.Schwab=parseFloat((v-txSchwab).toFixed(2));
+  recalcCash();sv("acc");
   schwabImp={rows:[],step:0};
   clearTimeout(S._syncTimer);syncToGitHub();
-  toast("✅ 嘉信匯入完成，現金 $"+fn(v,2));
+  toast("✅ 嘉信匯入完成，現金 $"+fn(S.acc.cashSchwab,2));
   S.tab="dash";render();
 }
 function schwabConfirmImport(){
@@ -640,7 +647,8 @@ function schwabConfirmImport(){
       hMap[sym].cost=ns>0?(hMap[sym].shares*hMap[sym].cost+qty*r.price)/ns:0;
       hMap[sym].shares=ns;
     }else if(type==="賣出"&&qty>0){
-      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:r.date};
+      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:r.date,realized:0};
+      hMap[sym].realized=(hMap[sym].realized||0)+((r.price-(hMap[sym].cost||0))*qty-Math.abs(r.fee||0));
       hMap[sym].shares=Math.max(0,hMap[sym].shares-qty);
     }else if(type==="配息"&&r.amount>0){
       if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:r.date};
@@ -651,7 +659,7 @@ function schwabConfirmImport(){
   var schwabH=Object.keys(hMap).map(function(sym){
     var h=hMap[sym];
     return{id:gid(),sym:sym,shares:h.shares,cost:parseFloat((h.cost||0).toFixed(6)),
-      price:0,chg:0,div:parseFloat((h.div||0).toFixed(2)),realized:0,note:"",fd:h.fd,acct:"Schwab"};
+      price:0,chg:0,div:parseFloat((h.div||0).toFixed(2)),realized:parseFloat((h.realized||0).toFixed(2)),note:"",fd:h.fd,acct:"Schwab"};
   });
   S.H=S.H.concat(schwabH);
 
@@ -701,11 +709,13 @@ function cleanName(desc){
   var callMatch=desc.match(/(?:CALL|PUT)\s+([A-Z]{1,5})\s/i);
   if(callMatch)return"OPTION:"+callMatch[1].toUpperCase();
   return desc
-    .replace(/^\*+/,"")
-    .replace(/\s+EXEC\s+TIME[:\s]+[\d\-:\s]+/gi,"")
-    .replace(/\s+UNSOLICITED\b/gi,"")
-    .replace(/\s+(COMMON STOCK|INC\b|CORP\b|LTD\b|ETF\b|ADR\b|TECHNOLOGIES?\b|CLASS\s+[A-C]\b)/gi,"")
-    .replace(/\s+(SPONSORED\s+ADR|SPONSORED\s+REPSTG[^]*?(?=\s+[A-Z]{2,}|$)|ORDINARY\s+SHARES?|REPSTG.*?SER\s+[A-Z])/gi,"")
+    .replace(/^\*+/,"")                                        
+    .replace(/\s+EXEC\s+TIME[:\s]+[\d\-:\s]+/gi,"")       
+    .replace(/\s+UNSOLICITED\b/gi,"")                         
+    .replace(/\s+(SPONSORED\s+ADR\b|SPONSORED\s+REPSTG[\s\S]*?(?=\s*$)|ORDINARY\s+SHARES?)/gi,"")
+    .replace(/\s+REPSTG[\s\S]*$/gi,"")                       
+    .replace(/\s+SER\s+[A-Z]\b/gi,"")                        
+    .replace(/\s+(COMMON\s+STOCK|INC\b|CORP\b|LTD\b|ETF\b|ADR\b|TECHNOLOGIES?\b|TECHNOLOGY\b|CLASS\s+[A-C]\b)/gi,"")
     .replace(/\s+/g," ").trim();
 }
 var KNOWN_SYM={
@@ -769,7 +779,7 @@ function fsvBuildRows(){
     }
     // Never skip - include all transactions so XFER/TFR pairs cancel correctly in cash calc
     return{date:r.date,type:type,sym:sym,shares:shares,price:price,
-      fee:Math.abs(r.commission)+Math.abs(r.fee),amt:r.amount,wire:0,skip:false,desc:r.desc};
+      fee:Math.abs(r.commission)+Math.abs(r.fee),amt:r.amount,wire:0,desc:r.desc};
   });
 }
 function fsvConfirmImport(){
@@ -830,15 +840,15 @@ function doExport(){
       "台幣市值":+(h.shares*h.price*S.acc.rate).toFixed(0),"已實現損益":h.realized,"累積股息":h.div,
       "台幣成本":+(h.shares*h.cost*fx).toFixed(0),"備註":h.note,"首次買入":h.fd||""};})),"庫存總覽");
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(S.T.map(function(t){
-    return{"交易日期":t.date,"交易類別":t.type,"股票代號":t.sym,"成交股數":t.shares,"成交價(USD)":t.price,"手續費":t.fee,"實際金額":t.amt,"匯款手續費(NTD)":t.wire};})),"交易紀錄");
+    return{"交易日期":t.date,"帳戶":t.source||"FT","交易類別":t.type,"股票代號":t.sym,"成交股數":t.shares,"成交價(USD)":t.price,"手續費":t.fee,"實際金額":t.amt,"匯款手續費(NTD)":t.wire};})),"交易紀錄");
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(S.E.map(function(e){return{"日期":e.date||"","銀行":e.bank||e.note||"","台幣":e.twd,"美金":e.usd,"匯率":e.rate,"備註":e.note||""};})),"出入金紀錄");
-  XLSX.writeFile(wb,"Firstrade_"+today()+".xlsx");
+  XLSX.writeFile(wb,"stock-tracker_"+today()+".xlsx");
   toast("✅ 已匯出 Excel");
 }
 function exportJSON(){
   var a=document.createElement("a");
-  a.href="data:application/json,"+encodeURIComponent(JSON.stringify({H:S.H,T:S.T,E:S.E,acc:S.acc},null,2));
-  a.download="Firstrade_backup_"+today()+".json";a.click();
+  a.href="data:application/json,"+encodeURIComponent(JSON.stringify({v:1,H:S.H,T:S.T,E:S.E,acc:S.acc},null,2));
+  a.download="stock-tracker_backup_"+today()+".json";a.click();
   toast("✅ 已匯出備份");
 }
 function importJSON(input){
@@ -847,7 +857,9 @@ function importJSON(input){
     try{
       var d=JSON.parse(e.target.result);
       if(d.H)S.H=d.H;if(d.T)S.T=d.T;if(d.E)S.E=d.E;if(d.acc)S.acc=d.acc;
+      if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
       ["H","T","E","acc"].forEach(sv);
+      recalcCash();sv("acc");
       toast("✅ 資料還原成功");render();
     }catch(ex){toast("❌ JSON 格式錯誤");}
   };
@@ -858,7 +870,7 @@ function resetData(){
   S.H=JSON.parse(JSON.stringify(INIT_H));
   S.T=JSON.parse(JSON.stringify(INIT_T));
   S.E=JSON.parse(JSON.stringify(INIT_E));
-  S.acc={cash:0,cashFT:0,cashSchwab:0,cashCathay:0,rate:31.5};
+  S.acc={cash:0,cashFT:0,cashSchwab:0,cashCathay:0,cashAdj:{FT:0,Schwab:0,GT:0},rate:31.5};
   ["H","T","E","acc"].forEach(sv);
   S.tab="dash";S.showForm=null;S.editTxId=null;S.editPriceId=null;
   document.getElementById("ir").value=S.acc.rate;
@@ -867,7 +879,7 @@ function resetData(){
 }
 function clearAll(){
   if(!confirm("確定清空所有持倉和交易紀錄？出入金紀錄會保留。此操作無法復原。"))return;
-  S.H=[];S.T=[];S.acc={cash:0,cashFT:0,cashSchwab:0,cashCathay:0,rate:S.acc.rate};
+  S.H=[];S.T=[];S.acc={cash:0,cashFT:0,cashSchwab:0,cashCathay:0,cashAdj:{FT:0,Schwab:0,GT:0},rate:S.acc.rate};
   ["H","T","acc"].forEach(sv);
   S.tab="settings";S.showForm=null;S.editTxId=null;S.editPriceId=null;
   document.getElementById("ir").value=S.acc.rate;
@@ -1554,7 +1566,7 @@ function addFX(){
   var acct=(document.getElementById("fe-acct")&&document.getElementById("fe-acct").value)||"GT";
   var date=(document.getElementById("fe-date")&&document.getElementById("fe-date").value)||today();
   S.E.push({id:gid(),date:date,bank:bank,acct:acct,twd:twd,usd:usd,rate:rate,note:note,mode:mode});
-  sv("E");S.showForm=null;S.fxMode="twd";toast("✅ 已新增出入金紀錄");render();
+  sv("E");S.showForm=null;S.fxMode="twd";recalcCash();sv("acc");toast("✅ 已新增出入金紀錄");render();
 }
 function saveEditFX(id){
   var usd=parseFloat(document.getElementById("fe-usd").value)||0;
@@ -1575,9 +1587,9 @@ function saveEditFX(id){
   var acct=(document.getElementById("fe-acct")&&document.getElementById("fe-acct").value)||"GT";
   var date=(document.getElementById("fe-date")&&document.getElementById("fe-date").value)||today();
   S.E=S.E.map(function(e){return e.id===id?Object.assign({},e,{date:date,bank:bank,acct:acct,twd:twd,usd:usd,rate:rate,note:note,mode:mode}):e;});
-  sv("E");S.editFxId=null;S.fxMode="twd";toast("✅ 出入金紀錄已更新");render();
+  sv("E");S.editFxId=null;S.fxMode="twd";recalcCash();sv("acc");toast("✅ 出入金紀錄已更新");render();
 }
-function delFX(id){if(!confirm("確定刪除？"))return;S.E=S.E.filter(function(e){return e.id!==id;});sv("E");render();}
+function delFX(id){if(!confirm("確定刪除？"))return;S.E=S.E.filter(function(e){return e.id!==id;});sv("E");recalcCash();sv("acc");render();}
 
 // ─── INIT ───
 S.H=ld("H")||JSON.parse(JSON.stringify(INIT_H));

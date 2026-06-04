@@ -5915,7 +5915,8 @@
       "usd": 5000,
       "rate": 29.3,
       "note": "",
-      "mode": "usd"
+      "mode": "twd",
+      "acct": "Schwab"
     }
   ],
   "acc": {

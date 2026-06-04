@@ -1087,17 +1087,22 @@ function rTx(){
   html+="<button class='btn btn-blue' onclick=\"toggleForm('t')\">＋ 新增</button></div>";
   if(S.showForm==="t"||isEd){
     var ev=function(k,d){return isEd&&edTx?(edTx[k]!==undefined?edTx[k]:d):d;};
+    var curType=isEd&&edTx?edTx.type:"買入";
+    // amt sign rules: 買入=負(支出), 入金/賣出/配息/現金利息/匯費補貼=正
+    var amtSign=["買入"].indexOf(curType)>=0?"-":"+";
+    var amtAbs=isEd&&edTx?Math.abs(edTx.amt||0):"";
     html+="<div class='fb'><div style='font-size:13px;font-weight:500;margin-bottom:10px'>"+(isEd?"編輯交易（"+edTx.date+"）":"新增交易")+"</div><div class='fg'>";
     html+="<div><div class='fl'>日期</div><input id='ft-date' type='date' value='"+ev("date",today())+"'></div>";
-    html+="<div><div class='fl'>類別</div><select id='ft-type'>"+types.map(function(t){return"<option"+(isEd&&edTx.type===t?" selected":"")+">"+t+"</option>";}).join("")+"</select></div>";
+    html+="<div><div class='fl'>類別</div><select id='ft-type' onchange='onTxTypeChange(this.value)'>"+types.map(function(t){return"<option"+(isEd&&edTx.type===t?" selected":"")+">"+t+"</option>";}).join("")+"</select></div>";
     html+="<div><div class='fl'>股票代號</div><input id='ft-sym' placeholder='選填' value='"+esc(ev("sym",""))+"'></div>";
-    html+="<div><div class='fl'>股數</div><input id='ft-shares' type='number' value='"+ev("shares","")+"' placeholder='0'></div>";
-    html+="<div><div class='fl'>成交價(USD)</div><input id='ft-price' type='number' value='"+ev("price","")+"' placeholder='0'></div>";
-    html+="<div><div class='fl'>手續費</div><input id='ft-fee' type='number' value='"+ev("fee","")+"' placeholder='0'></div>";
-    html+="<div><div class='fl'>實際金額(+入/-出)</div><input id='ft-amt' type='number' value='"+ev("amt","")+"' placeholder='0'></div>";
+    html+="<div><div class='fl'>股數</div><input id='ft-shares' type='number' value='"+ev("shares","")+"' placeholder='0' oninput='autoCalcAmt()'></div>";
+    html+="<div><div class='fl'>成交價(USD)</div><input id='ft-price' type='number' value='"+ev("price","")+"' placeholder='0' oninput='autoCalcAmt()'></div>";
+    html+="<div><div class='fl'>手續費</div><input id='ft-fee' type='number' value='"+ev("fee","")+"' placeholder='0' oninput='autoCalcAmt()'></div>";
+    html+="<div><div class='fl'>金額(USD) <span id='ft-amt-sign' style='color:var(--text2);font-size:11px'>"+amtSign+"（自動計算）</span></div><input id='ft-amt-abs' type='number' value='"+amtAbs+"' placeholder='留空自動算' min='0' oninput='autoCalcAmt()'><input type='hidden' id='ft-amt' value='"+(isEd&&edTx?ev("amt",""):"")+"'></div>";
     html+="<div><div class='fl'>匯款手續費(NTD)</div><input id='ft-wire' type='number' value='"+ev("wire","")+"' placeholder='0'></div>";
     html+="<div style='display:flex;align-items:flex-end;gap:8px;grid-column:span 2'><button class='btn btn-blue' onclick='"+(isEd?"saveEditTx":"addTx")+"()' style='flex:1'>"+(isEd?"儲存修改":"確認新增")+"</button><button class='btn-sm' onclick='cancelTxEdit()' style='padding:8px 12px'>取消</button></div>";
-    html+="</div>"+(S.showForm==="t"?"<div class='fh'>💡 買入/賣出/配息 自動更新持倉</div>":"")+"</div>";
+    html+="</div>"+(S.showForm==="t"?"<div class='fh'>💡 買入自動帶出負數、賣出/入金自動帶入正數</div>":"")+"</div>";
+    html+="<script>setTimeout(function(){onTxTypeChange(document.getElementById('ft-type')&&document.getElementById('ft-type').value||'買入');},30);<\/script>";
   }
   html+="<div class='panel'><div class='ph'><span>顯示 "+filtered.length+" / "+S.T.length+" 筆</span></div>";
   html+="<div class='sx sy'><table><thead><tr><th>日期</th><th>類別</th><th>代號</th><th class='num'>股數</th><th class='num'>成交價</th><th class='num'>手續費</th><th class='num'>實際金額</th><th class='num'>匯費(NTD)</th><th></th></tr></thead><tbody>";
@@ -1394,12 +1399,58 @@ function addHolding(){
   sv("H");S.showForm=null;render();
 }
 function delHolding(id){if(!confirm("確定刪除？"))return;S.H=S.H.filter(function(h){return h.id!==id;});sv("H");render();}
+// ── Transaction form helpers ──
+var TX_OUT=["買入"]; // types where money goes OUT (negative amt)
+var TX_IN=["賣出","入金","配息","現金利息","匯費補貼","出金"]; // positive amt
+
+function onTxTypeChange(type){
+  var sign=document.getElementById("ft-amt-sign");
+  var sharesRow=document.getElementById("ft-shares")&&document.getElementById("ft-shares").closest("div");
+  var priceRow=document.getElementById("ft-price")&&document.getElementById("ft-price").closest("div");
+  var symRow=document.getElementById("ft-sym")&&document.getElementById("ft-sym").closest("div");
+  if(sign)sign.textContent=(TX_OUT.indexOf(type)>=0?"−（支出，自動計算）":"＋（收入，自動計算）");
+  // show/hide sym, shares, price based on type
+  var isTrade=["買入","賣出"].indexOf(type)>=0;
+  var isDiv=type==="配息";
+  if(symRow)symRow.style.display=(isTrade||isDiv)?"":"none";
+  if(sharesRow)sharesRow.style.display=isTrade?"":"none";
+  if(priceRow)priceRow.style.display=isTrade?"":"none";
+  autoCalcAmt();
+}
+
+function autoCalcAmt(){
+  var type=document.getElementById("ft-type")&&document.getElementById("ft-type").value||"";
+  var shares=parseFloat(document.getElementById("ft-shares")&&document.getElementById("ft-shares").value)||0;
+  var price=parseFloat(document.getElementById("ft-price")&&document.getElementById("ft-price").value)||0;
+  var fee=parseFloat(document.getElementById("ft-fee")&&document.getElementById("ft-fee").value)||0;
+  var absInput=document.getElementById("ft-amt-abs");
+  var hiddenAmt=document.getElementById("ft-amt");
+  if(!hiddenAmt)return;
+  var isNeg=TX_OUT.indexOf(type)>=0;
+  var absVal;
+  if(absInput&&absInput.value!==""){
+    absVal=parseFloat(absInput.value)||0;
+  }else if(shares>0&&price>0){
+    absVal=parseFloat((shares*price+(isNeg?fee:-fee)).toFixed(2));
+    if(absInput)absInput.value=absVal;
+  }else{
+    absVal=0;
+  }
+  hiddenAmt.value=isNeg?-absVal:absVal;
+  // show preview
+  var sign=document.getElementById("ft-amt-sign");
+  if(sign&&absVal>0)sign.textContent=(isNeg?"− $"+absVal.toFixed(2)+" (支出)":"＋ $"+absVal.toFixed(2)+" (收入)");
+}
+
 function addTx(){
   var type=document.getElementById("ft-type").value;
   var sym=(document.getElementById("ft-sym").value||"").toUpperCase();
   var shares=parseFloat(document.getElementById("ft-shares").value)||0;
   var price=parseFloat(document.getElementById("ft-price").value)||0;
-  var t={id:gid(),date:document.getElementById("ft-date").value,type:type,sym:sym,shares:shares,price:price,fee:parseFloat(document.getElementById("ft-fee").value)||0,amt:parseFloat(document.getElementById("ft-amt").value)||0,wire:parseFloat(document.getElementById("ft-wire").value)||0};
+  autoCalcAmt(); // ensure hidden field is updated
+  var rawAmt=parseFloat(document.getElementById("ft-amt").value);
+  var amt=isNaN(rawAmt)?0:rawAmt;
+  var t={id:gid(),date:document.getElementById("ft-date").value,type:type,sym:sym,shares:shares,price:price,fee:parseFloat(document.getElementById("ft-fee").value)||0,amt:amt,wire:parseFloat(document.getElementById("ft-wire").value)||0};
   if(applyTx(t)===false)return;
   S.T.push(t);sv("T");
   var h=S.H.find(function(h){return h.sym===sym;});
@@ -1413,7 +1464,9 @@ function startEditTx(id){S.editTxId=id;S.showForm=null;render();}
 function saveEditTx(){
   S.T=S.T.map(function(t){
     if(t.id!==S.editTxId)return t;
-    return Object.assign({},t,{date:document.getElementById("ft-date").value,type:document.getElementById("ft-type").value,sym:(document.getElementById("ft-sym").value||"").toUpperCase(),shares:parseFloat(document.getElementById("ft-shares").value)||0,price:parseFloat(document.getElementById("ft-price").value)||0,fee:parseFloat(document.getElementById("ft-fee").value)||0,amt:parseFloat(document.getElementById("ft-amt").value)||0,wire:parseFloat(document.getElementById("ft-wire").value)||0});
+    autoCalcAmt();
+    var _rawAmt=parseFloat(document.getElementById("ft-amt").value);var _amt=isNaN(_rawAmt)?0:_rawAmt;
+    return Object.assign({},t,{date:document.getElementById("ft-date").value,type:document.getElementById("ft-type").value,sym:(document.getElementById("ft-sym").value||"").toUpperCase(),shares:parseFloat(document.getElementById("ft-shares").value)||0,price:parseFloat(document.getElementById("ft-price").value)||0,fee:parseFloat(document.getElementById("ft-fee").value)||0,amt:_amt,wire:parseFloat(document.getElementById("ft-wire").value)||0});
   });
   sv("T");S.editTxId=null;toast("✅ 交易已修改");render();
 }

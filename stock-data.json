@@ -6154,6 +6154,17 @@
       "note": "",
       "mode": "twd",
       "acct": "Schwab"
+    },
+    {
+      "id": "1780559644879-9wfe",
+      "date": "2026-06-04",
+      "bank": "Line Bank",
+      "acct": "FT",
+      "twd": 78715,
+      "usd": 2500,
+      "rate": 31.486,
+      "note": "",
+      "mode": "usd"
     }
   ],
   "acc": {

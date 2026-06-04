@@ -5385,7 +5385,9 @@
       "rate": 32.71,
       "date": "2026-02-17",
       "bank": "國泰世華",
-      "note": ""
+      "note": "KBSX",
+      "acct": "GT",
+      "mode": "twd"
     },
     {
       "id": "e4",

@@ -5916,10 +5916,10 @@
     }
   ],
   "acc": {
-    "cash": 0,
-    "cashFT": 0,
-    "cashSchwab": 0,
+    "cash": -1461.0699999999997,
+    "cashFT": 12829.57,
+    "cashSchwab": -2034.25,
     "rate": 31.5,
-    "cashCathay": 0
+    "cashCathay": -12256.39
   }
 }

@@ -395,8 +395,8 @@
       "sym": "KBSX",
       "shares": 9979,
       "cost": 1.227235,
-      "price": 1.14,
-      "chg": 0,
+      "price": 1.28,
+      "chg": -0.02,
       "div": 0,
       "realized": 0,
       "note": "",
@@ -5891,8 +5891,8 @@
     }
   ],
   "acc": {
-    "cash": 12286.82,
-    "cashFT": 12100.02,
+    "cash": 1969.98,
+    "cashFT": 1783.18,
     "cashSchwab": 186.8,
     "rate": 31.5,
     "cashCathay": 0

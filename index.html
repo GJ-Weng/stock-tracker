@@ -7,78 +7,144 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#fff;--bg2:#f8f9fa;--bg3:#f1f3f5;--bg4:#e9ecef;--text:#1a1a2e;--text2:#6c757d;--border:#dee2e6;--border2:#ced4da;--green:#198754;--green-bg:#d1e7dd;--red:#dc3545;--red-bg:#f8d7da;--blue:#0d6efd;--blue-bg:#cfe2ff;--yellow:#856404;--yellow-bg:#fff3cd;--radius:8px;--radius-lg:12px}
-@media(prefers-color-scheme:dark){:root{--bg:#111827;--bg2:#1f2937;--bg3:#374151;--bg4:#4b5563;--text:#f3f4f6;--text2:#9ca3af;--border:#374151;--border2:#4b5563;--green:#34d399;--green-bg:#064e3b;--red:#f87171;--red-bg:#7f1d1d;--blue:#60a5fa;--blue-bg:#1e3a5f;--yellow:#fbbf24;--yellow-bg:#451a03}}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
-input,select{font-family:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none;width:100%}
-input:focus,select:focus{border-color:var(--blue)}
-button{font-family:inherit;cursor:pointer;transition:all .15s}
-.btn{background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 14px;border-radius:var(--radius);font-size:13px}
+:root{
+  --bg:#fff;--bg2:#f7f7f7;--bg3:#f0f0f0;--bg4:#e8e8e8;
+  --text:#1a1a1a;--text2:#666;--text3:#aaa;
+  --border:#ebebeb;--border2:#d8d8d8;
+  --green:#0B7A52;--green-bg:#E1F5EE;--green-text:#085041;
+  --red:#C0392B;--red-bg:#FCEAEA;--red-text:#7f1d1d;
+  --blue:#185FA5;--blue-bg:#E6F1FB;--blue-text:#0C447C;
+  --yellow:#854F0B;--yellow-bg:#FAEEDA;--yellow-text:#633806;
+  --purple-bg:#EEEDFE;--purple-text:#26215C;
+  --radius:6px;--radius-lg:10px;--radius-xl:14px;
+  --shadow:0 1px 3px rgba(0,0,0,.06)
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#111827;--bg2:#1a2535;--bg3:#243044;--bg4:#2d3a4e;
+  --text:#f0f0f0;--text2:#9aa5b4;--text3:#5a6880;
+  --border:#1e2d42;--border2:#2a3a52;
+  --green:#34d399;--green-bg:#064e3b;--green-text:#6ee7b7;
+  --red:#f87171;--red-bg:#450a0a;--red-text:#fca5a5;
+  --blue:#60a5fa;--blue-bg:#1e3a5f;--blue-text:#93c5fd;
+  --yellow:#fbbf24;--yellow-bg:#451a03;--yellow-text:#fde68a;
+  --purple-bg:#2e1065;--purple-text:#c4b5fd;
+}}
+body{font-family:'Noto Sans JP',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg2);color:var(--text);font-size:14px;line-height:1.5}
+input,select{font-family:inherit;font-size:12px;padding:6px 9px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none;width:100%}
+input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(24,95,165,.12)}
+button{font-family:inherit;cursor:pointer;transition:all .12s;background:var(--bg);border:0.5px solid var(--border2);color:var(--text2);padding:5px 12px;border-radius:var(--radius);font-size:12px;white-space:nowrap}
+button:hover{background:var(--bg2);color:var(--text)}
+.btn{background:var(--bg);border:0.5px solid var(--border2);color:var(--text);padding:6px 13px;border-radius:var(--radius);font-size:12px}
 .btn:hover{background:var(--bg2)}
 .btn-blue{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:500}
-.btn-blue:hover{filter:brightness(1.1)}
-.btn-red{background:none;border:1px solid var(--red);color:var(--red);padding:4px 10px;border-radius:var(--radius);font-size:12px}
+.btn-blue:hover{filter:brightness(1.08)}
+.btn-red{background:none;border:0.5px solid var(--red);color:var(--red);padding:4px 9px;border-radius:var(--radius);font-size:11px}
 .btn-red:hover{background:var(--red-bg)}
-.btn-sm{background:none;border:1px solid var(--border);color:var(--text2);padding:3px 8px;border-radius:var(--radius);font-size:11px}
+.btn-sm{background:none;border:0.5px solid var(--border);color:var(--text2);padding:3px 8px;border-radius:var(--radius);font-size:11px}
 .btn-sm:hover{border-color:var(--border2);color:var(--text)}
-#hd{display:flex;justify-content:space-between;align-items:center;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:8px}
-#hd h1{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+#hd{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;border-bottom:0.5px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:100;gap:10px}
+#hd h1{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;letter-spacing:.05em}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
-.hr{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.ai{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)}
-.ai input{width:78px;padding:4px 7px;font-size:12px}
-nav{display:flex;border-bottom:1px solid var(--border);padding:0 16px;overflow-x:auto;background:var(--bg);position:sticky;top:49px;z-index:99}
-.tab{padding:9px 14px;background:none;border:none;border-bottom:2.5px solid transparent;font-size:13px;color:var(--text2);cursor:pointer;white-space:nowrap}
+.hr{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ai{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.ai input{width:80px;padding:4px 7px;font-size:11px}
+nav{display:flex;border-bottom:0.5px solid var(--border);padding:0 20px;overflow-x:auto;background:var(--bg);position:sticky;top:45px;z-index:99}
+.tab{padding:9px 14px;background:none;border:none;border-bottom:2px solid transparent;font-size:11px;color:var(--text2);cursor:pointer;white-space:nowrap;letter-spacing:.06em}
 .tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:500}
-main{padding:18px 20px;max-width:1440px;margin:0 auto}
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:18px}
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:13px 15px}
-.cl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;font-weight:500}
-.cv{font-size:19px;font-weight:600;font-family:ui-monospace,monospace;line-height:1.2}
-.cs{font-size:11px;color:var(--text2);margin-top:3px}
+main{padding:0;max-width:1560px;margin:0 auto}
+/* KPI strip */
+.kpi-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:0.5px solid var(--border);background:var(--bg)}
+.kpi-cell{padding:12px 16px;border-right:0.5px solid var(--border)}
+.kpi-cell:last-child{border-right:none}
+/* 2-col dash layout */
+.dash-layout{display:grid;grid-template-columns:260px 1fr;min-height:400px}
+@media(max-width:900px){.dash-layout{grid-template-columns:1fr}}
+.dash-left{padding:16px;border-right:0.5px solid var(--border);background:var(--bg);display:flex;flex-direction:column;gap:16px}
+.dash-right{padding:16px;background:var(--bg2);display:flex;flex-direction:column;gap:12px}
+/* full page areas */
+.page-body{padding:16px;background:var(--bg2);display:flex;flex-direction:column;gap:12px}
+/* stat list */
+.stat-group-label{font-size:10px;letter-spacing:.14em;color:var(--text3);text-transform:uppercase;margin-bottom:8px}
+.stat-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:0.5px solid var(--border)}
+.stat-row:last-child{border-bottom:none}
+.stat-label{font-size:11px;color:var(--text2)}
+.stat-val{font-size:12px;font-weight:500;font-family:ui-monospace,monospace}
+/* account mini cards */
+.acc-list{display:flex;flex-direction:column;gap:5px}
+.acc-item{background:var(--bg2);border-radius:var(--radius);padding:8px 11px;display:flex;justify-content:space-between;align-items:center}
+.acc-item.total{border-top:0.5px solid var(--border);margin-top:2px;padding-top:8px}
+.acc-name{font-size:11px;color:var(--text2)}
+.acc-val{font-size:12px;font-weight:500;font-family:ui-monospace,monospace;color:var(--text)}
+/* progress */
+.prog-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.prog-title{font-size:11px;color:var(--text2)}
+.prog-pct{font-size:13px;font-weight:500;font-family:ui-monospace,monospace;color:var(--blue)}
+.prog-bar{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-bottom:5px}
+.prog-fill{height:100%;border-radius:2px;background:var(--blue)}
+.prog-note{font-size:10px;color:var(--text3);letter-spacing:.03em}
+/* cards (legacy compat + new) */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:12px 14px;box-shadow:var(--shadow)}
+.cl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px}
+.cv{font-size:19px;font-weight:500;font-family:ui-monospace,monospace;line-height:1.1}
+.cs{font-size:10px;color:var(--text3);margin-top:4px}
 .cv.pos{color:var(--green)}.cv.neg{color:var(--red)}
-.panel{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px}
-.ph{padding:10px 14px;background:var(--bg2);font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+/* sections */
+.panel{border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px;background:var(--bg);box-shadow:var(--shadow)}
+.ph{padding:9px 14px;background:var(--bg);font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.12em;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:0.5px solid var(--border)}
 .sx{overflow-x:auto}.sy{max-height:460px;overflow-y:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;padding:9px 11px;font-size:11px;font-weight:500;color:var(--text2);border-bottom:1px solid var(--border);background:var(--bg2);white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0;z-index:1}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:8px 12px;font-size:10px;font-weight:400;color:var(--text3);border-bottom:0.5px solid var(--border);background:var(--bg2);white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0;z-index:1;letter-spacing:.1em}
 th:hover{color:var(--text);background:var(--bg3)}
 th.sa::after{content:' ↑';color:var(--blue)}th.sd::after{content:' ↓';color:var(--blue)}
-td{padding:8px 11px;border-bottom:1px solid var(--border);vertical-align:middle}
+td{padding:9px 12px;border-bottom:0.5px solid var(--border);vertical-align:middle}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:var(--bg3)}
+tr:hover td{background:var(--bg2)}
 .num{font-family:ui-monospace,monospace;text-align:right;white-space:nowrap}
 .pos{color:var(--green)}.neg{color:var(--red)}.neu{color:var(--text2)}
-.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:500;white-space:nowrap}
-.bb{background:var(--blue-bg);color:var(--blue)}.bs{background:var(--red-bg);color:var(--red)}.bd{background:var(--green-bg);color:var(--green)}.bi{background:var(--yellow-bg);color:var(--yellow)}.br{background:var(--bg3);color:var(--text2)}
-.fb{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:14px}
+/* badges */
+.badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:500;white-space:nowrap;letter-spacing:.04em}
+.bb{background:var(--blue-bg);color:var(--blue-text)}
+.bs{background:var(--red-bg);color:var(--red-text)}
+.bd{background:var(--green-bg);color:var(--green-text)}
+.bi{background:var(--yellow-bg);color:var(--yellow-text)}
+.br{background:var(--bg3);color:var(--text2)}
+.bgt{background:var(--green-bg);color:var(--green-text)}
+.bft{background:var(--blue-bg);color:var(--blue-text)}
+.bsw{background:var(--yellow-bg);color:var(--yellow-text)}
+/* forms */
+.fb{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:14px;box-shadow:var(--shadow)}
 .fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
-.fl{font-size:11px;color:var(--text2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;font-weight:500}
-.fh{font-size:11px;color:var(--text2);margin-top:8px;padding:8px 10px;background:var(--bg3);border-radius:var(--radius)}
+.fl{font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.1em}
+.fh{font-size:11px;color:var(--text2);margin-top:8px;padding:7px 10px;background:var(--bg2);border-radius:var(--radius)}
 .filter-bar{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
-.chip{padding:4px 11px;border-radius:999px;font-size:12px;border:1px solid var(--border2);background:none;color:var(--text2);cursor:pointer}
+.chip{padding:3px 10px;border-radius:999px;font-size:11px;border:0.5px solid var(--border2);background:none;color:var(--text2);cursor:pointer;letter-spacing:.04em}
 .chip.active{background:var(--blue-bg);color:var(--blue);border-color:var(--blue)}
-.ubtn{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:var(--radius);font-size:12px;background:var(--bg);border:1px solid var(--border2);color:var(--text);cursor:pointer;font-family:inherit;white-space:nowrap}
+/* buttons */
+.ubtn{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:var(--radius);font-size:11px;background:var(--bg);border:0.5px solid var(--border2);color:var(--text);cursor:pointer;font-family:inherit;white-space:nowrap}
 .ubtn:hover{background:var(--bg2)}
 .ubtn.loading{opacity:.65;cursor:wait;pointer-events:none}
-.spin{width:12px;height:12px;border:2px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
+.spin{width:11px;height:11px;border:1.5px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
 @keyframes sp{to{transform:rotate(360deg)}}
-.bw{height:5px;background:var(--bg4);border-radius:3px;margin-top:3px;overflow:hidden}
-.bv{height:100%;border-radius:3px;background:var(--blue)}
-.toast{position:fixed;bottom:22px;right:22px;background:var(--text);color:var(--bg);padding:10px 18px;border-radius:var(--radius-lg);font-size:13px;z-index:9999;opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;max-width:360px}
+.bw{height:4px;background:var(--bg3);border-radius:2px;margin-top:3px;overflow:hidden}
+.bv{height:100%;border-radius:2px;background:var(--blue)}
+/* toast */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:var(--bg);padding:9px 16px;border-radius:var(--radius-lg);font-size:12px;z-index:9999;opacity:0;transform:translateY(8px);transition:all .22s;pointer-events:none;max-width:340px}
 .toast.show{opacity:1;transform:translateY(0)}
-.si{padding:6px 10px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none;width:160px}
-.cw{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.si{padding:5px 9px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none;width:150px}
+/* legacy layout compat */
+.cw{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
 @media(max-width:700px){.cw{grid-template-columns:1fr}}
-.cc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px}
-.ct{font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px}
+.cc{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px}
+.ct{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px}
 .li{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);padding:3px 0}
-.ld{width:9px;height:9px;border-radius:2px;flex-shrink:0}
-.sb{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:14px}
-.sb h3{font-size:13px;font-weight:500;margin-bottom:10px}
-.ib{background:var(--blue-bg);border-radius:var(--radius);padding:10px 12px;font-size:12px;color:var(--blue);margin-top:8px;line-height:1.7}
-.wb{background:var(--yellow-bg);border-radius:var(--radius);padding:10px 12px;font-size:12px;color:var(--yellow);margin-top:8px;line-height:1.7}
+.ld{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.sb{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
+.sb h3{font-size:12px;font-weight:500;margin-bottom:9px}
+.ib{background:var(--blue-bg);border-radius:var(--radius);padding:9px 11px;font-size:11px;color:var(--blue);margin-top:7px;line-height:1.7}
+.wb{background:var(--yellow-bg);border-radius:var(--radius);padding:9px 11px;font-size:11px;color:var(--yellow);margin-top:7px;line-height:1.7}
 .kr{display:flex;gap:8px}.kr input{flex:1}
 #cash-panel.open{display:block!important}
 @media(max-width:600px){main{padding:12px}#hd{padding:10px 14px}.ai{display:none}.cards{grid-template-columns:repeat(2,1fr)}}
@@ -86,29 +152,35 @@ tr:hover td{background:var(--bg3)}
 </head>
 <body>
 <div id="hd">
-  <h1><span class="dot"></span> 退休目標追蹤 💰</h1>
+  <div style="display:flex;align-items:center;gap:9px">
+    <span class="dot"></span>
+    <div>
+      <div style="font-size:13px;font-weight:500;letter-spacing:.06em;color:var(--text)">退休目標追蹤</div>
+      <div style="font-size:9px;color:var(--text3);letter-spacing:.18em;margin-top:1px">RETIREMENT TRACKER</div>
+    </div>
+  </div>
   <div class="hr">
-    <span id="ss" style="font-size:11px;color:var(--text2)"></span>
-    <div class="ai"><span>USD/TWD</span><input type="number" id="ir" step="0.001" onchange="onAcc('rate',this.value)"></div>
+    <span id="ss" style="font-size:10px;color:var(--text3);letter-spacing:.06em"></span>
+    <div class="ai"><span style="color:var(--text3);font-size:10px;letter-spacing:.06em">USD/TWD</span><input type="number" id="ir" step="0.001" onchange="onAcc('rate',this.value)" style="width:68px"></div>
     <div style="position:relative">
-      <button class="btn" onclick="document.getElementById('cash-panel').classList.toggle('open')" style="font-size:12px;padding:4px 10px" title="由交易紀錄自動計算">💰 現金餘額 ▾</button>
-      <div id="cash-panel" style="display:none;position:absolute;right:0;top:34px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:12px 14px;z-index:200;min-width:220px;box-shadow:0 4px 16px rgba(0,0,0,.12)">
-        <div style="font-size:11px;color:var(--text2);font-weight:500;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">帳戶現金（由交易自動計算）</div>
-        <div style="font-size:10px;color:var(--text2);margin-bottom:6px;display:grid;grid-template-columns:70px 90px 80px;gap:4px;text-align:center"><span></span><span>自動計算</span><span>手動調整</span></div>
-        <div style="display:grid;grid-template-columns:70px 90px 80px;gap:4px;align-items:center;margin-bottom:5px"><span style="font-size:12px">Firstrade</span><input type="number" id="ic-ft" readonly style="opacity:0.6;cursor:default;font-size:12px"><input type="number" id="ic-ft-adj" step="0.01" placeholder="±0" style="font-size:12px" onchange="onCashAdj('FT',this.value)" value="0"></div>
-        <div style="display:grid;grid-template-columns:70px 90px 80px;gap:4px;align-items:center;margin-bottom:5px"><span style="font-size:12px">嘉信</span><input type="number" id="ic-sw" readonly style="opacity:0.6;cursor:default;font-size:12px"><input type="number" id="ic-sw-adj" step="0.01" placeholder="±0" style="font-size:12px" onchange="onCashAdj('Schwab',this.value)" value="0"></div>
-        <div style="display:grid;grid-template-columns:70px 90px 80px;gap:4px;align-items:center"><span style="font-size:12px">國泰複委托</span><input type="number" id="ic-ct" readonly style="opacity:0.6;cursor:default;font-size:12px"><input type="number" id="ic-ct-adj" step="0.01" placeholder="±0" style="font-size:12px" onchange="onCashAdj('GT',this.value)" value="0"></div>
+      <button onclick="document.getElementById('cash-panel').classList.toggle('open')" title="由交易紀錄自動計算">💰 現金餘額 ▾</button>
+      <div id="cash-panel" style="display:none;position:absolute;right:0;top:36px;background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:14px 16px;z-index:200;min-width:280px;box-shadow:0 4px 20px rgba(0,0,0,.1)">
+        <div style="font-size:10px;color:var(--text3);letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px">帳戶現金（交易自動計算）</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px;display:grid;grid-template-columns:80px 90px 80px;gap:4px;text-align:center"><span></span><span>自動計算</span><span>手動調整</span></div>
+        <div style="display:grid;grid-template-columns:80px 90px 80px;gap:4px;align-items:center;margin-bottom:6px"><span style="font-size:11px;color:var(--text2)">Firstrade</span><input type="number" id="ic-ft" readonly style="opacity:0.5;cursor:default;font-size:11px"><input type="number" id="ic-ft-adj" step="0.01" placeholder="±0" style="font-size:11px" onchange="onCashAdj('FT',this.value)" value="0"></div>
+        <div style="display:grid;grid-template-columns:80px 90px 80px;gap:4px;align-items:center;margin-bottom:6px"><span style="font-size:11px;color:var(--text2)">嘉信</span><input type="number" id="ic-sw" readonly style="opacity:0.5;cursor:default;font-size:11px"><input type="number" id="ic-sw-adj" step="0.01" placeholder="±0" style="font-size:11px" onchange="onCashAdj('Schwab',this.value)" value="0"></div>
+        <div style="display:grid;grid-template-columns:80px 90px 80px;gap:4px;align-items:center"><span style="font-size:11px;color:var(--text2)">國泰複委托</span><input type="number" id="ic-ct" readonly style="opacity:0.5;cursor:default;font-size:11px"><input type="number" id="ic-ct-adj" step="0.01" placeholder="±0" style="font-size:11px" onchange="onCashAdj('GT',this.value)" value="0"></div>
       </div>
     </div>
-    <button class="btn" onclick="doExport()">⬇ 匯出</button>
+    <button class="btn-blue" onclick="doExport()">↓ 匯出</button>
   </div>
 </div>
 <nav>
-  <button class="tab" data-tab="dash">📊 總覽</button>
-  <button class="tab" data-tab="holdings">📈 持倉</button>
-  <button class="tab" data-tab="tx">📝 交易</button>
-  <button class="tab" data-tab="fx">💸 出入金</button>
-  <button class="tab" data-tab="settings">⚙️ 設定</button>
+  <button class="tab" data-tab="dash">總覽</button>
+  <button class="tab" data-tab="holdings">持倉</button>
+  <button class="tab" data-tab="tx">交易</button>
+  <button class="tab" data-tab="fx">出入金</button>
+  <button class="tab" data-tab="settings">設定</button>
 </nav>
 <main id="main"></main>
 <div class="toast" id="toast"></div>
@@ -925,23 +997,53 @@ function drawChart(p){
 
 // ─── RENDERS ───
 function rCard(l,v,s,c){return "<div class='card'><div class='cl'>"+l+"</div><div class='cv "+(c||"")+"'>"+v+"</div><div class='cs'>"+s+"</div></div>";}
-function rBadge(t){var m={"買入":"bb","賣出":"bs","入金":"bd","現金利息":"bi","匯費補貼":"br","配息":"bd","預扣稅":"bs"};return "<span class='badge "+(m[t]||"br")+"'>"+t+"</span>";}
+function rBadge(t){var m={"買入":"bi","賣出":"bd","入金":"bb","現金利息":"br","匯費補貼":"br","配息":"bd","預扣稅":"bs"};return "<span class='badge "+(m[t]||"br")+"'>"+ t+"</span>";}
 function rUBtn(text,fn,loading){return "<button class='ubtn"+(loading?" loading":"")+"' onclick='"+fn+"()'>"+text+"</button>";}
 
 function rDash(p){
-  var html="<div class='cards'>";
-  html+=rCard("總資產(USD)","$"+fn(p.totalUSD,0),"≈ NT$"+fn(p.totalTWD,0));
-  html+=rCard("股票市值(USD)","$"+fn(p.mkt,0),p.act.length+" 支持倉");
-  html+=rCard("未實現損益",(p.unreal>=0?"+":"")+"$"+fn(p.unreal,2),p.cost>0?fp(p.unreal/p.cost):"—",cv(p.unreal));
-  html+=rCard("已實現損益",(p.real>=0?"+":"")+"$"+fn(p.real,2),"含配息 $"+fn(p.div,2),cv(p.real));
-  html+=rCard("今日損益",(p.todayChg>=0?"+":"-")+"$"+fn(Math.abs(p.todayChg),2),"市場波動",cv(p.todayChg));
   var cashROI=p.totalInvested>0?((p.totalUSD-p.totalInvested)/p.totalInvested):0;
-  html+=rCard("帳戶現金","$"+fn(p.cash,2),"FT·嘉信·國泰合計");
-  html+=rCard("累計入金(USD)","$"+fn(p.totalInvested,2),(p.twdInvested?"≈ NT$"+fn(p.twdInvested,0)+" 換匯投入":"尚無出入金紀錄"));
-  if(cashROI!==0)html+=rCard("整體報酬率",(cashROI>=0?"+":"")+fp(cashROI),"以入金USD計算",cv(cashROI));
-  html+="</div>";
   var retPct=Math.min(p.totalUSD/1000000*100,100),retLeft=Math.max(1000000-p.totalUSD,0);
-  // Build dashRows for all views
+  var acctCash=S.acc||{};
+
+  // ── KPI strip ──
+  var html="<div class='kpi-strip'>";
+  html+="<div class='kpi-cell'><div class='cl'>總資產 USD</div><div class='cv'>$"+fn(p.totalUSD,0)+"</div><div class='cs'>≈ NT$"+fn(p.totalTWD,0)+"</div></div>";
+  html+="<div class='kpi-cell'><div class='cl'>未實現損益</div><div class='cv "+cv(p.unreal)+"'>"+(p.unreal>=0?"+":"")+"$"+fn(p.unreal,2)+"</div><div class='cs'>"+fp(p.unreal/p.cost)+"</div></div>";
+  html+="<div class='kpi-cell'><div class='cl'>今日損益</div><div class='cv "+cv(p.todayChg)+"'>"+(p.todayChg>=0?"+":"-")+"$"+fn(Math.abs(p.todayChg),2)+"</div><div class='cs'>市場波動</div></div>";
+  html+="<div class='kpi-cell'><div class='cl'>整體報酬率</div><div class='cv "+cv(cashROI)+"'>"+(cashROI>=0?"+":"")+fp(cashROI)+"</div><div class='cs'>以入金USD計算</div></div>";
+  html+="</div>";
+
+  // ── 2-col layout ──
+  html+="<div class='dash-layout'>";
+
+  // ── Left panel ──
+  html+="<div class='dash-left'>";
+
+  // goal progress
+  html+="<div><div class='stat-group-label'>退休目標</div>";
+  html+="<div class='prog-head'><span class='prog-title'>$1,000,000 USD</span><span class='prog-pct'>"+retPct.toFixed(2)+"%</span></div>";
+  html+="<div class='prog-bar'><div class='prog-fill' style='width:"+retPct+"%'></div></div>";
+  html+="<div class='prog-note'>已累積 $"+fn(p.totalUSD,0)+" — 還差 $"+fn(retLeft,0)+"</div></div>";
+
+  // stats
+  html+="<div><div class='stat-group-label'>損益明細</div>";
+  html+="<div class='stat-row'><span class='stat-label'>已實現損益</span><span class='stat-val "+cv(p.real)+"'>"+(p.real>=0?"+":"")+"$"+fn(p.real,2)+"</span></div>";
+  html+="<div class='stat-row'><span class='stat-label'>配息收入</span><span class='stat-val "+cv(p.div)+"'>$"+fn(p.div,2)+"</span></div>";
+  html+="<div class='stat-row'><span class='stat-label'>股票市值</span><span class='stat-val'>$"+fn(p.mkt,0)+"</span></div>";
+  html+="<div class='stat-row'><span class='stat-label'>累計入金</span><span class='stat-val'>$"+fn(p.totalInvested,2)+"</span></div></div>";
+
+  // account cash
+  html+="<div><div class='stat-group-label'>帳戶現金</div><div class='acc-list'>";
+  html+="<div class='acc-item'><span class='acc-name'>Firstrade</span><span class='acc-val'>$"+fn(acctCash.cashFT||0,2)+"</span></div>";
+  html+="<div class='acc-item'><span class='acc-name'>嘉信</span><span class='acc-val'>$"+fn(acctCash.cashSchwab||0,2)+"</span></div>";
+  html+="<div class='acc-item'><span class='acc-name "+cv(acctCash.cashCathay||0)+"'>國泰複委托</span><span class='acc-val "+cv(acctCash.cashCathay||0)+"'>$"+fn(acctCash.cashCathay||0,2)+"</span></div>";
+  html+="<div class='acc-item total'><span class='acc-name' style='font-weight:500;color:var(--text)'>合計</span><span class='acc-val' style='font-size:14px'>$"+fn(p.cash,2)+"</span></div>";
+  html+="</div></div>";
+  html+="</div>"; // end dash-left
+
+  // ── Right: holdings overview ──
+  html+="<div class='dash-right'>";
+  // dash account filter
   var dashAccts=["all"];
   S.H.forEach(function(h){if(h.acct&&dashAccts.indexOf(h.acct)<0)dashAccts.push(h.acct);});
   var dashLabels={"all":"整合","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
@@ -962,49 +1064,36 @@ function rDash(p){
   }else{
     dashRows=p.act.filter(function(h){return h.acct===dashView;});
   }
-  html+="<div style='background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:16px'>";
-  html+="<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px'>";
-  html+="<div style='font-size:13px;font-weight:500'>🎯 退休目標進度</div>";
-  html+="<div style='font-size:12px;color:var(--text2)'><span style='font-weight:600;color:var(--text)'>$"+fn(p.totalUSD,0)+"</span> / $1,000,000 <span style='margin-left:8px;color:var(--green);font-weight:600'>"+retPct.toFixed(2)+"%</span></div>";
-  html+="</div>";
-  html+="<div style='height:12px;background:var(--bg4);border-radius:6px;overflow:hidden'><div style='height:100%;border-radius:6px;background:linear-gradient(90deg,var(--blue),var(--green));width:"+retPct+"%'></div></div>";
-  html+="<div style='display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--text2)'><span>距目標還差 <strong style='color:var(--text)'>$"+fn(retLeft,0)+"</strong></span><span>目標 $1,000,000 USD</span></div>";
-  html+="</div>";
-  html+="<div class='cw'>";
 
-  html+="<div class='cc'><div class='ct'>持倉概覽</div>";
-  dashRows.forEach(function(h){
-    var mv=mktVal(h),ur=mv-costBasis(h),ret=h.cost>0?(h.price*(h.isOption?100:1)-h.cost)/h.cost:0,dashMkt=dashRows.reduce(function(s,h2){return s+mktVal(h2);},0),pct=dashMkt>0?mv/dashMkt*100:0;
-    html+="<div style='padding:5px 0;border-bottom:0.5px solid var(--border)'><div style='display:flex;justify-content:space-between'><strong>"+esc(h.sym)+"</strong><span class='"+cv(ur)+"' style='font-family:ui-monospace,monospace;font-size:12px'>"+(ur>=0?"+":"")+"$"+fn(ur,2)+"</span></div>";
-    html+="<div style='display:flex;justify-content:space-between;font-size:11px;color:var(--text2)'><span>$"+fn(h.price,2)+" × "+fn(h.shares,0)+"</span><span class='"+cv(ret)+"'>"+(ret>=0?"+":"")+fp(ret)+"</span></div>";
-    html+="<div class='bw'><div class='bv' style='width:"+pct+"%'></div></div></div>";
-  });
-  html+="</div></div>";
-  html+="<div class='panel'><div class='ph'>";
-  html+="<div style='display:flex;gap:6px;flex-wrap:wrap'>";
+  html+="<div class='panel'>";
+  html+="<div class='ph'>";
+  html+="<div style='display:flex;gap:5px;flex-wrap:wrap'>";
   dashAccts.forEach(function(a){
-    var lbl=(dashLabels[a]||a);
-    html+="<button class='chip"+(dashView===a?" active":"")+"' data-dv='"+a+"' onclick='S.dashView=this.dataset.dv;render()'>"+lbl+"</button>";
-  })
+    html+="<button class='chip"+(dashView===a?" active":"")+"' data-dv='"+a+"' onclick='S.dashView=this.dataset.dv;render()'>"+(dashLabels[a]||a)+"</button>";
+  });
   html+="</div>";
-  html+=rUBtn(S.updating?"<span class='spin'></span> 更新中…":"🔄 更新報價","updatePrices",S.updating)+"</div>";
-  html+="<div class='sx'><table><thead><tr><th>代號</th><th class='num'>股數</th><th class='num'>均成本</th><th class='num'>現價</th><th class='num'>今日漲跌</th><th class='num'>市值</th><th class='num'>未實現損益</th><th class='num'>報酬率</th><th class='num'>年化報酬</th></tr></thead><tbody>";
+  html+=rUBtn(S.updating?"<span class='spin'></span> 更新中…":"🔄 更新報價","updatePrices",S.updating);
+  html+="</div>";
+  html+="<div class='sx'><table><thead><tr>";
+  html+="<th>代號</th><th class='num'>股數</th><th class='num'>均成本</th><th class='num'>現價</th><th class='num'>今日</th><th class='num'>市值</th><th class='num'>未實現</th><th class='num'>報酬率</th><th class='num'>年化</th>";
+  html+="</tr></thead><tbody>";
   dashRows.forEach(function(h){
     var mv=h.shares*h.price,ur=h.shares*(h.price-h.cost),ret=h.cost>0?(h.price-h.cost)/h.cost:0,ann=annualReturn(h.cost,h.price,h.fd);
-    html+="<tr><td><strong>"+esc(h.sym)+"</strong>"+(h.note?"<br><small style='color:var(--text2)'>"+esc(h.note)+"</small>":"")+"</td>";
+    html+="<tr><td><strong style='letter-spacing:.04em'>"+esc(h.sym)+"</strong>"+(h.note?"<br><small style='color:var(--text3)'>"+esc(h.note)+"</small>":"")+"</td>";
     html+="<td class='num'><span class='editable' data-type='shares' data-id='"+h.id+"' data-val='"+h.shares+"'>"+fn(h.shares,h.shares%1===0?0:6)+"</span></td>";
     var isEC=S.editCostId===h.id;
-    if(isEC){
-      html+="<td class='num'><input id='ec-"+h.id+"' type='number' value='"+S.editCostVal+"' style='width:90px;padding:3px 6px;font-size:12px;text-align:right'></td>";
-    }else{
-      html+="<td class='num'><span class='editable' data-type='cost' data-id='"+h.id+"' data-val='"+h.cost+"'>$"+fn(h.cost,4)+"</span></td>";
-    }
+    if(isEC){html+="<td class='num'><input id='ec-"+h.id+"' type='number' value='"+S.editCostVal+"' style='width:80px;padding:3px 6px;font-size:11px;text-align:right'></td>";}
+    else{html+="<td class='num'><span class='editable' data-type='cost' data-id='"+h.id+"' data-val='"+h.cost+"'>$"+fn(h.cost,4)+"</span></td>";}
     html+="<td class='num'>$"+fn(h.price,2)+"</td>";
-    html+="<td class='num "+cv(h.chg)+"'>"+(h.chg>=0?"+":"")+fn(h.chg,2)+"</td><td class='num'>$"+fn(mv,0)+"</td>";
-    html+="<td class='num "+cv(ur)+"'>"+(ur>=0?"+":"")+"$"+fn(ur,2)+"</td><td class='num "+cv(ret)+"'>"+(ret>=0?"+":"")+fp(ret)+"</td>";
+    html+="<td class='num "+cv(h.chg)+"'>"+(h.chg>=0?"+":"")+fn(h.chg,2)+"</td>";
+    html+="<td class='num'>$"+fn(mv,0)+"</td>";
+    html+="<td class='num "+cv(ur)+"'>"+(ur>=0?"+":"")+"$"+fn(ur,2)+"</td>";
+    html+="<td class='num "+cv(ret)+"'>"+(ret>=0?"+":"")+fp(ret)+"</td>";
     html+="<td class='num "+(ann!==null?cv(ann):"neu")+"'>"+(ann!==null?(ann>=0?"+":"")+fp(ann):"—")+"</td></tr>";
   });
   html+="</tbody></table></div></div>";
+  html+="</div>"; // end dash-right
+  html+="</div>"; // end dash-layout
   return html;
 }
 
@@ -1110,7 +1199,7 @@ function rHoldings(){
     html+="<td><button class='btn-red' onclick=\"delHolding('"+h.id+"')\">刪除</button></td></tr>";
   });
   html+="</tbody></table></div></div><p style='font-size:11px;color:var(--text2);margin-top:6px'>💡 點現價修改 · 點標題排序 · 台幣成本匯率 "+fx.toFixed(3)+"</p>";
-  return html;
+  return "<div class='page-body'>"+html+"</div>";
 }
 
 function rTx(){
@@ -1149,7 +1238,7 @@ function rTx(){
   html+="<div class='panel'><div class='ph'><span>顯示 "+filtered.length+" / "+S.T.length+" 筆</span></div>";
   html+="<div class='sx sy'><table><thead><tr><th>日期</th><th>類別</th><th>代號</th><th class='num'>股數</th><th class='num'>成交價</th><th class='num'>手續費</th><th class='num'>實際金額</th><th class='num'>匯費(NTD)</th><th></th></tr></thead><tbody>";
   filtered.forEach(function(t){
-    var srcLabel={"FT":"FT","Schwab":"嘉信","GT":"國泰複"};
+    var srcLabel={"FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
     html+="<tr><td style='font-size:12px;color:var(--text2);white-space:nowrap'>"+t.date+"</td><td style='white-space:nowrap'>"+rBadge(t.type)+"<span class='badge br' style='font-size:10px;margin-left:3px'>"+(srcLabel[t.source||"FT"]||t.source||"FT")+"</span></td>";
     html+="<td>"+(t.sym?"<strong>"+esc(t.sym)+"</strong>":"—")+"</td>";
     html+="<td class='num'>"+(t.shares||"—")+"</td><td class='num'>"+(t.price?"$"+fn(t.price,2):"—")+"</td>";
@@ -1159,7 +1248,7 @@ function rTx(){
     html+="<td><div style='display:flex;gap:4px'><button class='btn-sm' onclick=\"startEditTx('"+t.id+"')\">編輯</button><button class='btn-red' onclick=\"delTx('"+t.id+"')\">刪除</button></div></td></tr>";
   });
   html+="</tbody></table></div></div>";
-  return html;
+  return "<div class='page-body'>"+html+"</div>";
 }
 
 function rFX(){
@@ -1225,7 +1314,7 @@ function rFX(){
     }
   });
   html+="</tbody></table></div></div>";
-  return html;
+  return "<div class='page-body'>"+html+"</div>";
 }
 
 function rImportPanel(){
@@ -1301,7 +1390,7 @@ function rSettings(){
   html+="<button class='btn' onclick='resetData()' style='opacity:.7'>↩ 恢復範例資料</button>";
   html+="</div><div class='fh' style='margin-top:8px'>💡 步驟：完全清空 → 設定頁上方匯入 FSV</div></div>";
   html+="</div>";
-  return html;
+  return "<div class='page-body'>"+html+"</div>";
 }
 
 // ─── MASTER RENDER ───

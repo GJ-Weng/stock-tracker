@@ -355,8 +355,8 @@
     {
       "id": "1780559127379-vqyc",
       "sym": "NOK",
-      "shares": 100,
-      "cost": 15.7,
+      "shares": 200,
+      "cost": 15.35,
       "price": 14.38,
       "chg": -2.24,
       "div": 0,
@@ -5491,6 +5491,18 @@
       "price": 300,
       "fee": 0,
       "amt": -600,
+      "wire": 0,
+      "source": "FT"
+    },
+    {
+      "id": "1780822565381-1ovn",
+      "date": "2026-06-05",
+      "type": "買入",
+      "sym": "NOK",
+      "shares": 100,
+      "price": 15,
+      "fee": 0,
+      "amt": -1500,
       "wire": 0,
       "source": "FT"
     }

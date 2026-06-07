@@ -13,10 +13,10 @@
   --bg:#fff;--bg2:#f5f5f5;--bg3:#ececec;--bg4:#e0e0e0;
   --text:#111;--text2:#555;--text3:#999;
   --border:#e2e2e2;--border2:#ccc;
-  --green:#0A6E48;--green-bg:#D6F5E8;--green-text:#064832;
-  --red:#B52A1C;--red-bg:#FDDDD9;--red-text:#7a1810;
-  --blue:#1252A3;--blue-bg:#D9EAFB;--blue-text:#0a3572;
-  --yellow:#7A4500;--yellow-bg:#FDEBD0;--yellow-text:#5a3200;
+  --green:#097A4A;--green-bg:#C5F0DC;--green-text:#054028;
+  --red:#C0291A;--red-bg:#FDDDD9;--red-text:#7a1810;
+  --blue:#1252A3;--blue-bg:#C8E0F8;--blue-text:#0a3572;
+  --yellow:#7A4500;--yellow-bg:#FDDDB8;--yellow-text:#4a2800;
   --purple-bg:#EAE8FD;--purple-text:#2D2080;
   --radius:6px;--radius-lg:10px;--radius-xl:14px;
   --shadow:0 1px 4px rgba(0,0,0,.07)
@@ -31,7 +31,7 @@
   --yellow:#f5a623;--yellow-bg:#3d1f00;--yellow-text:#fdd08a;
   --purple-bg:#1e1560;--purple-text:#b5aaff;
 }}
-body{font-family:'Noto Sans JP',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg2);color:var(--text);font-size:14px;line-height:1.5}
+body{font-family:'Noto Sans JP',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg2);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
 input,select{font-family:inherit;font-size:12px;padding:6px 9px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none;width:100%}
 input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(24,95,165,.12)}
 button{font-family:inherit;cursor:pointer;transition:all .12s;background:var(--bg);border:0.5px solid var(--border2);color:var(--text2);padding:5px 12px;border-radius:var(--radius);font-size:12px;white-space:nowrap}
@@ -53,20 +53,20 @@ button:hover{background:var(--bg2);color:var(--text)}
 nav{display:flex;border-bottom:0.5px solid var(--border);padding:0 20px;overflow-x:auto;background:var(--bg);position:sticky;top:45px;z-index:99}
 .tab{padding:9px 14px;background:none;border:none;border-bottom:2px solid transparent;font-size:11px;color:var(--text2);cursor:pointer;white-space:nowrap;letter-spacing:.06em}
 .tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:500}
-main{padding:0;max-width:1560px;margin:0 auto}
+main{padding:0;width:100%}
 /* KPI strip */
-.kpi-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:0.5px solid var(--border);background:var(--bg)}
-.kpi-cell{padding:11px 18px;border-right:0.5px solid var(--border)}
+.kpi-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:0.5px solid var(--border);background:var(--bg);width:100%}
+.kpi-cell{padding:12px 20px;border-right:0.5px solid var(--border);min-height:80px}
 .kpi-cell:last-child{border-right:none}
 /* 2-col dash layout */
-.dash-layout{display:grid;grid-template-columns:220px 1fr;min-height:400px}
+.dash-layout{display:grid;grid-template-columns:220px 1fr;min-height:400px;width:100%}
 @media(max-width:900px){.dash-layout{grid-template-columns:1fr}}
 .dash-left{padding:14px 16px;border-right:0.5px solid var(--border);background:var(--bg);display:flex;flex-direction:column;gap:14px}
-.dash-right{padding:12px 14px;background:var(--bg2);display:flex;flex-direction:column;gap:10px}
+.dash-right{padding:12px 14px;background:var(--bg2);display:flex;flex-direction:column;gap:10px;min-height:calc(100vh - 90px)}
 /* full page areas */
-.page-body{padding:14px 16px;background:var(--bg2);display:flex;flex-direction:column;gap:10px}
+.page-body{padding:16px;background:var(--bg2);display:flex;flex-direction:column;gap:12px;min-height:calc(100vh - 90px)}
 /* stat list */
-.stat-group-label{font-size:10px;letter-spacing:.14em;color:var(--text3);text-transform:uppercase;margin-bottom:8px}
+.stat-group-label{font-size:9px;letter-spacing:.18em;color:var(--text3);text-transform:uppercase;margin-bottom:8px;font-weight:500}
 .stat-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:0.5px solid var(--border)}
 .stat-row:last-child{border-bottom:none}
 .stat-label{font-size:11px;color:var(--text2)}
@@ -92,19 +92,19 @@ main{padding:0;max-width:1560px;margin:0 auto}
 .cs{font-size:10px;color:var(--text3);margin-top:4px}
 .cv.pos{color:var(--green)}.cv.neg{color:var(--red)}
 /* sections */
-.panel{border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px;background:var(--bg);box-shadow:var(--shadow)}
-.ph{padding:9px 14px;background:var(--bg);font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.12em;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:0.5px solid var(--border)}
+.panel{border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--bg);box-shadow:var(--shadow)}
+.ph{padding:9px 14px;background:var(--bg);font-size:10px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:0.5px solid var(--border)}
 .sx{overflow-x:auto}.sy{max-height:460px;overflow-y:auto}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th{text-align:left;padding:8px 12px;font-size:10px;font-weight:400;color:var(--text3);border-bottom:0.5px solid var(--border);background:var(--bg2);white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0;z-index:1;letter-spacing:.1em}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;padding:8px 12px;font-size:10px;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);background:var(--bg3);white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0;z-index:1;letter-spacing:.1em;text-transform:uppercase}
 th:hover{color:var(--text);background:var(--bg3)}
 th.sa::after{content:' ↑';color:var(--blue)}th.sd::after{content:' ↓';color:var(--blue)}
 td{padding:8px 12px;border-bottom:0.5px solid var(--border);vertical-align:middle}
 td.pos,td.neg{font-weight:600}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:var(--bg2)}
+tr:hover td{background:var(--bg3)}
 .num{font-family:ui-monospace,monospace;text-align:right;white-space:nowrap}
-.pos{color:var(--green);font-weight:600}.neg{color:var(--red);font-weight:600}.neu{color:var(--text2)}
+.pos{color:var(--green);font-weight:700}.neg{color:var(--red);font-weight:700}.neu{color:var(--text2)}
 .num.pos,.num.neg{font-weight:700}
 /* badges */
 .badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:500;white-space:nowrap;letter-spacing:.04em}
@@ -113,9 +113,9 @@ tr:hover td{background:var(--bg2)}
 .bd{background:var(--green-bg);color:var(--green-text)}
 .bi{background:var(--yellow-bg);color:var(--yellow-text)}
 .br{background:var(--bg3);color:var(--text2)}
-.bgt{background:var(--green-bg);color:var(--green-text)}
-.bft{background:var(--blue-bg);color:var(--blue-text)}
-.bsw{background:var(--yellow-bg);color:var(--yellow-text)}
+.bgt{background:var(--green-bg);color:var(--green-text);font-weight:600}
+.bft{background:var(--blue-bg);color:var(--blue-text);font-weight:600}
+.bsw{background:var(--yellow-bg);color:var(--yellow-text);font-weight:600}
 /* forms */
 .fb{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:14px;box-shadow:var(--shadow)}
 .fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
@@ -1040,8 +1040,8 @@ function rDash(p){
   html+="<div><div class='stat-group-label'>帳戶現金</div><div class='acc-list'>";
   html+="<div class='acc-item'><span class='acc-name'><span class='badge bft' style='font-size:10px'>FT</span></span><span class='acc-val'>$"+fn(acctCash.cashFT||0,2)+"</span></div>";
   html+="<div class='acc-item'><span class='acc-name'><span class='badge bsw' style='font-size:10px'>嘉信</span></span><span class='acc-val'>$"+fn(acctCash.cashSchwab||0,2)+"</span></div>";
-  html+="<div class='acc-item'><span class='acc-name'><span class='badge bgt' style='font-size:10px'>國泰</span></span><span class='acc-val "+cv(acctCash.cashCathay||0)+"'>$"+fn(acctCash.cashCathay||0,2)+"</span></div>";
-  html+="<div class='acc-item total'><span class='acc-name' style='font-weight:600;color:var(--text);font-size:12px'>合計</span><span class='acc-val' style='font-size:15px;font-weight:600;color:var(--text)'>$"+fn(p.cash,2)+"</span></div>";
+  html+="<div class='acc-item'><span class='acc-name'><span class='badge bgt' style='font-size:10px'>國泰</span></span><span class='acc-val "+(acctCash.cashCathay>0?"pos":acctCash.cashCathay<0?"neg":"")+"'>$"+fn(acctCash.cashCathay||0,2)+"</span></div>";
+  var cashCls=p.cash<0?"neg":"";html+="<div class='acc-item total'><span class='acc-name' style='font-weight:600;color:var(--text);font-size:12px'>合計</span><span class='acc-val "+cashCls+"' style='font-size:15px;font-weight:700'>$"+fn(p.cash,2)+"</span></div>";
   html+="</div></div>";
   html+="</div>"; // end dash-left
 
@@ -1153,10 +1153,11 @@ function rHoldings(){
     html+="</div><div class='fh'>💡 若代號已存在，股數和成本會自動加權合併</div></div>";
   }
   var ex=S.showExtraCols;
+  var acctBadgeMap={"FT":"bft","Schwab":"bsw","GT":"bgt","Cathay":"bgt"};
   html+="<div class='panel'>";
-  html+="<div class='ph' style='padding:5px 11px;display:flex;justify-content:space-between;align-items:center'><span style='font-size:11px;color:var(--text2)'>"+(viewH.length)+" 支持倉</span><button class='btn-sm' onclick='S.showExtraCols=!S.showExtraCols;render()'>"+(ex?"← 收起":"更多欄位 →")+"</button></div>";
+  html+="<div class='ph'><span>"+(viewH.length)+" 支持倉</span><button class='btn-sm' onclick='S.showExtraCols=!S.showExtraCols;render()'>"+(ex?"← 收起":"更多欄位 →")+"</button></div>";
   html+="<div class='sx sy'><table><thead><tr>";
-  html+=th("sym","代號")+th("shares","股數")+th("cost","均成本")+"<th>現價(點擊)</th>"+th("chg","今日漲跌")+th("mkt","市值")+th("ur","未實現")+th("ret","報酬率");
+  html+=th("sym","代號")+"<th>帳戶</th>"+th("shares","股數")+th("cost","均成本")+"<th>現價(點擊)</th>"+th("chg","今日")+""+th("mkt","市值")+th("ur","未實現")+th("ret","報酬率");
   if(ex)html+=th("realized","已實現")+th("div","股息")+"<th>年化</th><th>台幣成本</th>";
   html+="<th></th>";
   html+="</tr></thead><tbody>";

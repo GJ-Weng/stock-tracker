@@ -1421,23 +1421,46 @@ function rSettings(){
 // ─── NEWS ───
 var NEWS_STATE={articles:[],loading:false,error:"",lastFetch:0};
 
+// Sym → full company name for better news search
+var SYM_NAMES={
+  "AAPL":"Apple","MSFT":"Microsoft","NVDA":"NVIDIA","TSLA":"Tesla","AMZN":"Amazon",
+  "GOOGL":"Alphabet Google","META":"Meta Facebook","PLTR":"Palantir","SOFI":"SoFi Technologies",
+  "ONDS":"Ondas Holdings","KBSX":"Kiora Pharmaceuticals","MU":"Micron Technology",
+  "MRVL":"Marvell Technology","NOK":"Nokia","RMBS":"Rambus","IREN":"IREN Limited",
+  "SATS":"EchoStar","ALAB":"Astera Labs","AMD":"Advanced Micro Devices","INTC":"Intel",
+  "QCOM":"Qualcomm","AVGO":"Broadcom","AAON":"AAON","CRWD":"CrowdStrike",
+  "CRNC":"Cerence","NET":"Cloudflare","SNOW":"Snowflake","UBER":"Uber"
+};
+
 async function fetchNews(){
   if(!S.newsApiKey){NEWS_STATE.error="請先在設定頁填入 NewsAPI Key";renderNewsPanel();return;}
   if(NEWS_STATE.loading)return;
   var now=Date.now();
-  if(now-NEWS_STATE.lastFetch<300000&&NEWS_STATE.articles.length){renderNewsPanel();return;} // 5min cache
+  if(now-NEWS_STATE.lastFetch<300000&&NEWS_STATE.articles.length){renderNewsPanel();return;}
   NEWS_STATE.loading=true;NEWS_STATE.error="";
   renderNewsPanel();
-  // Get unique syms with shares > 0
-  var syms=[...new Set(S.H.filter(function(h){return h.shares>0&&!h.sym.includes("Call")&&!h.sym.includes("Put");}).map(function(h){return h.sym;}))].slice(0,8);
+  var syms=[...new Set(S.H.filter(function(h){return h.shares>0&&!h.sym.includes("Call")&&!h.sym.includes("Put");}).map(function(h){return h.sym;}))].slice(0,6);
   if(!syms.length){NEWS_STATE.loading=false;NEWS_STATE.error="尚無持倉";renderNewsPanel();return;}
-  var q=syms.join(" OR ");
+  // Build query using company names + stock keyword to improve relevance
+  var terms=syms.map(function(s){
+    var name=SYM_NAMES[s];
+    return name?'"'+name+'"':'"'+s+'" stock';
+  });
+  var q="("+terms.join(" OR ")+") AND (stock OR shares OR earnings OR market OR investor)";
   try{
     var url="/api/news?q="+encodeURIComponent(q)+"&apiKey="+encodeURIComponent(S.newsApiKey);
     var r=await fetch(url);
     var d=await r.json();
     if(d.status!=="ok")throw new Error(d.message||"API error");
-    NEWS_STATE.articles=d.articles||[];
+    // Filter: must contain at least one sym or company name in title/description
+    var filtered=(d.articles||[]).filter(function(a){
+      var txt=((a.title||"")+" "+(a.description||"")).toUpperCase();
+      return syms.some(function(s){
+        var name=(SYM_NAMES[s]||"").toUpperCase().split(" ")[0];
+        return txt.includes(s) || (name.length>3&&txt.includes(name));
+      });
+    });
+    NEWS_STATE.articles=filtered;
     NEWS_STATE.lastFetch=Date.now();
     NEWS_STATE.error="";
   }catch(e){

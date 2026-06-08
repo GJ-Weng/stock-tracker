@@ -59,7 +59,8 @@ main{padding:0;width:100%}
 .kpi-cell{padding:12px 20px;border-right:0.5px solid var(--border);min-height:80px}
 .kpi-cell:last-child{border-right:none}
 /* 2-col dash layout */
-.dash-layout{display:grid;grid-template-columns:220px 1fr;min-height:400px;width:100%}
+.dash-layout{display:grid;grid-template-columns:220px 1fr 300px;min-height:400px;width:100%}
+@media(max-width:1200px){.dash-layout{grid-template-columns:220px 1fr}}
 @media(max-width:900px){.dash-layout{grid-template-columns:1fr}}
 .dash-left{padding:14px 16px;border-right:0.5px solid var(--border);background:var(--bg);display:flex;flex-direction:column;gap:14px}
 .dash-right{padding:12px 14px;background:var(--bg2);display:flex;flex-direction:column;gap:10px;min-height:calc(100vh - 90px)}
@@ -1097,6 +1098,22 @@ function rDash(p){
   });
   html+="</tbody></table></div></div>";
   html+="</div>"; // end dash-right
+
+  // ── News panel (right sidebar) ──
+  html+="<div style='width:300px;min-width:260px;border-left:0.5px solid var(--border);background:var(--bg);display:flex;flex-direction:column'>";
+  html+="<div class='ph' style='display:flex;justify-content:space-between;align-items:center'>";
+  html+="<span>📰 市場動態</span>";
+  html+="<button class='btn-sm' onclick='NEWS_STATE.lastFetch=0;fetchNews()'>重新整理</button>";
+  html+="</div>";
+  html+="<div id='news-panel' style='overflow-y:auto;flex:1;max-height:calc(100vh - 130px)'>";
+  if(!S.newsApiKey){
+    html+="<div style='padding:14px;font-size:11px;color:var(--text2);line-height:1.7'>請到「設定」頁填入 NewsAPI Key 以啟用市場新聞功能。<br><br><a href='https://newsapi.org/register' target='_blank' style='color:var(--blue)'>免費申請 →</a></div>";
+  }else{
+    html+="<div style='padding:14px;text-align:center;color:var(--text2);font-size:12px'><span class='spin'></span> 載入中…</div>";
+  }
+  html+="</div>";
+  html+="</div>"; // end news panel
+
   html+="</div>"; // end dash-layout
   return html;
 }
@@ -1385,6 +1402,8 @@ function rSettings(){
   html+="<button class='btn' onclick='syncToGitHub()'>⬆ 立即同步</button>";
   html+="</div><div class='ib' style='margin-top:10px'>💡 Token 申請：GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Contents: Read and Write</div></div>";
   html+=rImportPanel();
+  html+="<div class='sb'><h3>📰 NewsAPI Key（盤前新聞）</h3><p style='font-size:12px;color:var(--text2);margin-bottom:10px'>前往 newsapi.org 免費註冊取得，每日 100 次免費請求。</p>";
+  html+="<div class='kr'><input type='password' id='news-key-inp' placeholder='你的 NewsAPI Key…' value='"+esc(S.newsApiKey||"")+"'><button class='btn btn-blue' onclick='saveNewsApiKey()'>儲存並載入新聞</button></div></div>";
   html+="<div class='sb'><h3>🔑 Anthropic API Key（報價備援）</h3>";
   html+="<div class='kr'><input type='password' id='api-key-inp' placeholder='sk-ant-api03-…' value='"+esc(S.apiKey)+"'><button class='btn btn-blue' onclick='saveApiKey()'>儲存</button></div></div>";
   html+="<div class='sb'><h3>📦 資料管理</h3><div style='display:flex;gap:8px;flex-wrap:wrap;margin-top:8px'>";
@@ -1396,6 +1415,80 @@ function rSettings(){
   html+="</div><div class='fh' style='margin-top:8px'>💡 步驟：完全清空 → 設定頁上方匯入 FSV</div></div>";
   html+="</div>";
   return "<div class='page-body'>"+html+"</div>";
+}
+
+
+// ─── NEWS ───
+var NEWS_STATE={articles:[],loading:false,error:"",lastFetch:0};
+
+async function fetchNews(){
+  if(!S.newsApiKey){NEWS_STATE.error="請先在設定頁填入 NewsAPI Key";renderNewsPanel();return;}
+  if(NEWS_STATE.loading)return;
+  var now=Date.now();
+  if(now-NEWS_STATE.lastFetch<300000&&NEWS_STATE.articles.length){renderNewsPanel();return;} // 5min cache
+  NEWS_STATE.loading=true;NEWS_STATE.error="";
+  renderNewsPanel();
+  // Get unique syms with shares > 0
+  var syms=[...new Set(S.H.filter(function(h){return h.shares>0&&!h.sym.includes("Call")&&!h.sym.includes("Put");}).map(function(h){return h.sym;}))].slice(0,8);
+  if(!syms.length){NEWS_STATE.loading=false;NEWS_STATE.error="尚無持倉";renderNewsPanel();return;}
+  var q=syms.join(" OR ");
+  try{
+    var url="https://newsapi.org/v2/everything?q="+encodeURIComponent(q)+"&language=en&sortBy=publishedAt&pageSize=20&apiKey="+S.newsApiKey;
+    var r=await fetch(url);
+    var d=await r.json();
+    if(d.status!=="ok")throw new Error(d.message||"API error");
+    NEWS_STATE.articles=d.articles||[];
+    NEWS_STATE.lastFetch=Date.now();
+    NEWS_STATE.error="";
+  }catch(e){
+    NEWS_STATE.error="新聞載入失敗："+e.message;
+  }
+  NEWS_STATE.loading=false;
+  renderNewsPanel();
+}
+
+function renderNewsPanel(){
+  var el=document.getElementById("news-panel");
+  if(!el)return;
+  var html="";
+  if(NEWS_STATE.loading){
+    html="<div style='padding:16px;text-align:center;color:var(--text2);font-size:12px'><span class='spin'></span> 載入新聞中…</div>";
+  }else if(NEWS_STATE.error){
+    html="<div style='padding:12px 16px;color:var(--red);font-size:12px'>⚠ "+esc(NEWS_STATE.error)+"</div>";
+  }else if(!NEWS_STATE.articles.length){
+    html="<div style='padding:12px 16px;color:var(--text2);font-size:12px'>尚無新聞，請填入 NewsAPI Key 或稍後再試。</div>";
+  }else{
+    var syms=[...new Set(S.H.filter(function(h){return h.shares>0;}).map(function(h){return h.sym.toUpperCase();}))];
+    var scored=NEWS_STATE.articles.map(function(a){
+      var title=(a.title||"").toUpperCase();
+      var match=syms.find(function(s){return title.includes(s);});
+      return{a:a,sym:match||null};
+    });
+    // show matched first then rest
+    var sorted=scored.filter(function(x){return x.sym;}).concat(scored.filter(function(x){return !x.sym;}));
+    sorted.slice(0,15).forEach(function(x){
+      var a=x.a;
+      var pub=a.publishedAt?new Date(a.publishedAt):null;
+      var timeStr=pub?timeSince(pub):"";
+      var srcName=a.source&&a.source.name?a.source.name:"";
+      html+="<div style='padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;flex-direction:column;gap:3px'>";
+      if(x.sym)html+="<span class='badge bft' style='font-size:10px;align-self:flex-start;margin-bottom:2px'>"+x.sym+"</span>";
+      html+="<a href='"+esc(a.url)+"' target='_blank' style='font-size:12px;font-weight:500;color:var(--text);text-decoration:none;line-height:1.4'>"+esc(a.title||"")+"</a>";
+      html+="<div style='display:flex;gap:8px;font-size:10px;color:var(--text3)'>";
+      if(srcName)html+="<span>"+esc(srcName)+"</span>";
+      if(timeStr)html+="<span>"+timeStr+"</span>";
+      html+="</div></div>";
+    });
+  }
+  el.innerHTML=html;
+}
+
+function timeSince(date){
+  var s=Math.floor((Date.now()-date)/1000);
+  if(s<60)return "剛剛";
+  var m=Math.floor(s/60);if(m<60)return m+"分前";
+  var h=Math.floor(m/60);if(h<24)return h+"小時前";
+  return Math.floor(h/24)+"天前";
 }
 
 // ─── MASTER RENDER ───
@@ -1419,7 +1512,7 @@ function render(){
     else if(S.tab==="tx")m.innerHTML=rTx();
     else if(S.tab==="fx")m.innerHTML=rFX();
     else m.innerHTML=rSettings();
-    if(S.tab==="dash")requestAnimationFrame(function(){drawChart(p);});
+    if(S.tab==="dash"){requestAnimationFrame(function(){drawChart(p);});if(S.newsApiKey&&!S.newsFetched){S.newsFetched=true;fetchNews();}else if(S.newsApiKey){renderNewsPanel();}}
     if(S.editPriceId){var el=document.getElementById("ep-"+S.editPriceId);if(el){el.focus();el.select();}}
   if(S.editCostId){
     var ec=document.getElementById("ec-"+S.editCostId);
@@ -1501,6 +1594,7 @@ function onCashAdj(acct,v){
   sv("acc");recalcCash();render();
 }
 function saveApiKey(){S.apiKey=document.getElementById("api-key-inp").value.trim();localStorage.setItem("ft_apiKey",S.apiKey);toast("✅ API Key 已儲存");}
+function saveNewsApiKey(){S.newsApiKey=(document.getElementById("news-key-inp")||{}).value||"";localStorage.setItem("ft_newsApiKey",S.newsApiKey);S.newsCache={};S.newsFetched=false;toast("✅ NewsAPI Key 已儲存");fetchNews();}
 function sortH(col){S.sortDir=S.sortCol===col?S.sortDir*-1:-1;S.sortCol=col;render();}
 function startEditPrice(id,v){S.editPriceId=id;S.editPriceVal=String(v);render();}
 function startEditCost(id,v){S.editCostId=id;S.editCostVal=String(v);render();}
@@ -1701,6 +1795,9 @@ if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
 // cashFT is always recalculated from transactions
 if(S.T.length>0)recalcCash();
 S.apiKey=localStorage.getItem("ft_apiKey")||"";
+  S.newsApiKey=localStorage.getItem("ft_newsApiKey")||"";
+  S.newsCache={};
+  S.newsFetched=false;
 S.ghToken=localStorage.getItem("ft_ghToken")||"";
 S.ghUser=localStorage.getItem("ft_ghUser")||"";
 S.ghRepo=localStorage.getItem("ft_ghRepo")||"";
@@ -1710,6 +1807,7 @@ document.getElementById("ir").value=S.acc.rate;
 var _cft=document.getElementById("ic-ft");var _csw=document.getElementById("ic-sw");var _cct=document.getElementById("ic-ct");if(_cft)_cft.value=S.acc.cashFT||0;if(_csw)_csw.value=S.acc.cashSchwab||0;if(_cct)_cct.value=S.acc.cashCathay||0;
 render();
 document.addEventListener("click",function(e){var p=document.getElementById("cash-panel");if(p&&!p.contains(e.target)&&!e.target.closest("[onclick*='cash-panel']"))p.classList.remove("open");});
+if(S.newsApiKey&&S.tab==="dash"){setTimeout(fetchNews,1500);}
 if(S.ghToken&&S.ghUser&&S.ghRepo){
   loadFromGitHub().then(function(ok){
     if(ok){

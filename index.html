@@ -1470,6 +1470,31 @@ async function fetchNews(){
   renderNewsPanel();
 }
 
+// Keywords that indicate non-financial content - filter these out
+var NEWS_EXCLUDE_WORDS=["horror","entertainment","recipe","fashion","travel","sports","soccer","football","basketball","baseball","nfl","nba","mlb","world cup","stadium workers","apple watch","airpods","macbook","iphone deal","ipad deal","sale","discount","coupon","#entertainment","del toro","movie","film","tv show","series","album","song","concert","oscar","emmy","grammy","celebrity","tiananmen","anti-corruption","neo-familism"];
+
+function matchSym(a){
+  var title=((a.title||"")+" "+(a.description||"")).toUpperCase();
+  var mySyms=[...new Set(S.H.filter(function(h){return h.shares>0&&!h.sym.includes("Call")&&!h.sym.includes("Put");}).map(function(h){return h.sym;}))];
+  // Check each holding
+  for(var i=0;i<mySyms.length;i++){
+    var s=mySyms[i];
+    var name=(SYM_NAMES[s]||"").toUpperCase().split(" ")[0];
+    if(title.includes(" "+s+" ")||title.startsWith(s+" ")||title.includes(s+"'S")||title.includes(s+",")||title.includes(s+")")){return s;}
+    if(name.length>4&&title.includes(name)){return s;}
+  }
+  return null;
+}
+
+function isFinancialNews(a){
+  var txt=((a.title||"")+" "+(a.description||"")).toLowerCase();
+  // Exclude non-financial topics
+  for(var i=0;i<NEWS_EXCLUDE_WORDS.length;i++){if(txt.includes(NEWS_EXCLUDE_WORDS[i]))return false;}
+  // Must contain at least one financial keyword OR a matched sym
+  var finWords=["stock","shares","earnings","revenue","profit","investor","market","nasdaq","nyse","sec","ipo","valuation","analyst","upgrade","downgrade","buy","sell","hold","quarter","fiscal","guidance","outlook","fund","etf"];
+  return finWords.some(function(w){return txt.includes(w);});
+}
+
 function renderNewsPanel(){
   var el=document.getElementById("news-panel");
   if(!el)return;
@@ -1481,27 +1506,48 @@ function renderNewsPanel(){
   }else if(!NEWS_STATE.articles.length){
     html="<div style='padding:12px 16px;color:var(--text2);font-size:12px'>尚無新聞，請填入 NewsAPI Key 或稍後再試。</div>";
   }else{
-    var syms=[...new Set(S.H.filter(function(h){return h.shares>0;}).map(function(h){return h.sym.toUpperCase();}))];
-    var scored=NEWS_STATE.articles.map(function(a){
-      var title=(a.title||"").toUpperCase();
-      var match=syms.find(function(s){return title.includes(s);});
-      return{a:a,sym:match||null};
+    var acctBadgeCls={"FT":"bft","Schwab":"bsw","GT":"bgt"};
+    // Score each article: find matching sym + check if financial
+    var processed=NEWS_STATE.articles.map(function(a){
+      var sym=matchSym(a);
+      var isFinancial=isFinancialNews(a);
+      return{a:a,sym:sym,ok:sym&&isFinancial};
     });
-    // show matched first then rest
-    var sorted=scored.filter(function(x){return x.sym;}).concat(scored.filter(function(x){return !x.sym;}));
-    sorted.slice(0,15).forEach(function(x){
-      var a=x.a;
-      var pub=a.publishedAt?new Date(a.publishedAt):null;
-      var timeStr=pub?timeSince(pub):"";
-      var srcName=a.source&&a.source.name?a.source.name:"";
-      html+="<div style='padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;flex-direction:column;gap:3px'>";
-      if(x.sym)html+="<span class='badge bft' style='font-size:10px;align-self:flex-start;margin-bottom:2px'>"+x.sym+"</span>";
-      html+="<a href='"+esc(a.url)+"' target='_blank' style='font-size:12px;font-weight:500;color:var(--text);text-decoration:none;line-height:1.4'>"+esc(a.title||"")+"</a>";
-      html+="<div style='display:flex;gap:8px;font-size:10px;color:var(--text3)'>";
-      if(srcName)html+="<span>"+esc(srcName)+"</span>";
-      if(timeStr)html+="<span>"+timeStr+"</span>";
-      html+="</div></div>";
-    });
+    // Sort: matched+financial first, then matched only, then rest
+    var sorted=processed.filter(function(x){return x.ok;})
+      .concat(processed.filter(function(x){return x.sym&&!x.ok;}))
+      .concat(processed.filter(function(x){return !x.sym&&isFinancialNews(x.a);}));
+    var shown=sorted.slice(0,12);
+    if(!shown.length){
+      html="<div style='padding:14px;color:var(--text2);font-size:12px'>未找到相關財經新聞，請點「重新整理」再試。</div>";
+    }else{
+      shown.forEach(function(x){
+        var a=x.a,sym=x.sym;
+        var pub=a.publishedAt?new Date(a.publishedAt):null;
+        var timeStr=pub?timeSince(pub):"";
+        var srcName=a.source&&a.source.name?a.source.name:"";
+        // Find which acct this sym belongs to
+        var holding=sym&&S.H.find(function(h){return h.sym===sym&&h.shares>0;});
+        var acctCls=holding?acctBadgeCls[holding.acct||"FT"]||"br":"bft";
+        html+="<div style='padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;flex-direction:column;gap:4px'>";
+        if(sym){
+          html+="<div style='display:flex;gap:5px;align-items:center;flex-wrap:wrap'>";
+          html+="<span class='badge "+acctCls+"' style='font-size:10px'>"+sym+"</span>";
+          if(holding){html+="<span style='font-size:10px;color:var(--text3)'>"+fn(holding.price,2)+" · "+(holding.shares*(holding.price-holding.cost)>=0?"<span class='pos'>":"<span class='neg'>")+(holding.shares*(holding.price-holding.cost)>=0?"+":"")+fp((holding.price-holding.cost)/holding.cost)+"</span></span>";}
+          html+="</div>";
+        }
+        html+="<a href='"+esc(a.url)+"' target='_blank' style='font-size:12px;font-weight:500;color:var(--text);text-decoration:none;line-height:1.45;display:block'>"+esc(a.title||"")+"</a>";
+        if(a.description&&a.description.length>20){
+          html+="<div style='font-size:11px;color:var(--text2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden'>"+esc(a.description)+"</div>";
+        }
+        html+="<div style='display:flex;gap:8px;font-size:10px;color:var(--text3);margin-top:1px'>";
+        if(srcName)html+="<span>"+esc(srcName)+"</span>";
+        if(timeStr)html+="<span>"+timeStr+"</span>";
+        html+="</div></div>";
+      });
+    }
+    var updTime=NEWS_STATE.lastFetch?new Date(NEWS_STATE.lastFetch).toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"}):"";
+    if(updTime)html+="<div style='padding:8px 14px;font-size:10px;color:var(--text3);border-top:0.5px solid var(--border)'>上次更新 "+updTime+"</div>";
   }
   el.innerHTML=html;
 }

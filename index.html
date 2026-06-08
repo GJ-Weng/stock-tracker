@@ -1433,7 +1433,7 @@ async function fetchNews(){
   if(!syms.length){NEWS_STATE.loading=false;NEWS_STATE.error="尚無持倉";renderNewsPanel();return;}
   var q=syms.join(" OR ");
   try{
-    var url="https://newsapi.org/v2/everything?q="+encodeURIComponent(q)+"&language=en&sortBy=publishedAt&pageSize=20&apiKey="+S.newsApiKey;
+    var url="/api/news?q="+encodeURIComponent(q)+"&apiKey="+encodeURIComponent(S.newsApiKey);
     var r=await fetch(url);
     var d=await r.json();
     if(d.status!=="ok")throw new Error(d.message||"API error");

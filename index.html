@@ -1004,18 +1004,76 @@ function rBadge(t){var m={"買入":"bi","賣出":"bd","入金":"bb","現金利�
 function rUBtn(text,fn,loading){return "<button class='ubtn"+(loading?" loading":"")+"' onclick='"+fn+"()'>"+text+"</button>";}
 
 function rDash(p){
-  var cashROI=p.totalInvested>0?((p.totalUSD-p.totalInvested)/p.totalInvested):0;
-  var retPct=Math.min(p.totalUSD/1000000*100,100),retLeft=Math.max(1000000-p.totalUSD,0);
   var acctCash=S.acc||{};
+  var dashView=S.dashView||"all";
+  var dashLabels={"all":"整合","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
+
+  // ── Per-account KPI calculation ──
+  var kRows=dashView==="all"?p.act:p.act.filter(function(h){return h.acct===dashView;});
+  var kMkt=0,kCost=0,kUnreal=0,kToday=0,kReal=0,kDiv=0;
+  kRows.forEach(function(h){
+    var mv=h.shares*h.price;
+    kMkt+=mv;kCost+=h.shares*h.cost;
+    kUnreal+=h.shares*(h.price-h.cost);
+    kToday+=h.shares*(h.chg||0);
+    kReal+=(h.realized||0);kDiv+=(h.div||0);
+  });
+  // account cash per view
+  var kCash=dashView==="all"?p.cash
+    :dashView==="FT"?(acctCash.cashFT||0)
+    :dashView==="Schwab"?(acctCash.cashSchwab||0)
+    :dashView==="GT"?(acctCash.cashCathay||0):0;
+  var kTotal=kMkt+kCash;
+  var kTotalTWD=kTotal*(acctCash.rate||31.5);
+  // invested per view (from FX records with matching acct)
+  var kInvested=0;
+  S.E.forEach(function(e){
+    if(dashView==="all"||e.acct===dashView||(dashView==="FT"&&(!e.acct||e.acct==="FT")))kInvested+=e.usd||0;
+  });
+  var kROI=kInvested>0?(kTotal-kInvested)/kInvested:0;
+  var viewLabel=dashLabels[dashView]||dashView;
+  var isAll=dashView==="all";
 
   // ── KPI strip ──
   var kpiStyle="style='font-size:21px;font-weight:600;font-family:ui-monospace,monospace;line-height:1.1'";
   var html="<div class='kpi-strip'>";
-  html+="<div class='kpi-cell' style='border-top:3px solid var(--blue)'><div class='cl'>總資產 USD</div><div class='cv' "+kpiStyle+">$"+fn(p.totalUSD,0)+"</div><div class='cs'>≈ NT$"+fn(p.totalTWD,0)+"</div></div>";
-  html+="<div class='kpi-cell' style='border-top:3px solid "+(p.unreal>=0?"var(--green)":"var(--red)")+"'><div class='cl'>未實現損益</div><div class='cv "+cv(p.unreal)+"' "+kpiStyle+">"+(p.unreal>=0?"+":"")+"$"+fn(p.unreal,2)+"</div><div class='cs'>"+(p.cost>0?fp(p.unreal/p.cost):"—")+"</div></div>";
-  html+="<div class='kpi-cell' style='border-top:3px solid "+(p.todayChg>=0?"var(--green)":"var(--red)")+"'><div class='cl'>今日損益</div><div class='cv "+cv(p.todayChg)+"' "+kpiStyle+">"+(p.todayChg>=0?"+":"-")+"$"+fn(Math.abs(p.todayChg),2)+"</div><div class='cs'>市場波動</div></div>";
-  html+="<div class='kpi-cell' style='border-top:3px solid "+(cashROI>=0?"var(--green)":"var(--red)")+"'><div class='cl'>整體報酬率</div><div class='cv "+cv(cashROI)+"' "+kpiStyle+">"+(cashROI>=0?"+":"")+fp(cashROI)+"</div><div class='cs'>以入金USD計算</div></div>";
+  html+="<div class='kpi-cell' style='border-top:3px solid var(--blue)'>";
+  html+="<div class='cl'>"+(isAll?"總資產":viewLabel+" 總值")+" USD</div>";
+  html+="<div class='cv' "+kpiStyle+">$"+fn(kTotal,0)+"</div>";
+  html+="<div class='cs'>≈ NT$"+fn(kTotalTWD,0)+"</div></div>";
+
+  html+="<div class='kpi-cell' style='border-top:3px solid "+(kUnreal>=0?"var(--green)":"var(--red)")+"'>";
+  html+="<div class='cl'>未實現損益</div>";
+  html+="<div class='cv "+cv(kUnreal)+"' "+kpiStyle+">"+(kUnreal>=0?"+":"")+"$"+fn(kUnreal,2)+"</div>";
+  html+="<div class='cs'>"+(kCost>0?fp(kUnreal/kCost):"—")+"</div></div>";
+
+  html+="<div class='kpi-cell' style='border-top:3px solid "+(kToday>=0?"var(--green)":"var(--red)")+"'>";
+  html+="<div class='cl'>今日損益</div>";
+  html+="<div class='cv "+cv(kToday)+"' "+kpiStyle+">"+(kToday>=0?"+":"-")+"$"+fn(Math.abs(kToday),2)+"</div>";
+  html+="<div class='cs'>市場波動</div></div>";
+
+  html+="<div class='kpi-cell' style='border-top:3px solid "+(kROI>=0?"var(--green)":"var(--red)")+"'>";
+  html+="<div class='cl'>"+(isAll?"整體":"帳戶")+"報酬率</div>";
+  html+="<div class='cv "+cv(kROI)+"' "+kpiStyle+">"+(kROI>=0?"+":"")+fp(kROI)+"</div>";
+  html+="<div class='cs'>以入金USD計算</div></div>";
   html+="</div>";
+
+  // for left panel, still use full totals
+  var retPct=Math.min(p.totalUSD/1000000*100,100),retLeft=Math.max(1000000-p.totalUSD,0);
+  var cashROI=p.totalInvested>0?((p.totalUSD-p.totalInvested)/p.totalInvested):0;
+
+  // ── Account switcher above KPI strip ──
+  var dashAccts=["all"];
+  S.H.forEach(function(h){if(h.acct&&dashAccts.indexOf(h.acct)<0)dashAccts.push(h.acct);});
+  html="<div style='background:var(--bg);border-bottom:0.5px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap'>"+html;
+  // prepend chips before KPI strip - build separately
+  var chipHtml="<div style='background:var(--bg);border-bottom:0.5px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap'>";
+  dashAccts.forEach(function(a){
+    var label={"all":"整合","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"}[a]||a;
+    chipHtml+="<button class='chip"+(dashView===a?" active":"")+"' data-dv='"+a+"' onclick='S.dashView=this.dataset.dv;render()'>"+label+"</button>";
+  });
+  chipHtml+="</div>";
+  html=chipHtml+html;
 
   // ── 2-col layout ──
   html+="<div class='dash-layout'>";
@@ -1048,11 +1106,6 @@ function rDash(p){
 
   // ── Right: holdings overview ──
   html+="<div class='dash-right'>";
-  // dash account filter
-  var dashAccts=["all"];
-  S.H.forEach(function(h){if(h.acct&&dashAccts.indexOf(h.acct)<0)dashAccts.push(h.acct);});
-  var dashLabels={"all":"整合","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
-  var dashView=S.dashView||"all";
   var dashRows;
   if(dashView==="all"){
     var merged2={};
@@ -1072,11 +1125,7 @@ function rDash(p){
 
   html+="<div class='panel'>";
   html+="<div class='ph'>";
-  html+="<div style='display:flex;gap:5px;flex-wrap:wrap'>";
-  dashAccts.forEach(function(a){
-    html+="<button class='chip"+(dashView===a?" active":"")+"' data-dv='"+a+"' onclick='S.dashView=this.dataset.dv;render()'>"+(dashLabels[a]||a)+"</button>";
-  });
-  html+="</div>";
+  html+="<span style='color:var(--text2);font-size:11px'>"+(isAll?"整合檢視":viewLabel)+"的持倉</span>";
   html+=rUBtn(S.updating?"<span class='spin'></span> 更新中…":"🔄 更新報價","updatePrices",S.updating);
   html+="</div>";
   html+="<div class='sx'><table><thead><tr>";

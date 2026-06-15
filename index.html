@@ -1231,30 +1231,29 @@ function rHoldings(){
     var mv=mktVal(h),ur=mv-costBasis(h),ret=h.cost>0?(h.price*(h.isOption?100:1)-h.cost)/h.cost:0,ann=annualReturn(h.cost,h.price*(h.isOption?100:1),h.fd),isE=S.editPriceId===h.id;
     var isQT=S.quickTrade&&S.quickTrade.id===h.id;
     var qtType=isQT?S.quickTrade.type:"";
+    var _acls={"FT":"bft","Schwab":"bsw","GT":"bgt"}[h.acct||"FT"]||"br";
+    var _albl={"FT":"Firstrade","Schwab":"嘉信","GT":"國泰"}[h.acct]||h.acct||"FT";
     html+="<tr><td>"
-      +"<div style='display:flex;align-items:center;gap:6px'><strong>"+esc(h.sym)+"</strong>"
-      +(h.acct?"<span style='font-size:10px;padding:1px 5px;border-radius:3px;background:var(--bg3);color:var(--text2)'>"+esc(h.acct)+"</span>":"")
+      +"<strong style='font-size:13px;letter-spacing:.04em'>"+esc(h.sym)+"</strong>"
+      +(h.note?"<div style='font-size:10px;color:var(--text3);margin-top:1px'>"+esc(h.note)+"</div>":"")
+      +"<div style='display:flex;gap:4px;margin-top:4px'>"
+      +"<button onclick='openQuickTrade(this.dataset.id,\"買入\")' data-id='"+h.id+"' class='btn-sm' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue)'>+買</button>"
+      +(h.shares>0?"<button onclick='openQuickTrade(this.dataset.id,\"賣出\")' data-id='"+h.id+"' class='btn-sm' style='background:var(--red-bg);color:var(--red);border-color:var(--red)'>-賣</button>":"")
       +"</div>"
-      +(h.note?"<small style='color:var(--text2)'>"+esc(h.note)+"</small>":"")
-      +"<div style='display:flex;gap:3px;margin-top:3px'>"
-      +"<button onclick='openQuickTrade(this.dataset.id,\"\u8cb7\u5165\")' data-id='"+h.id+"'  style='padding:2px 8px;font-size:11px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue);border-radius:4px;cursor:pointer'>+\u8cb7</button>"
-      +(h.shares>0?"<button onclick='openQuickTrade(this.dataset.id,\"\u8ce3\u51fa\")' data-id='"+h.id+"' style='padding:2px 8px;font-size:11px;background:var(--red-bg);color:var(--red);border:1px solid var(--red);border-radius:4px;cursor:pointer'>-\u8ce3</button>":"")
-      +"</div>"
-      +(isQT
-        ?"<div style='margin-top:8px;padding:10px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);min-width:280px'>"
-          +"<div style='font-size:12px;font-weight:500;margin-bottom:8px;color:"+(qtType==='\u8cb7\u5165'?"var(--blue)":"var(--red)")+"'>"+qtType+" "+esc(h.sym)+"</div>"
-          +"<div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px'>"
-          +"<div><div style='font-size:10px;color:var(--text2);margin-bottom:2px'>\u80a1\u6578</div><input id='qt-shares' type='number' placeholder='0' style='padding:5px;font-size:13px'></div>"
-          +"<div><div style='font-size:10px;color:var(--text2);margin-bottom:2px'>\u50f9\u683c</div><input id='qt-price' type='number' value='"+h.price+"' style='padding:5px;font-size:13px'></div>"
-          +"<div><div style='font-size:10px;color:var(--text2);margin-bottom:2px'>\u624b\u7e8c\u8cbb</div><input id='qt-fee' type='number' value='0' style='padding:5px;font-size:13px'></div>"
-          +"</div>"
-          +"<div style='margin-bottom:8px'><div style='font-size:10px;color:var(--text2);margin-bottom:2px'>\u65e5\u671f</div><input id='qt-date' type='date' value='"+today()+"' style='padding:5px;font-size:13px'></div>"
-          +"<div style='display:flex;gap:6px'>"
-          +"<button onclick='submitQuickTrade()' style='flex:1;padding:7px;font-size:13px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);cursor:pointer'>\u78ba\u8a8d"+qtType+"</button>"
-          +"<button onclick='closeQuickTrade()' style='padding:7px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);cursor:pointer'>\u53d6\u6d88</button>"
-          +"</div></div>"
-        :"")
-      +"</td>"
+      +"</td>";
+    // Quick trade panel as separate full-width row
+    if(isQT){
+      var colCount=ex?13:9;
+      html+="</tr><tr><td colspan='"+colCount+"' style='padding:0;background:var(--bg2)'>"
+        +"<div style='padding:12px 16px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:8px;align-items:flex-end'>"
+        +"<div><div class='fl'>股數</div><input id='qt-shares' type='number' placeholder='0'></div>"
+        +"<div><div class='fl'>價格 USD</div><input id='qt-price' type='number' value='"+h.price+"'></div>"
+        +"<div><div class='fl'>手續費</div><input id='qt-fee' type='number' value='0'></div>"
+        +"<div><div class='fl'>日期</div><input id='qt-date' type='date' value='"+today()+"'></div>"
+        +"<div style='display:flex;gap:6px'><button class='btn-blue' onclick='submitQuickTrade()'>確認"+qtType+"</button><button onclick='closeQuickTrade()'>取消</button></div>"
+        +"</div></td>";
+    }
+    html+="<td><span class='badge "+_acls+"'>"+ _albl+"</span></td>";
     html+="<td class='num'><span onclick='startEditShares(\""+h.id+"\")' title='點擊修改股數' style='cursor:pointer;text-decoration:underline dotted'>"+fn(h.shares,h.shares%1===0?0:6)+"</span></td><td class='num'>$"+fn(h.cost,4)+"</td>";
     html+="<td class='num'>"+(isE?"<input id='ep-"+h.id+"' type='number' value='"+S.editPriceVal+"' style='width:82px;padding:3px 6px;font-size:12px;text-align:right' onblur=\"savePrice('"+h.id+"')\" onkeydown=\"if(event.key==='Enter')savePrice('"+h.id+"');else if(event.key==='Escape'){S.editPriceId=null;render();}\" oninput='S.editPriceVal=this.value'>":"<span onclick=\"startEditPrice('"+h.id+"',"+h.price+")\" style='cursor:pointer;text-decoration:underline dotted'>$"+fn(h.price,2)+"</span>")+"</td>";
     html+="<td class='num "+cv(h.chg)+"'>"+(h.chg>=0?"+":"")+fn(h.chg,2)+"</td>";

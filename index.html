@@ -437,6 +437,7 @@ function ghLoad(){
 }
 
 // ─── PRICE UPDATE ───
+// ─── PRICE UPDATE ───
 async function updatePrices(){
   if(S.updating)return;
   var _rawSyms=S.H.filter(function(h){return h.shares>0&&!h.sym.includes("Call")&&!h.sym.includes("Put");}).map(function(h){return h.sym;});
@@ -444,12 +445,10 @@ async function updatePrices(){
   if(!syms.length){toast("沒有有效持倉");return;}
   S.updating=true;render();
   try{
-    // Modify this if you have a real API endpoint, currently acts as a placeholder
-    // var r=await fetch("/api/quote?sym="+encodeURIComponent(syms.join(",")));
-    // if(!r.ok)throw new Error("API "+r.status);
-    // var data=await r.json();
-    throw new Error("需設定有效報價 API 來源");
-    /* var n=0;
+    var r=await fetch("/api/quote?sym="+encodeURIComponent(syms.join(",")));
+    if(!r.ok)throw new Error("API "+r.status);
+    var data=await r.json();
+    var n=0;
     S.H=S.H.map(function(h){
       if(data[h.sym]&&!data[h.sym].error){
         n++;
@@ -459,7 +458,6 @@ async function updatePrices(){
     });
     sv("H");
     toast(n>0?"✅ 已更新 "+n+" 支報價（"+new Date().toLocaleTimeString()+"）":"❌ 無法取得報價，請確認網路");
-    */
   }catch(e){toast("❌ 更新失敗："+e.message);}
   S.updating=false;render();
 }

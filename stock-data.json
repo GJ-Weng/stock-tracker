@@ -158,32 +158,6 @@
       "acct": "Schwab"
     },
     {
-      "id": "1781616903625-2k8k",
-      "sym": "ONDS",
-      "shares": 50,
-      "cost": 8.5,
-      "price": 9.63,
-      "chg": 0.12,
-      "div": 0,
-      "realized": 0,
-      "note": "",
-      "fd": "2025-12-03",
-      "acct": "Schwab"
-    },
-    {
-      "id": "1781609509742-i0vm",
-      "sym": "KBSX",
-      "shares": 9979,
-      "cost": 1.227236,
-      "price": 1.2,
-      "chg": -0.08,
-      "div": 0,
-      "realized": 0,
-      "note": "",
-      "fd": "2026-02-03",
-      "acct": "GT"
-    },
-    {
       "id": "1781618001106-9wmh",
       "sym": "ALAB",
       "shares": 0,
@@ -208,6 +182,19 @@
       "note": "",
       "fd": "2025-10-15",
       "acct": "FT"
+    },
+    {
+      "id": "1781616903625-2k8k",
+      "sym": "ONDS",
+      "shares": 50,
+      "cost": 8.5,
+      "price": 9.63,
+      "chg": 0.12,
+      "div": 0,
+      "realized": 0,
+      "note": "",
+      "fd": "2025-12-03",
+      "acct": "Schwab"
     },
     {
       "id": "1781618001106-yqhb",
@@ -247,6 +234,19 @@
       "note": "",
       "fd": "2026-01-29",
       "acct": "FT"
+    },
+    {
+      "id": "1781609509742-i0vm",
+      "sym": "KBSX",
+      "shares": 9979,
+      "cost": 1.227236,
+      "price": 1.2,
+      "chg": -0.08,
+      "div": 0,
+      "realized": 0,
+      "note": "",
+      "fd": "2026-02-03",
+      "acct": "GT"
     },
     {
       "id": "1781618001106-ivpx",

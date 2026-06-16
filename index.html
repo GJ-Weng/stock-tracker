@@ -597,10 +597,11 @@ function parseSchwabDate(s){
   if(p.length!==3)return clean;
   return p[2]+"-"+p[0].padStart(2,"0")+"-"+p[1].padStart(2,"0");
 }
-function classifySchwab(action, desc, qty){
+function classifySchwab(action, desc, qty, amt){
   var a = action.trim();
   var d = String(desc || "").toUpperCase();
   var q = parseFloat(qty) || 0;
+  var amount = parseFloat(amt) || 0;
 
   if(a === "Buy" || a === "Reinvest Shares") return "買入";
   if(a === "Sell") return "賣出";
@@ -632,7 +633,8 @@ function classifySchwab(action, desc, qty){
   }
 
   if(a === "Security Transfer"){
-    // ACAT TOA 帳戶整體移轉、現金移出 → 跳過
+    // 負金額 = ACAT 現金轉出（如 -$15000），需計入現金減少
+    if(amount < 0) return "出金";
     return "其他";
   }
 
@@ -707,15 +709,15 @@ function rSchwabPanel(){
   }
   // Build preview
   var rows=schwabImp.rows;
-  var included=rows.filter(function(r){return classifySchwab(r.action, r.desc, r.qty)!=="其他";});
-  var skipped=rows.filter(function(r){return classifySchwab(r.action, r.desc, r.qty)==="其他";});
+  var included=rows.filter(function(r){return classifySchwab(r.action, r.desc, r.qty, r.amount)!=="其他";});
+  var skipped=rows.filter(function(r){return classifySchwab(r.action, r.desc, r.qty, r.amount)==="其他";});
   var badgeMap={"買入":"bb","賣出":"bs","配息":"bd","現金利息":"bi","入金":"bd","預扣稅":"bs","轉出":"br"};
   var html="<div class='sb' id='schwab-panel'><h3>📋 嘉信預覽（"+included.length+" 筆）</h3>";
   if(skipped.length)html+="<div class='wb' style='margin-bottom:10px'>⚠️ 略過 "+skipped.length+" 筆（無法識別的類型，不影響交易紀錄）</div>";
   html+="<div class='sx' style='max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px'>";
   html+="<table><thead><tr><th>日期</th><th>類別</th><th>代號</th><th class='num'>股數</th><th class='num'>成交價</th><th class='num'>金額</th></tr></thead><tbody>";
   included.forEach(function(r){
-    var t=classifySchwab(r.action, r.desc, r.qty);
+    var t=classifySchwab(r.action, r.desc, r.qty, r.amount);
     html+="<tr><td style='font-size:12px;color:var(--text2)'>"+r.date+"</td>";
     html+="<td><span class='badge "+(badgeMap[t]||"br")+"'>"+t+"</span></td>";
     html+="<td>"+(r.sym?"<strong>"+esc(r.sym)+"</strong>":"—")+"</td>";
@@ -731,17 +733,20 @@ function rSchwabPanel(){
   return html;
 }
 function schwabSetCash(){
-  // Manual Schwab cash override → stored as cashAdj.Schwab so recalcCash() still owns the logic
-  var v=parseFloat(document.getElementById("schwab-cash").value)||0;
+  var v=parseFloat(document.getElementById("schwab-cash").value);
+  if(isNaN(v)){alert("請輸入有效金額");return;}
   if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
-  // adj = desired cash - what transactions already compute
-  var txSchwab=0;
-  S.T.filter(function(t){return t.source==="Schwab";}).forEach(function(t){txSchwab+=t.amt||0;});
-  S.acc.cashAdj.Schwab=parseFloat((v-txSchwab).toFixed(2));
-  recalcCash();sv("acc");
+  // 直接把嘉信現金設為使用者填入的值，清除舊的 adj 避免殘留
+  // recalcCash 會計算嘉信 S.T 的交易影響，我們用 adj 補差額
+  recalcCash(); // 先算出 S.T 貢獻的嘉信現金
+  var autoSchwab=S.acc.cashSchwab; // S.T 算出來的嘉信現金
+  S.acc.cashAdj.Schwab=parseFloat((v-autoSchwab).toFixed(2));
+  S.acc.cashSchwab=v;
+  S.acc.cash=S.acc.cashFT+S.acc.cashSchwab+S.acc.cashCathay;
+  sv("acc");
   schwabImp={rows:[],step:0};
   clearTimeout(S._syncTimer);syncToGitHub();
-  toast("✅ 嘉信匯入完成，現金 $"+fn(S.acc.cashSchwab,2));
+  toast("✅ 嘉信匯入完成，現金 $"+fn(v,2));
   S.tab="dash";render();
 }
 function schwabConfirmImport(){
@@ -754,7 +759,7 @@ function schwabConfirmImport(){
   
   var newCount = 0;
   allRows.forEach(function(r){
-    var type=classifySchwab(r.action, r.desc, r.qty);
+    var type=classifySchwab(r.action, r.desc, r.qty, r.amount);
     if (type === "其他") return;
     
     // 檢查是否已存在相似紀錄，存在就跳過不重複新增
@@ -1382,18 +1387,46 @@ function rHoldings(){
   return "<div class='page-body'>"+html+"</div>";
 }
 
-function rTx(){
-  var types=["買入","賣出","入金","出金","現金利息","匯費補貼","配息","預扣稅","轉出"];
-  var fTypes=["全部"].concat(types);
+function exportTxExcel(){
   var q=S.txSearch.toLowerCase();
   var filtered=S.T.filter(function(t){
-    return(S.filterType==="全部"||t.type===S.filterType)&&(!q||(t.sym||"").toLowerCase().includes(q)||t.type.includes(q));
+    return(S.filterType==="全部"||t.type===S.filterType)
+      &&(S.filterAcct==="全部"||( t.source||"FT")===S.filterAcct)
+      &&(!q||(t.sym||"").toLowerCase().includes(q)||t.type.includes(q));
+  }).sort(function(a,b){return b.date.localeCompare(a.date);});
+  var srcLabel={"FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
+  var rows=[["日期","帳戶","類別","代號","股數","成交價","手續費","實際金額(USD)","匯費(NTD)","備註"]];
+  filtered.forEach(function(t){
+    rows.push([t.date,srcLabel[t.source||"FT"]||t.source||"FT",t.type,t.sym||"",t.shares||"",t.price||"",t.fee||"",t.amt||"",t.wire||"",t.desc||""]);
+  });
+  // Build CSV then trigger download
+  var csv=rows.map(function(r){return r.map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+  var bom="\uFEFF";
+  var blob=new Blob([bom+csv],{type:"text/csv;charset=utf-8;"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");a.href=url;a.download="交易記錄_"+(new Date().toISOString().slice(0,10))+".csv";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  toast("✅ 已匯出 "+filtered.length+" 筆交易（可用 Excel 開啟）");
+}
+function rTx(){
+  if(!S.filterAcct)S.filterAcct="全部";
+  var types=["買入","賣出","入金","出金","現金利息","匯費補貼","配息","預扣稅","轉出"];
+  var fTypes=["全部"].concat(types);
+  var accts=["全部","FT","Schwab","GT"];
+  var acctLabel={"全部":"全部","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
+  var q=S.txSearch.toLowerCase();
+  var filtered=S.T.filter(function(t){
+    return(S.filterType==="全部"||t.type===S.filterType)
+      &&(S.filterAcct==="全部"||(t.source||"FT")===S.filterAcct)
+      &&(!q||(t.sym||"").toLowerCase().includes(q)||t.type.includes(q));
   }).sort(function(a,b){return b.date.localeCompare(a.date);});
   var isEd=!!S.editTxId,edTx=isEd?S.T.find(function(t){return t.id===S.editTxId;}):null;
-  var html="<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px'>";
+  var html="<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px'>";
   html+="<div class='filter-bar'>"+fTypes.map(function(ft){return "<button class='chip"+(S.filterType===ft?" active":"")+"' onclick=\"setFilter('"+ft+"')\">"+ft+"</button>";}).join("");
   html+="<input class='si' placeholder='搜尋代號…' value='"+esc(S.txSearch)+"' oninput='S.txSearch=this.value;render()'></div>";
-  html+="<button class='btn btn-blue' onclick=\"toggleForm('t')\">＋ 新增</button></div>";
+  html+="<div style='display:flex;gap:8px'><button class='btn' onclick='exportTxExcel()'>📥 匯出 Excel</button><button class='btn btn-blue' onclick=\"toggleForm('t')\">＋ 新增</button></div></div>";
+  // 帳戶篩選
+  html+="<div class='filter-bar' style='margin-bottom:12px'>帳戶："+accts.map(function(a){return "<button class='chip"+(S.filterAcct===a?" active":"")+"' onclick=\"S.filterAcct='"+a+"';render()\">"+acctLabel[a]+"</button>";}).join("")+"</div>";
   if(S.showForm==="t"||isEd){
     var ev=function(k,d){return isEd&&edTx?(edTx[k]!==undefined?edTx[k]:d):d;};
     var curType=isEd&&edTx?edTx.type:"買入";
@@ -1415,7 +1448,7 @@ function rTx(){
     html+="</div>"+(S.showForm==="t"?"<div class='fh'>💡 買入/出金/預扣稅會自動計算為負數支出</div>":"")+"</div>";
     html+="<script>setTimeout(function(){onTxTypeChange(document.getElementById('ft-type')&&document.getElementById('ft-type').value||'買入');},30);<\/script>";
   }
-  html+="<div class='panel'><div class='ph'><span>顯示 "+filtered.length+" / "+S.T.length+" 筆</span></div>";
+  html+="<div class='panel'><div class='ph'><span>顯示 "+filtered.length+" / "+S.T.length+" 筆"+(S.filterAcct!=="全部"?" （"+acctLabel[S.filterAcct]+"）":"")+"</span></div>";
   html+="<div class='sx sy'><table><thead><tr><th>日期</th><th>類別</th><th>代號</th><th class='num'>股數</th><th class='num'>成交價</th><th class='num'>手續費</th><th class='num'>實際金額</th><th class='num'>匯費(NTD)</th><th></th></tr></thead><tbody>";
   filtered.forEach(function(t){
     var srcLabel={"FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
@@ -1563,6 +1596,15 @@ function rSettings(){
   html+="<div class='kr'><input type='password' id='news-key-inp' placeholder='你的 NewsAPI Key…' value='"+esc(S.newsApiKey||"")+"'><button class='btn btn-blue' onclick='saveNewsApiKey()'>儲存並載入新聞</button></div></div>";
   html+="<div class='sb'><h3>🔑 Anthropic API Key（報價備援）</h3>";
   html+="<div class='kr'><input type='password' id='api-key-inp' placeholder='sk-ant-api03-…' value='"+esc(S.apiKey)+"'><button class='btn btn-blue' onclick='saveApiKey()'>儲存</button></div></div>";
+  html+="<div class='sb'><h3>💰 現金餘額修正</h3>";
+  html+="<p style='font-size:12px;color:var(--text2);margin-bottom:10px'>如果現金顯示異常（虛高或過低），可在此直接覆蓋各帳戶現金。</p>";
+  var adjNow=S.acc.cashAdj||{FT:0,Schwab:0,GT:0};
+  html+="<div style='font-size:11px;color:var(--text3);margin-bottom:8px'>目前調整值 — FT: "+adjNow.FT+" / 嘉信: "+adjNow.Schwab+" / 國泰: "+(adjNow.GT||0)+"</div>";
+  html+="<div style='display:flex;gap:8px;flex-wrap:wrap'>";
+  html+="<div style='display:flex;gap:6px;align-items:flex-end'><div><div class='fl'>嘉信現金 (USD)</div><input id='set-sw-cash' type='number' step='0.01' placeholder='例：186.80' style='width:120px'></div>";
+  html+="<button class='btn btn-blue' onclick='overrideSchwabCash()'>覆蓋</button></div>";
+  html+="<button class='btn' onclick='resetCashAdj()'>🔄 清除所有現金調整值</button>";
+  html+="</div></div>";
   html+="<div class='sb'><h3>📦 資料管理</h3><div style='display:flex;gap:8px;flex-wrap:wrap;margin-top:8px'>";
   html+="<button class='btn' onclick='exportJSON()'>📤 備份 JSON</button>";
   html+="<button class='btn' onclick='document.getElementById(\"imp\").click()'>📥 還原 JSON</button>";
@@ -2003,6 +2045,22 @@ function saveEditFX(id){
   var date=(document.getElementById("fe-date")&&document.getElementById("fe-date").value)||today();
   S.E=S.E.map(function(e){return e.id===id?Object.assign({},e,{date:date,bank:bank,acct:acct,twd:twd,usd:usd,rate:rate,note:note,mode:mode}):e;});
   sv("E");S.editFxId=null;S.fxMode="twd";recalcCash();sv("acc");toast("✅ 出入金紀錄已更新");render();
+}
+function overrideSchwabCash(){
+  var v=parseFloat(document.getElementById("set-sw-cash").value);
+  if(isNaN(v)){alert("請輸入有效金額");return;}
+  if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
+  recalcCash();
+  S.acc.cashAdj.Schwab=parseFloat((v-S.acc.cashSchwab).toFixed(2));
+  S.acc.cashSchwab=v;
+  S.acc.cash=S.acc.cashFT+v+(S.acc.cashCathay||0);
+  sv("acc");toast("✅ 嘉信現金已設為 $"+fn(v,2));render();
+}
+function resetCashAdj(){
+  if(!confirm("清除所有現金手動調整值？\n自動計算的現金不受影響。"))return;
+  S.acc.cashAdj={FT:0,Schwab:0,GT:0};
+  sv("acc");recalcCash();sv("acc");
+  toast("✅ 現金調整值已全部清除");render();
 }
 function delFX(id){if(!confirm("確定刪除？"))return;S.E=S.E.filter(function(e){return e.id!==id;});sv("E");recalcCash();sv("acc");render();}
 

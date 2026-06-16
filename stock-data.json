@@ -433,8 +433,8 @@
     {
       "id": "1781609509742-i0vm",
       "sym": "KBSX",
-      "shares": 300,
-      "cost": 1.24,
+      "shares": 400,
+      "cost": 1.237375,
       "price": 1.24,
       "chg": 0,
       "div": 0,
@@ -5745,6 +5745,18 @@
       "amt": -123.1,
       "wire": 0,
       "source": "GT"
+    },
+    {
+      "id": "1781609622925-bz59",
+      "date": "2026-04-16",
+      "type": "買入",
+      "sym": "KBSX",
+      "shares": 100,
+      "price": 1.2295,
+      "fee": 0.1,
+      "amt": -123.05,
+      "wire": 0,
+      "source": "GT"
     }
   ],
   "E": [
@@ -6421,10 +6433,10 @@
     }
   ],
   "acc": {
-    "cash": 63956.229999999996,
+    "cash": 63833.17999999999,
     "cashFT": 4578.84,
     "cashSchwab": 47509.7,
-    "cashCathay": 11867.69,
+    "cashCathay": 11744.64,
     "cashAdj": {
       "FT": 0,
       "Schwab": 0,

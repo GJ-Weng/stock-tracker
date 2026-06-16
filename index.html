@@ -55,7 +55,7 @@ nav{display:flex;border-bottom:0.5px solid var(--border);padding:0 20px;overflow
 .tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:500}
 main{padding:0;width:100%}
 /* KPI strip */
-.kpi-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:0.5px solid var(--border);background:var(--bg);width:100%}
+.kpi-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-bottom:0.5px solid var(--border);background:var(--bg);width:100%}
 .kpi-cell{padding:12px 20px;border-right:0.5px solid var(--border);min-height:80px}
 .kpi-cell:last-child{border-right:none}
 /* 2-col dash layout */
@@ -1056,6 +1056,10 @@ function rDash(p){
   html+="<div class='cl'>"+(isAll?"整體":"帳戶")+"報酬率</div>";
   html+="<div class='cv "+cv(kROI)+"' "+kpiStyle+">"+(kROI>=0?"+":"")+fp(kROI)+"</div>";
   html+="<div class='cs'>以入金USD計算</div></div>";
+  html+="<div class='kpi-cell' style='border-top:3px solid "+(kReal>=0?"var(--green)":"var(--red)")+"'>";
+  html+="<div class='cl'>已實現損益</div>";
+  html+="<div class='cv "+cv(kReal)+"' "+kpiStyle+">"+(kReal>=0?"+":"")+"$"+fn(kReal,2)+"</div>";
+  html+="<div class='cs'>"+(kDiv>0?"含配息 $"+fn(kDiv,2):"不含配息")+"</div></div>";
   html+="</div>";
 
   // for left panel, still use full totals
@@ -1081,26 +1085,38 @@ function rDash(p){
   // ── Left panel ──
   html+="<div class='dash-left'>";
 
-  // goal progress
-  html+="<div><div class='stat-group-label'>退休目標</div>";
+  // ── Left panel content - all filtered by dashView ──
+  var sv2="style='font-size:13px;font-weight:600;font-family:ui-monospace,monospace'";
+
+  // goal progress - always show full total
+  html+="<div><div class='stat-group-label'>退休目標（整體）</div>";
   html+="<div class='prog-head'><span class='prog-title'>$1,000,000 USD</span><span class='prog-pct'>"+retPct.toFixed(2)+"%</span></div>";
   html+="<div class='prog-bar'><div class='prog-fill' style='width:"+retPct+"%'></div></div>";
   html+="<div class='prog-note'>已累積 $"+fn(p.totalUSD,0)+" — 還差 $"+fn(retLeft,0)+"</div></div>";
 
-  // stats
-  var sv2="style='font-size:13px;font-weight:600;font-family:ui-monospace,monospace'";
-  html+="<div><div class='stat-group-label'>損益明細</div>";
-  html+="<div class='stat-row'><span class='stat-label'>已實現損益</span><span class='"+cv(p.real)+"' "+sv2+">"+(p.real>=0?"+":"")+"$"+fn(p.real,2)+"</span></div>";
-  html+="<div class='stat-row'><span class='stat-label'>配息收入</span><span class='"+cv(p.div)+"' "+sv2+">$"+fn(p.div,2)+"</span></div>";
-  html+="<div class='stat-row'><span class='stat-label'>股票市值</span><span "+sv2+">$"+fn(p.mkt,0)+"</span></div>";
-  html+="<div class='stat-row'><span class='stat-label'>累計入金</span><span "+sv2+">$"+fn(p.totalInvested,2)+"</span></div></div>";
+  // stats - filtered by dashView using kRows values
+  html+="<div><div class='stat-group-label'>"+(isAll?"損益明細":viewLabel+" 損益")+"</div>";
+  html+="<div class='stat-row'><span class='stat-label'>未實現損益</span><span class='"+cv(kUnreal)+"' "+sv2+">"+(kUnreal>=0?"+":"")+"$"+fn(kUnreal,2)+"</span></div>";
+  html+="<div class='stat-row'><span class='stat-label'>已實現損益</span><span class='"+cv(kReal)+"' "+sv2+">"+(kReal>=0?"+":"")+"$"+fn(kReal,2)+"</span></div>";
+  html+="<div class='stat-row'><span class='stat-label'>配息收入</span><span class='"+cv(kDiv)+"' "+sv2+">$"+fn(kDiv,2)+"</span></div>";
+  html+="<div class='stat-row'><span class='stat-label'>股票市值</span><span "+sv2+">$"+fn(kMkt,0)+"</span></div>";
+  html+="<div class='stat-row'><span class='stat-label'>累計入金</span><span "+sv2+">$"+fn(kInvested,2)+"</span></div></div>";
 
-  // account cash
+  // account cash - show single account or all
   html+="<div><div class='stat-group-label'>帳戶現金</div><div class='acc-list'>";
-  html+="<div class='acc-item'><span class='acc-name'><span class='badge bft' style='font-size:10px'>FT</span></span><span class='acc-val'>$"+fn(acctCash.cashFT||0,2)+"</span></div>";
-  html+="<div class='acc-item'><span class='acc-name'><span class='badge bsw' style='font-size:10px'>嘉信</span></span><span class='acc-val'>$"+fn(acctCash.cashSchwab||0,2)+"</span></div>";
-  html+="<div class='acc-item'><span class='acc-name'><span class='badge bgt' style='font-size:10px'>國泰</span></span><span class='acc-val "+(acctCash.cashCathay>0?"pos":acctCash.cashCathay<0?"neg":"")+"'>$"+fn(acctCash.cashCathay||0,2)+"</span></div>";
-  var cashCls=p.cash<0?"neg":"";html+="<div class='acc-item total'><span class='acc-name' style='font-weight:600;color:var(--text);font-size:12px'>合計</span><span class='acc-val "+cashCls+"' style='font-size:15px;font-weight:700'>$"+fn(p.cash,2)+"</span></div>";
+  if(isAll){
+    html+="<div class='acc-item'><span class='acc-name'><span class='badge bft' style='font-size:10px'>FT</span></span><span class='acc-val'>$"+fn(acctCash.cashFT||0,2)+"</span></div>";
+    html+="<div class='acc-item'><span class='acc-name'><span class='badge bsw' style='font-size:10px'>嘉信</span></span><span class='acc-val'>$"+fn(acctCash.cashSchwab||0,2)+"</span></div>";
+    html+="<div class='acc-item'><span class='acc-name'><span class='badge bgt' style='font-size:10px'>國泰</span></span><span class='acc-val "+(acctCash.cashCathay>0?"pos":acctCash.cashCathay<0?"neg":"")+"'>$"+fn(acctCash.cashCathay||0,2)+"</span></div>";
+    var cashCls=p.cash<0?"neg":"";
+    html+="<div class='acc-item total'><span class='acc-name' style='font-weight:600;color:var(--text);font-size:12px'>合計</span><span class='acc-val "+cashCls+"' style='font-size:15px;font-weight:700'>$"+fn(p.cash,2)+"</span></div>";
+  }else{
+    var singleCash=dashView==="FT"?(acctCash.cashFT||0):dashView==="Schwab"?(acctCash.cashSchwab||0):(acctCash.cashCathay||0);
+    var singleBadgeCls=dashView==="FT"?"bft":dashView==="Schwab"?"bsw":"bgt";
+    var singleCashCls=singleCash>0?"pos":singleCash<0?"neg":"";
+    html+="<div class='acc-item'><span class='acc-name'><span class='badge "+singleBadgeCls+"' style='font-size:10px'>"+viewLabel+"</span></span><span class='acc-val "+singleCashCls+"'>$"+fn(singleCash,2)+"</span></div>";
+    html+="<div class='acc-item total'><span class='acc-name' style='font-weight:600;color:var(--text);font-size:12px'>帳戶總值</span><span class='acc-val' style='font-size:15px;font-weight:700'>$"+fn(kTotal,0)+"</span></div>";
+  }
   html+="</div></div>";
   html+="</div>"; // end dash-left
 

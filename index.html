@@ -598,9 +598,10 @@ function classifySchwab(action){
   if(a==="Credit Interest"||a==="Bond Interest")return"現金利息";
   if(a==="Wire Received"||a==="Wire Funds Received")return"入金";
   if(a==="NRA Tax Adj")return"預扣稅";
-  // Journaled Shares & Internal Transfer = TD→Schwab migration, skip
-  if(a==="Journaled Shares"||a==="Internal Transfer")return"其他";
-  if(a==="Security Transfer")return"其他";  // ACAT transfer between brokers
+  // Journaled Shares / Security Transfer = TD→Schwab ACAT stock migration → treat as 買入 (uses cost basis from price field)
+  if(a==="Journaled Shares"||a==="Security Transfer")return"買入";
+  // Internal Transfer = cash movement between Schwab accounts → treat as 入金
+  if(a==="Internal Transfer")return"入金";
   return"其他";
 }
 var schwabImp={rows:[],step:0};
@@ -662,7 +663,7 @@ function rSchwabPanel(){
   var skipped=rows.filter(function(r){return classifySchwab(r.action)==="其他";});
   var badgeMap={"買入":"bb","賣出":"bs","配息":"bd","現金利息":"bi","入金":"bd","預扣稅":"bs"};
   var html="<div class='sb' id='schwab-panel'><h3>📋 嘉信預覽（"+included.length+" 筆）</h3>";
-  if(skipped.length)html+="<div class='wb' style='margin-bottom:10px'>⚠️ 略過 "+skipped.length+" 筆（內部轉帳、帳戶遷移等）</div>";
+  if(skipped.length)html+="<div class='wb' style='margin-bottom:10px'>⚠️ 略過 "+skipped.length+" 筆（無法識別的類型，不影響交易紀錄）</div>";
   html+="<div class='sx' style='max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px'>";
   html+="<table><thead><tr><th>日期</th><th>類別</th><th>代號</th><th class='num'>股數</th><th class='num'>成交價</th><th class='num'>金額</th></tr></thead><tbody>";
   included.forEach(function(r){

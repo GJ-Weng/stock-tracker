@@ -528,12 +528,12 @@ function recalcCash(){
     var src=t.source||"FT";
     // 手動新增的入金（非 FSV 匯入）→ 跳過，由 S.E 負責
     if(t.type==="入金"&&!t.fromFSV)return;
+    // 出金也由 S.E 負責（換匯前後的台幣出金不影響美金現金）
+    if(t.type==="出金")return;
     if(d.includes("XFER CASH TO MARGIN")&&amt>0)return;
     if(src==="Schwab"){
-      // 2024-05-13 前是 TDA 時期舊交易，不計入嘉信現金
-      if((t.date||"")<"2024-05-13")return;
-      // 入金/出金是 Wire $15,000 進來再 ACAT $15,000 轉出，兩筆淨額 $0，跳過避免誤算
-      if(t.type==="入金"||t.type==="出金")return;
+      if(!t.fromSchwab)return;          // 只算 CSV 匯入的（有 fromSchwab 標記）
+      if(t.type==="入金"||t.type==="出金")return;  // CSV 的入金/出金忽略，由 S.E 負責
       cashSchwab+=amt;
     } else if(src==="FT"){
       cashFT+=amt;
@@ -774,7 +774,7 @@ function schwabConfirmImport(){
     if (exists) return;
     
     var t={id:gid(),date:r.date,type:type,sym:r.sym,shares:Math.abs(r.qty),
-      price:r.price,fee:Math.abs(r.fee),amt:r.amount,wire:0,desc:r.desc,source:"Schwab"};
+      price:r.price,fee:Math.abs(r.fee),amt:r.amount,wire:0,desc:r.desc,source:"Schwab",fromSchwab:true};
     S.T.push(t);
     newCount++;
   });

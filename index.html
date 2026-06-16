@@ -530,11 +530,10 @@ function recalcCash(){
     if(t.type==="入金"&&!t.fromFSV)return;
     if(d.includes("XFER CASH TO MARGIN")&&amt>0)return;
     if(src==="Schwab"){
-      // TDA 時期（TD轉嘉信前）的舊交易不計入嘉信現金
+      // 2024-05-13 前是 TDA 時期舊交易，不計入嘉信現金
       if((t.date||"")<"2024-05-13")return;
-      // Wire Received 和 Security Transfer 是配對進出（台灣匯入後再轉 FT），淨額 $0，跳過
+      // 入金/出金是 Wire $15,000 進來再 ACAT $15,000 轉出，兩筆淨額 $0，跳過避免誤算
       if(t.type==="入金"||t.type==="出金")return;
-      if(d.includes("WIRED FUNDS")||d.includes("ACAT TOA"))return;
       cashSchwab+=amt;
     } else if(src==="FT"){
       cashFT+=amt;
@@ -745,14 +744,13 @@ function schwabSetCash(){
   var v=parseFloat(document.getElementById("schwab-cash").value);
   if(isNaN(v)){alert("請輸入有效金額");return;}
   if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
-  // 直接把嘉信現金設為使用者填入的值，清除舊的 adj 避免殘留
-  // recalcCash 會計算嘉信 S.T 的交易影響，我們用 adj 補差額
-  recalcCash(); // 先算出 S.T 貢獻的嘉信現金
-  var autoSchwab=S.acc.cashSchwab; // S.T 算出來的嘉信現金
-  S.acc.cashAdj.Schwab=parseFloat((v-autoSchwab).toFixed(2));
-  S.acc.cashSchwab=v;
-  S.acc.cash=S.acc.cashFT+S.acc.cashSchwab+S.acc.cashCathay;
-  sv("acc");
+  // 嘉信現金 = S.E 換匯 + cashAdj.Schwab
+  // 先算 S.E 嘉信 USD 加總
+  var seSwab=0;
+  S.E.forEach(function(e){if(e.acct==="Schwab")seSwab+=e.usd||0;});
+  // adj = 目標現金 - S.E 換匯
+  S.acc.cashAdj.Schwab=parseFloat((v-seSwab).toFixed(2));
+  recalcCash();sv("acc");
   schwabImp={rows:[],step:0};
   clearTimeout(S._syncTimer);syncToGitHub();
   toast("✅ 嘉信匯入完成，現金 $"+fn(v,2));
@@ -2074,11 +2072,11 @@ function overrideSchwabCash(){
   var v=parseFloat(document.getElementById("set-sw-cash").value);
   if(isNaN(v)){alert("請輸入有效金額");return;}
   if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
-  recalcCash();
-  S.acc.cashAdj.Schwab=parseFloat((v-S.acc.cashSchwab).toFixed(2));
-  S.acc.cashSchwab=v;
-  S.acc.cash=S.acc.cashFT+v+(S.acc.cashCathay||0);
-  sv("acc");toast("✅ 嘉信現金已設為 $"+fn(v,2));render();
+  var seSwab=0;
+  S.E.forEach(function(e){if(e.acct==="Schwab")seSwab+=e.usd||0;});
+  S.acc.cashAdj.Schwab=parseFloat((v-seSwab).toFixed(2));
+  recalcCash();sv("acc");
+  toast("✅ 嘉信現金已設為 $"+fn(v,2));render();
 }
 function resetCashAdj(){
   if(!confirm("清除所有現金手動調整值？\n自動計算的現金不受影響。"))return;

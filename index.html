@@ -526,12 +526,21 @@ function recalcCash(){
     var d=(t.desc||"").toUpperCase();
     var amt=t.amt||0;
     var src=t.source||"FT";
-    // 手動新增的入金（非 FSV 匯入）→ 跳過，由 S.E 負責，避免重複計算
+    // 手動新增的入金（非 FSV 匯入）→ 跳過，由 S.E 負責
     if(t.type==="入金"&&!t.fromFSV)return;
     if(d.includes("XFER CASH TO MARGIN")&&amt>0)return;
-    if(src==="FT")cashFT+=amt;
-    else if(src==="Schwab")cashSchwab+=amt;
-    else if(src==="GT"||src==="Cathay")cashGT+=amt;
+    if(src==="Schwab"){
+      // TDA 時期（TD轉嘉信前）的舊交易不計入嘉信現金
+      if((t.date||"")<"2024-05-13")return;
+      // Wire Received 和 Security Transfer 是配對進出（台灣匯入後再轉 FT），淨額 $0，跳過
+      if(t.type==="入金"||t.type==="出金")return;
+      if(d.includes("WIRED FUNDS")||d.includes("ACAT TOA"))return;
+      cashSchwab+=amt;
+    } else if(src==="FT"){
+      cashFT+=amt;
+    } else if(src==="GT"||src==="Cathay"){
+      cashGT+=amt;
+    }
   });
   S.acc.cashFT=parseFloat(cashFT.toFixed(2));
   S.acc.cashSchwab=parseFloat(cashSchwab.toFixed(2));

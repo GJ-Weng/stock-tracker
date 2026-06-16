@@ -597,7 +597,7 @@ function classifySchwab(action,desc,sym,qty){
   if(a==="Sell")return"賣出";
   if(a==="Qualified Dividend"||a==="Cash Dividend"||a==="Qual Div Reinvest")return"配息";
   if(a==="Credit Interest"||a==="Bond Interest")return"現金利息";
-  if(a==="Wire Received"||a==="Wire Funds Received")return"入金";
+  if(a==="Wire Received"||a==="Wire Funds Received")return"其他"; // user manually enters deposits in S.E
   if(a==="NRA Tax Adj")return"預扣稅";
   if(a==="Journaled Shares"){
     if(desc.includes("W-8 WITHHOLDING"))return"預扣稅";
@@ -1165,11 +1165,14 @@ function rDash(p){
   html+=rUBtn(S.updating?"<span class='spin'></span> 更新中…":"🔄 更新報價","updatePrices",S.updating);
   html+="</div>";
   html+="<div class='sx'><table><thead><tr>";
-  html+="<th>代號</th><th class='num'>股數</th><th class='num'>均成本</th><th class='num'>現價</th><th class='num'>今日</th><th class='num'>市值</th><th class='num'>未實現</th><th class='num'>報酬率</th><th class='num'>年化</th>";
+  html+="<th>代號</th>"+(isAll?"<th>帳戶</th>":"")
+    +"<th class='num'>股數</th><th class='num'>均成本</th><th class='num'>現價</th><th class='num'>今日</th><th class='num'>市值</th><th class='num'>未實現</th><th class='num'>報酬率</th><th class='num'>年化</th>";
   html+="</tr></thead><tbody>";
   dashRows.forEach(function(h){
     var mv=h.shares*h.price,ur=h.shares*(h.price-h.cost),ret=h.cost>0?(h.price-h.cost)/h.cost:0,ann=annualReturn(h.cost,h.price,h.fd);
-    html+="<tr><td><strong style='letter-spacing:.04em'>"+esc(h.sym)+"</strong>"+(h.note?"<br><small style='color:var(--text3)'>"+esc(h.note)+"</small>":"")+"</td>";
+    var _dab={"FT":"bft","Schwab":"bsw","GT":"bgt"}[h.acct||"FT"]||"br";
+    var _dal={"FT":"Firstrade","Schwab":"嘉信","GT":"國泰"}[h.acct]||h.acct||"FT";
+    html+="<tr><td><strong style='letter-spacing:.04em;font-size:13px'>"+esc(h.sym)+"</strong>"+(h.note?"<div style='font-size:10px;color:var(--text3)'>"+esc(h.note)+"</div>":"")+"</td>"+(isAll?"<td><span class='badge "+_dab+"'>"+_dal+"</span></td>":"");
     html+="<td class='num'><span class='editable' data-type='shares' data-id='"+h.id+"' data-val='"+h.shares+"'>"+fn(h.shares,h.shares%1===0?0:6)+"</span></td>";
     var isEC=S.editCostId===h.id;
     if(isEC){html+="<td class='num'><input id='ec-"+h.id+"' type='number' value='"+S.editCostVal+"' style='width:80px;padding:3px 6px;font-size:11px;text-align:right'></td>";}
@@ -1312,14 +1315,25 @@ function rTx(){
   var types=["買入","賣出","入金","現金利息","匯費補貼","配息"];
   var fTypes=["全部"].concat(types);
   var q=S.txSearch.toLowerCase();
+  var txAcct=S.txAcct||"全部";
+  var acctMap={"全部":"全部","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
   var filtered=S.T.filter(function(t){
-    return(S.filterType==="全部"||t.type===S.filterType)&&(!q||(t.sym||"").toLowerCase().includes(q)||t.type.includes(q));
+    var acctOk=(txAcct==="全部"||(t.source||"FT")===txAcct);
+    return acctOk&&(S.filterType==="全部"||t.type===S.filterType)&&(!q||(t.sym||"").toLowerCase().includes(q)||t.type.includes(q));
   }).sort(function(a,b){return b.date.localeCompare(a.date);});
   var isEd=!!S.editTxId,edTx=isEd?S.T.find(function(t){return t.id===S.editTxId;}):null;
-  var html="<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px'>";
-  html+="<div class='filter-bar'>"+fTypes.map(function(ft){return "<button class='chip"+(S.filterType===ft?" active":"")+"' onclick=\"setFilter('"+ft+"')\">"+ft+"</button>";}).join("");
+  var html="";
+  // Account chips
+  html+="<div style='display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:0.5px solid var(--border)'>";
+  ["全部","FT","Schwab","GT"].forEach(function(a){
+    html+="<button class='chip"+(txAcct===a?" active":"")+"'onclick='S.txAcct=\""+a+"\";render()'>"+acctMap[a]+"</button>";
+  });
+  html+="</div>";
+  // Type filter + search + buttons
+  html+="<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px'>";
+  html+="<div class='filter-bar'>"+fTypes.map(function(ft){return "<button class='chip"+(S.filterType===ft?" active":"")+"'onclick=\"setFilter('"+ft+"')\">"+ ft+"</button>";}).join("");
   html+="<input class='si' placeholder='搜尋代號…' value='"+esc(S.txSearch)+"' oninput='S.txSearch=this.value;render()'></div>";
-  html+="<button class='btn btn-blue' onclick=\"toggleForm('t')\">＋ 新增</button></div>";
+  html+="<div style='display:flex;gap:6px'><button class='btn' onclick='exportTxExcel()'>↓ Excel</button><button class='btn btn-blue' onclick=\"toggleForm('t')\">＋ 新增</button></div></div>";
   if(S.showForm==="t"||isEd){
     var ev=function(k,d){return isEd&&edTx?(edTx[k]!==undefined?edTx[k]:d):d;};
     var curType=isEd&&edTx?edTx.type:"買入";
@@ -1345,8 +1359,10 @@ function rTx(){
   html+="<div class='sx sy'><table><thead><tr><th>日期</th><th>類別</th><th>代號</th><th class='num'>股數</th><th class='num'>成交價</th><th class='num'>手續費</th><th class='num'>實際金額</th><th class='num'>匯費(NTD)</th><th></th></tr></thead><tbody>";
   filtered.forEach(function(t){
     var srcLabel={"FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
-    html+="<tr><td style='font-size:12px;color:var(--text2);white-space:nowrap'>"+t.date+"</td><td style='white-space:nowrap'>"+rBadge(t.type)+"<span class='badge br' style='font-size:10px;margin-left:3px'>"+(srcLabel[t.source||"FT"]||t.source||"FT")+"</span></td>";
-    html+="<td>"+(t.sym?"<strong>"+esc(t.sym)+"</strong>":"—")+"</td>";
+    var _sc={"FT":"bft","Schwab":"bsw","GT":"bgt"}[t.source||"FT"]||"br";
+    var _sl={"FT":"FT","Schwab":"嘉信","GT":"國泰"}[t.source||"FT"]||t.source||"FT";
+    html+="<tr><td style='font-size:11px;color:var(--text2);white-space:nowrap'>"+t.date+"</td>";
+    html+="<td style='white-space:nowrap'>"+rBadge(t.type)+"<span class='badge "+_sc+"' style='font-size:10px;margin-left:3px'>"+_sl+"</span></td>";
     html+="<td class='num'>"+(t.shares||"—")+"</td><td class='num'>"+(t.price?"$"+fn(t.price,2):"—")+"</td>";
     html+="<td class='num'>"+(t.fee?fn(t.fee,2):"—")+"</td>";
     html+="<td class='num "+cv(t.amt)+"'>"+(t.amt>=0?"+":"")+"$"+fn(t.amt,2)+"</td>";
@@ -1738,6 +1754,26 @@ function setHoldingsView(v){S.holdingsView=v;render();}
 function setTab(t){S.tab=t;S.showForm=null;S.editTxId=null;S.editPriceId=null;render();}
 function toggleForm(f){S.showForm=S.showForm===f?null:f;S.editTxId=null;render();}
 function setFilter(f){S.filterType=f;render();}
+function exportTxExcel(){
+  if(typeof XLSX==="undefined"){toast("❌ XLSX 函式庫未載入");return;}
+  var txAcct=S.txAcct||"全部";
+  var q=S.txSearch.toLowerCase();
+  var rows=S.T.filter(function(t){
+    var acctOk=(txAcct==="全部"||(t.source||"FT")===txAcct);
+    return acctOk&&(S.filterType==="全部"||t.type===S.filterType)&&(!q||(t.sym||"").toLowerCase().includes(q)||t.type.includes(q));
+  }).sort(function(a,b){return b.date.localeCompare(a.date);});
+  var aLbl={"FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
+  var data=rows.map(function(t){
+    return{"日期":t.date,"帳戶":aLbl[t.source||"FT"]||"FT","類別":t.type,"代號":t.sym||"","股數":t.shares||"","成交價":t.price||"","手續費":t.fee||"","實際金額":t.amt||0,"匯費NTD":t.wire||""};
+  });
+  var wb=XLSX.utils.book_new();
+  var ws=XLSX.utils.json_to_sheet(data);
+  ws["!cols"]=[{wch:12},{wch:14},{wch:8},{wch:8},{wch:8},{wch:10},{wch:8},{wch:12},{wch:10}];
+  var title=(txAcct==="全部"?"全帳戶":aLbl[txAcct]||txAcct)+"_交易_"+today();
+  XLSX.utils.book_append_sheet(wb,ws,title.slice(0,31));
+  XLSX.writeFile(wb,title+".xlsx");
+  toast("✅ 已匯出 "+data.length+" 筆交易");
+}
 function onAcc(k,v){
   if(k==="rate"){S.acc.rate=parseFloat(v)||31.5;sv("acc");render();}
 }

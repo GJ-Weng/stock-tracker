@@ -863,18 +863,13 @@ function classifyFSV(r){
   if(a==="BUY")return"買入";
   if(a==="SELL")return"賣出";
   if(a==="Interest")return"現金利息";
-  // FT CSV 用 "Dividend" 或 "DIV"，描述含 DIVIDEND 也算；REIN 是股息再投資買入
   if(a==="Dividend"||a==="DIV"||d.includes("DIVIDEND"))return"配息";
-  // 股息再投資買股（REIN 或 REINVEST，amt 為負）→ 買入
-  if((d.includes(" REIN ")|| d.includes("REINVEST"))&&amt<0)return"買入";
-  if(d.includes("TFR"))return"其他";
-  // Negative XFER MARGIN TO CASH = tax withholding actually deducted from cash
-  if(d.includes("XFER MARGIN TO CASH")&&amt<0)return"預扣稅";
-  if(d.includes("XFER"))return"其他";
-  // Wire Funds & ACAT → 改用 "入金FT" 讓 recalcCash 直接計入，不依賴 S.E
+  if((d.includes(" REIN ")||d.includes("REINVEST"))&&amt<0)return"買入";
   if(d.includes("WIRE FUNDS"))return"入金";
   if(d.includes("TRANSFER FROM")&&d.includes("ACAT"))return"入金";
   if(d.includes("REBATE"))return"匯費補貼";
+  // TFR / XFER 配對進出：淨額為零，全部忽略
+  if(d.includes("TFR")||d.includes("XFER"))return"其他";
   return"其他";
 }
 function cleanName(desc){

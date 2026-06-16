@@ -335,7 +335,7 @@ const INIT_E=[
 var S={holdingsView:"all",dashView:"all",editCostId:null,editCostVal:"",showZero:false,quickTrade:null,
   tab:"dash",H:null,T:null,E:null,acc:null,
   apiKey:"",ghToken:"",ghUser:"",ghRepo:"",ghSHA:"",
-  showForm:null,filterType:"全部",txSearch:"",
+  showForm:null,filterType:"全部",txSearch:"",txAcct:"全部",
   sortCol:"",sortDir:-1,showExtraCols:false,fxMode:"twd",editTxId:null,editFxId:null,editPriceId:null,editPriceVal:"",
   updating:false,syncing:false,chartInst:null,
   imp:{rows:[],symMap:{},step:0}
@@ -1326,7 +1326,7 @@ function rTx(){
   // Account chips
   html+="<div style='display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:0.5px solid var(--border)'>";
   ["全部","FT","Schwab","GT"].forEach(function(a){
-    html+="<button class='chip"+(txAcct===a?" active":"")+"'onclick='S.txAcct=\""+a+"\";render()'>"+acctMap[a]+"</button>";
+    html+="<button class='chip"+(txAcct===a?" active":"")+"'onclick=\"S.txAcct='"+a+"';render()\">"+acctMap[a]+"</button>";
   });
   html+="</div>";
   // Type filter + search + buttons

@@ -1363,6 +1363,7 @@ function rTx(){
     var _sl={"FT":"FT","Schwab":"嘉信","GT":"國泰"}[t.source||"FT"]||t.source||"FT";
     html+="<tr><td style='font-size:11px;color:var(--text2);white-space:nowrap'>"+t.date+"</td>";
     html+="<td style='white-space:nowrap'>"+rBadge(t.type)+"<span class='badge "+_sc+"' style='font-size:10px;margin-left:3px'>"+_sl+"</span></td>";
+    html+="<td>"+(t.sym?"<strong>"+esc(t.sym)+"</strong>":"—")+"</td>";
     html+="<td class='num'>"+(t.shares||"—")+"</td><td class='num'>"+(t.price?"$"+fn(t.price,2):"—")+"</td>";
     html+="<td class='num'>"+(t.fee?fn(t.fee,2):"—")+"</td>";
     html+="<td class='num "+cv(t.amt)+"'>"+(t.amt>=0?"+":"")+"$"+fn(t.amt,2)+"</td>";

@@ -522,24 +522,17 @@ function recalcCash(){
   // 規則：type="入金" 且 source="FT" → 代表 FSV 匯入的 Wire Funds/ACAT，直接計入
   //       type="入金" 且 source 非 FT（手動新增，無 fromFSV 標記）→ 跳過，由 S.E 負責
   // 用 fromFSV 旗標區分：fsvConfirmImport 存入的入金帶 fromFSV:true
+  var CASH_TYPES={"買入":true,"賣出":true,"現金利息":true,"配息":true,"預扣稅":true,"匯費補貼":true};
   S.T.forEach(function(t){
     var d=(t.desc||"").toUpperCase();
     var amt=t.amt||0;
     var src=t.source||"FT";
-    // 手動新增的入金（非 FSV 匯入）→ 跳過，由 S.E 負責
-    if(t.type==="入金"&&!t.fromFSV)return;
-    // 出金也由 S.E 負責（換匯前後的台幣出金不影響美金現金）
-    if(t.type==="出金")return;
+    // 入金/出金 全部忽略，由 S.E 出入金頁負責
+    if(!CASH_TYPES[t.type])return;
     if(d.includes("XFER CASH TO MARGIN")&&amt>0)return;
-    if(src==="Schwab"){
-      if(!t.fromSchwab)return;          // 只算 CSV 匯入的（有 fromSchwab 標記）
-      if(t.type==="入金"||t.type==="出金")return;  // CSV 的入金/出金忽略，由 S.E 負責
-      cashSchwab+=amt;
-    } else if(src==="FT"){
-      cashFT+=amt;
-    } else if(src==="GT"||src==="Cathay"){
-      cashGT+=amt;
-    }
+    if(src==="FT")cashFT+=amt;
+    else if(src==="Schwab")cashSchwab+=amt;
+    else if(src==="GT"||src==="Cathay")cashGT+=amt;
   });
   S.acc.cashFT=parseFloat(cashFT.toFixed(2));
   S.acc.cashSchwab=parseFloat(cashSchwab.toFixed(2));

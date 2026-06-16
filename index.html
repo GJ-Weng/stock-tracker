@@ -504,8 +504,8 @@ function applyTx(tx){
 }
 
 function recalcCash(){
-  // Step 1: S.E（出入金頁）提供換匯入金（台幣換美金），分帳戶累加
   var cashFT=0, cashSchwab=0, cashGT=0;
+  // Step 1: S.E 換匯入金作為現金基礎
   S.E.forEach(function(e){
     var acct=e.acct||"GT";
     var usd=e.usd||0;
@@ -513,27 +513,24 @@ function recalcCash(){
     else if(acct==="Schwab")cashSchwab+=usd;
     else if(acct==="GT"||acct==="Cathay")cashGT+=usd;
   });
-  // Step 2: 手動調整
-  var adj=S.acc.cashAdj||{FT:0,Schwab:0,GT:0};
-  cashFT+=adj.FT||0;
-  cashSchwab+=adj.Schwab||0;
-  cashGT+=adj.GT||0;
-  // Step 3: S.T 交易影響現金
-  // 規則：type="入金" 且 source="FT" → 代表 FSV 匯入的 Wire Funds/ACAT，直接計入
-  //       type="入金" 且 source 非 FT（手動新增，無 fromFSV 標記）→ 跳過，由 S.E 負責
-  // 用 fromFSV 旗標區分：fsvConfirmImport 存入的入金帶 fromFSV:true
+  // Step 2: S.T 的買賣/利息/配息/預扣稅/匯費補貼 從基礎上加減
+  // 入金/出金 忽略（入金已在 S.E 計算，CSV 的入金行不重複計算）
   var CASH_TYPES={"買入":true,"賣出":true,"現金利息":true,"配息":true,"預扣稅":true,"匯費補貼":true};
   S.T.forEach(function(t){
     var d=(t.desc||"").toUpperCase();
     var amt=t.amt||0;
     var src=t.source||"FT";
-    // 入金/出金 全部忽略，由 S.E 出入金頁負責
     if(!CASH_TYPES[t.type])return;
     if(d.includes("XFER CASH TO MARGIN")&&amt>0)return;
     if(src==="FT")cashFT+=amt;
     else if(src==="Schwab")cashSchwab+=amt;
     else if(src==="GT"||src==="Cathay")cashGT+=amt;
   });
+  // Step 3: 手動調整
+  var adj=S.acc.cashAdj||{FT:0,Schwab:0,GT:0};
+  cashFT+=adj.FT||0;
+  cashSchwab+=adj.Schwab||0;
+  cashGT+=adj.GT||0;
   S.acc.cashFT=parseFloat(cashFT.toFixed(2));
   S.acc.cashSchwab=parseFloat(cashSchwab.toFixed(2));
   S.acc.cashCathay=parseFloat(cashGT.toFixed(2));

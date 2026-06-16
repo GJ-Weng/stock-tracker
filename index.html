@@ -787,6 +787,16 @@ function schwabConfirmImport(){
   var hMap={};
   var schwabTransactions = S.T.filter(t => t.source === "Schwab").sort((a,b) => a.date.localeCompare(b.date));
   
+  // 2024-05-13 從 TD 轉入嘉信時的正確成本（來源：2024-05-31 嘉信月結單 Cost Basis）
+  var TDA_COST_BASIS={
+    "AMZN": 125.0000,
+    "AAPL": 153.5700,
+    "INTC":  35.5300,
+    "MSFT": 327.4000,
+    "TSLA": 257.4300,
+    "DIS":  169.3700,
+  };
+
   schwabTransactions.forEach(function(tx){
     var sym=tx.sym;if(!sym)return;
     var type=tx.type;
@@ -794,12 +804,17 @@ function schwabConfirmImport(){
     
     if(type==="買入"&&qty>0){
       if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:tx.date};
-      // price=0 的情況（Internal Transfer / Stock Split）：只加股數，不影響均價
-      if(tx.price>0){
+      var usePrice=tx.price;
+      // Internal Transfer（price=0）→ 用 PDF Cost Basis，否則成本歸零導致損益錯誤
+      if(!usePrice&&TDA_COST_BASIS[sym]){
+        usePrice=TDA_COST_BASIS[sym];
+      }
+      if(usePrice>0){
         var ns=hMap[sym].shares+qty;
-        hMap[sym].cost=ns>0?(hMap[sym].shares*hMap[sym].cost+qty*tx.price)/ns:0;
+        hMap[sym].cost=ns>0?(hMap[sym].shares*hMap[sym].cost+qty*usePrice)/ns:0;
         hMap[sym].shares=ns;
       }else{
+        // Stock Split 或無成本記錄：只加股數
         hMap[sym].shares+=qty;
       }
     }else if(type==="賣出"&&qty>0){

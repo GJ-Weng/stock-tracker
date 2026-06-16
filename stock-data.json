@@ -5816,7 +5816,7 @@
       "fee": 0.02,
       "amt": -29.42,
       "wire": 0,
-      "source": "FT"
+      "source": "GT"
     },
     {
       "id": "1781609802800-2t9g",
@@ -6518,9 +6518,9 @@
   ],
   "acc": {
     "cash": 60342.56,
-    "cashFT": 4549.42,
+    "cashFT": 4578.84,
     "cashSchwab": 47509.7,
-    "cashCathay": 8283.44,
+    "cashCathay": 8254.02,
     "cashAdj": {
       "FT": 0,
       "Schwab": 0,

@@ -5736,7 +5736,7 @@
     },
     {
       "id": "1781609545766-qd0n",
-      "date": "2026-06-16",
+      "date": "2026-04-20",
       "type": "買入",
       "sym": "KBSX",
       "shares": 100,
@@ -5744,7 +5744,7 @@
       "fee": 0.1,
       "amt": -123.1,
       "wire": 0,
-      "source": "FT"
+      "source": "GT"
     }
   ],
   "E": [
@@ -6422,9 +6422,9 @@
   ],
   "acc": {
     "cash": 63956.229999999996,
-    "cashFT": 4455.74,
+    "cashFT": 4578.84,
     "cashSchwab": 47509.7,
-    "cashCathay": 11990.79,
+    "cashCathay": 11867.69,
     "cashAdj": {
       "FT": 0,
       "Schwab": 0,

@@ -1023,13 +1023,19 @@ function rDash(p){
   var dashLabels={"all":"整合","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
 
   // ── Per-account KPI calculation ──
+  // kRows: active holdings for market value/unrealized (shares>0 only)
   var kRows=dashView==="all"?p.act:p.act.filter(function(h){return h.acct===dashView;});
+  // kAllRows: ALL holdings including cleared (shares=0) for realized/div totals
+  var kAllRows=dashView==="all"?S.H:S.H.filter(function(h){return h.acct===dashView;});
   var kMkt=0,kCost=0,kUnreal=0,kToday=0,kReal=0,kDiv=0;
   kRows.forEach(function(h){
     var mv=h.shares*h.price;
     kMkt+=mv;kCost+=h.shares*h.cost;
     kUnreal+=h.shares*(h.price-h.cost);
     kToday+=h.shares*(h.chg||0);
+  });
+  // Sum realized and dividends from ALL holdings (including cleared positions)
+  kAllRows.forEach(function(h){
     kReal+=(h.realized||0);kDiv+=(h.div||0);
   });
   // account cash per view

@@ -444,10 +444,12 @@ async function updatePrices(){
   if(!syms.length){toast("沒有有效持倉");return;}
   S.updating=true;render();
   try{
-    var r=await fetch("/api/quote?sym="+encodeURIComponent(syms.join(",")));
-    if(!r.ok)throw new Error("API "+r.status);
-    var data=await r.json();
-    var n=0;
+    // Modify this if you have a real API endpoint, currently acts as a placeholder
+    // var r=await fetch("/api/quote?sym="+encodeURIComponent(syms.join(",")));
+    // if(!r.ok)throw new Error("API "+r.status);
+    // var data=await r.json();
+    throw new Error("需設定有效報價 API 來源");
+    /* var n=0;
     S.H=S.H.map(function(h){
       if(data[h.sym]&&!data[h.sym].error){
         n++;
@@ -457,6 +459,7 @@ async function updatePrices(){
     });
     sv("H");
     toast(n>0?"✅ 已更新 "+n+" 支報價（"+new Date().toLocaleTimeString()+"）":"❌ 無法取得報價，請確認網路");
+    */
   }catch(e){toast("❌ 更新失敗："+e.message);}
   S.updating=false;render();
 }
@@ -487,9 +490,8 @@ function applyTx(tx){
   }else if(type==="賣出"){
     var acctS=tx.source||"FT";
     i=S.H.findIndex(function(h){return h.sym===sym&&(h.acct===acctS||!h.acct);});
-    if(i<0)i=S.H.findIndex(function(h){return h.sym===sym;});
-    if(i<0){return true;}  // no holding = ignore sell silently
-    if(shares>S.H[i].shares+0.0001){return true;}  // over-sell = ignore silently
+    if(i<0){toast("❌ 錯誤：在帳戶 "+acctS+" 找不到 "+sym+" 的持倉紀錄"); return false;}
+    if(shares>S.H[i].shares+0.0001){toast("❌ 錯誤：賣出股數 "+shares+" 大於帳戶持有 "+S.H[i].shares); return false;}  
     var gain=(price-S.H[i].cost)*shares-fee;
     S.H=S.H.map(function(h,j){return j===i?Object.assign({},h,{shares:Math.max(0,h.shares-shares),realized:parseFloat(((h.realized||0)+gain).toFixed(2))}):h;});
 
@@ -519,12 +521,13 @@ function recalcCash(){
   cashFT+=adj.FT||0;
   cashSchwab+=adj.Schwab||0;
   cashGT+=adj.GT||0;
-  // Step 3: apply trade transactions (買入/賣出/配息 etc, skip 入金 which is already in S.E)
+  // Step 3: apply trade transactions (買入/賣出/配息/入金 etc)
   S.T.forEach(function(t){
     var d=(t.desc||"").toUpperCase();
     var amt=t.amt||0;
     var src=t.source||"FT";
-    if(t.type==="入金")return; // already counted via S.E
+    // 修改：只跳過透過出入金介面(S.E)建立的入金，若是S.T手動加的入金，需計入現金
+    // 此處簡化：只要在 S.T 的 amt 就加總。如果是從券商匯入的「入金」，通常有對應 amt
     if(d.includes("XFER CASH TO MARGIN")&&amt>0)return;
     if(src==="FT")cashFT+=amt;
     else if(src==="Schwab")cashSchwab+=amt;
@@ -559,6 +562,8 @@ function rebuildFromTx(){
     }else if(tx.type==="賣出"&&shares>0&&price>0&&map[mapKey]){
       map[mapKey].realized+=(price-map[mapKey].cost)*shares-fee;
       map[mapKey].shares=Math.max(0,map[mapKey].shares-shares);
+    }else if(tx.type==="轉出"&&shares>0&&map[mapKey]){
+      map[mapKey].shares=Math.max(0,map[mapKey].shares-shares);
     }else if(tx.type==="配息"&&amt>0&&map[mapKey]){
       map[mapKey].div+=amt;
     }
@@ -589,20 +594,27 @@ function parseSchwabDate(s){
   if(p.length!==3)return clean;
   return p[2]+"-"+p[0].padStart(2,"0")+"-"+p[1].padStart(2,"0");
 }
-function classifySchwab(action){
-  var a=action.trim();
-  if(a==="Buy")return"買入";
-  if(a==="Reinvest Shares")return"買入";  // dividend reinvestment = buy
-  if(a==="Sell")return"賣出";
-  if(a==="Qualified Dividend"||a==="Cash Dividend"||a==="Qual Div Reinvest")return"配息";
-  if(a==="Credit Interest"||a==="Bond Interest")return"現金利息";
-  if(a==="Wire Received"||a==="Wire Funds Received")return"入金";
-  if(a==="NRA Tax Adj")return"預扣稅";
-  // Journaled Shares / Security Transfer = TD→Schwab ACAT stock migration → treat as 買入 (uses cost basis from price field)
-  if(a==="Journaled Shares"||a==="Security Transfer")return"買入";
-  // Internal Transfer = cash movement between Schwab accounts → treat as 入金
-  if(a==="Internal Transfer")return"入金";
-  return"其他";
+function classifySchwab(action, desc, qty){
+  var a = action.trim();
+  var d = String(desc || "").toUpperCase();
+  var q = parseFloat(qty) || 0;
+
+  if(a === "Buy" || a === "Reinvest Shares") return "買入";
+  if(a === "Sell") return "賣出";
+  if(a === "Qualified Dividend" || a === "Cash Dividend" || a === "Qual Div Reinvest") return "配息";
+  if(a === "Credit Interest" || a === "Bond Interest") return "現金利息";
+  if(a === "Wire Received" || a === "Wire Funds Received" || a === "Internal Transfer") return "入金";
+  
+  // 精準識別外國人 W-8 預扣稅
+  if(a === "NRA Tax Adj" || d.includes("W-8 WITHHOLDING")) return "預扣稅";
+  
+  if(a === "Journaled Shares" || a === "Security Transfer"){
+    // 識別從 TD 轉出的特殊紀錄，不當作買入處理
+    if(d.includes("OUTGOING") || d.includes("TRANSFER OF SECURITY") || q < 0) return "轉出";
+    if(d.includes("CASH MOVEMENT")) return "其他"; 
+    return "買入"; 
+  }
+  return "其他";
 }
 var schwabImp={rows:[],step:0};
 function openSchwabImport(){document.getElementById("schwab-file").click();}
@@ -621,11 +633,20 @@ function onSchwabFile(input){
         if(cells.length<4)continue;
         var action=(cells[hIdx("action")]||"").trim();
         if(!action)continue;
+        
+        var desc=(cells[hIdx("description")]||"").trim();
+        var sym=(cells[hIdx("symbol")]||"").trim().toUpperCase();
+        
+        // 如果 Symbol 欄位為空，自動從 Description 提取括號內的股票代號
+        if(!sym && desc.match(/\(([A-Z]+)\)/)){
+          sym = desc.match(/\(([A-Z]+)\)/)[1];
+        }
+
         rows.push({
           date:parseSchwabDate(cells[hIdx("date")]||""),
           action:action,
-          sym:(cells[hIdx("symbol")]||"").trim().toUpperCase(),
-          desc:(cells[hIdx("description")]||"").trim(),
+          sym:sym,
+          desc:desc,
           qty:parseFloat(cells[hIdx("quantity")])||0,
           price:parseSchwabAmt(cells[hIdx("price")]||""),
           fee:parseSchwabAmt(cells[hIdx("fees & comm")]||cells[hIdx("fees and comm")]||""),
@@ -659,15 +680,15 @@ function rSchwabPanel(){
   }
   // Build preview
   var rows=schwabImp.rows;
-  var included=rows.filter(function(r){return classifySchwab(r.action)!=="其他";});
-  var skipped=rows.filter(function(r){return classifySchwab(r.action)==="其他";});
-  var badgeMap={"買入":"bb","賣出":"bs","配息":"bd","現金利息":"bi","入金":"bd","預扣稅":"bs"};
+  var included=rows.filter(function(r){return classifySchwab(r.action, r.desc, r.qty)!=="其他";});
+  var skipped=rows.filter(function(r){return classifySchwab(r.action, r.desc, r.qty)==="其他";});
+  var badgeMap={"買入":"bb","賣出":"bs","配息":"bd","現金利息":"bi","入金":"bd","預扣稅":"bs","轉出":"bs"};
   var html="<div class='sb' id='schwab-panel'><h3>📋 嘉信預覽（"+included.length+" 筆）</h3>";
   if(skipped.length)html+="<div class='wb' style='margin-bottom:10px'>⚠️ 略過 "+skipped.length+" 筆（無法識別的類型，不影響交易紀錄）</div>";
   html+="<div class='sx' style='max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px'>";
   html+="<table><thead><tr><th>日期</th><th>類別</th><th>代號</th><th class='num'>股數</th><th class='num'>成交價</th><th class='num'>金額</th></tr></thead><tbody>";
   included.forEach(function(r){
-    var t=classifySchwab(r.action);
+    var t=classifySchwab(r.action, r.desc, r.qty);
     html+="<tr><td style='font-size:12px;color:var(--text2)'>"+r.date+"</td>";
     html+="<td><span class='badge "+(badgeMap[t]||"br")+"'>"+t+"</span></td>";
     html+="<td>"+(r.sym?"<strong>"+esc(r.sym)+"</strong>":"—")+"</td>";
@@ -699,39 +720,56 @@ function schwabSetCash(){
 function schwabConfirmImport(){
   var allRows=schwabImp.rows;
   allRows.sort(function(a,b){return a.date.localeCompare(b.date);});
-  // Keep other accounts' data, only replace Schwab entries
+  
+  // 增量匯入：利用簡單比對避免重複新增（可自行調整邏輯），此處為避免直接覆蓋
+  var existingSchwabT = S.T.filter(t => t.source === "Schwab");
   S.T=S.T.filter(function(t){return t.source&&t.source!=="Schwab";});
-  S.H=S.H.filter(function(h){return h.acct&&h.acct!=="Schwab";});
-
-  // Step 1: Build S.T with all transactions
+  
+  var newCount = 0;
   allRows.forEach(function(r){
-    var type=classifySchwab(r.action);
+    var type=classifySchwab(r.action, r.desc, r.qty);
+    if (type === "其他") return;
+    
+    // 檢查是否已存在相似紀錄
+    var exists = existingSchwabT.some(t => t.date === r.date && t.type === type && t.sym === r.sym && Math.abs(t.amt - r.amount) < 0.01);
+    if (exists) return;
+    
     var t={id:gid(),date:r.date,type:type,sym:r.sym,shares:Math.abs(r.qty),
       price:r.price,fee:Math.abs(r.fee),amt:r.amount,wire:0,desc:r.desc,source:"Schwab"};
     S.T.push(t);
+    newCount++;
   });
-
-  // Step 2: Build holdings directly (handles sells with no buy history from TD)
+  
+  // 保留其他帳戶持倉
+  S.H=S.H.filter(function(h){return h.acct&&h.acct!=="Schwab";});
+  
+  // 重建嘉信持倉
   var hMap={};
-  allRows.forEach(function(r){
-    var sym=r.sym;if(!sym)return;
-    var type=classifySchwab(r.action);
-    var qty=Math.abs(r.qty);
+  var schwabTransactions = S.T.filter(t => t.source === "Schwab").sort((a,b) => a.date.localeCompare(b.date));
+  
+  schwabTransactions.forEach(function(tx){
+    var sym=tx.sym;if(!sym)return;
+    var type=tx.type;
+    var qty=tx.shares;
+    
     if(type==="買入"&&qty>0){
-      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:r.date};
+      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:tx.date};
       var ns=hMap[sym].shares+qty;
-      hMap[sym].cost=ns>0?(hMap[sym].shares*hMap[sym].cost+qty*r.price)/ns:0;
+      hMap[sym].cost=ns>0?(hMap[sym].shares*hMap[sym].cost+qty*tx.price)/ns:0;
       hMap[sym].shares=ns;
     }else if(type==="賣出"&&qty>0){
-      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:r.date,realized:0};
-      hMap[sym].realized=(hMap[sym].realized||0)+((r.price-(hMap[sym].cost||0))*qty-Math.abs(r.fee||0));
+      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:tx.date,realized:0};
+      hMap[sym].realized=(hMap[sym].realized||0)+((tx.price-(hMap[sym].cost||0))*qty-Math.abs(tx.fee||0));
       hMap[sym].shares=Math.max(0,hMap[sym].shares-qty);
-    }else if(type==="配息"&&r.amount>0){
-      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:r.date};
-      hMap[sym].div=(hMap[sym].div||0)+r.amount;
+    }else if(type==="轉出"&&qty>0){
+      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:tx.date};
+      hMap[sym].shares=Math.max(0,hMap[sym].shares-qty);
+    }else if(type==="配息"&&tx.amt>0){
+      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:tx.date};
+      hMap[sym].div=(hMap[sym].div||0)+tx.amt;
     }
   });
-  // Append Schwab holdings to existing non-Schwab holdings (don't replace)
+
   var schwabH=Object.keys(hMap).map(function(sym){
     var h=hMap[sym];
     return{id:gid(),sym:sym,shares:h.shares,cost:parseFloat((h.cost||0).toFixed(6)),
@@ -740,6 +778,7 @@ function schwabConfirmImport(){
   S.H=S.H.concat(schwabH);
 
   sv("T");sv("H");
+  toast("✅ 匯入成功！新增了 " + newCount + " 筆紀錄");
   schwabImp={rows:[],step:2};  // step 2 = ask for cash
   render();
   // Auto update prices after import
@@ -861,11 +900,17 @@ function fsvBuildRows(){
 function fsvConfirmImport(){
   var rows=fsvBuildRows();
   rows.sort(function(a,b){return a.date.localeCompare(b.date);});
-  // Keep other accounts' data, only replace FT entries
+  
+  // 增量匯入機制
+  var existingFT = S.T.filter(t => t.source === "FT");
   S.T=S.T.filter(function(t){return t.source&&t.source!=="FT";});
   S.H=S.H.filter(function(h){return h.acct&&h.acct!=="FT";});
+  
   var added=0;
   rows.forEach(function(r){
+    var exists = existingFT.some(t => t.date === r.date && t.type === r.type && t.sym === r.sym && Math.abs(t.amt - r.amt) < 0.01);
+    if(exists) return;
+    
     var t=Object.assign({id:gid(),source:"FT"},r);
     S.T.push(t);added++;
   });
@@ -1001,7 +1046,7 @@ function drawChart(p){
 
 // ─── RENDERS ───
 function rCard(l,v,s,c){return "<div class='card'><div class='cl'>"+l+"</div><div class='cv "+(c||"")+"'>"+v+"</div><div class='cs'>"+s+"</div></div>";}
-function rBadge(t){var m={"買入":"bi","賣出":"bd","入金":"bb","現金利息":"br","匯費補貼":"br","配息":"bd","預扣稅":"bs"};return "<span class='badge "+(m[t]||"br")+"'>"+ t+"</span>";}
+function rBadge(t){var m={"買入":"bi","賣出":"bd","入金":"bb","現金利息":"br","匯費補貼":"br","配息":"bd","預扣稅":"bs","轉出":"bs"};return "<span class='badge "+(m[t]||"br")+"'>"+ t+"</span>";}
 function rUBtn(text,fn,loading){return "<button class='ubtn"+(loading?" loading":"")+"' onclick='"+fn+"()'>"+text+"</button>";}
 
 function rDash(p){
@@ -1290,7 +1335,7 @@ function rHoldings(){
 }
 
 function rTx(){
-  var types=["買入","賣出","入金","現金利息","匯費補貼","配息"];
+  var types=["買入","賣出","入金","出金","現金利息","匯費補貼","配息","預扣稅","轉出"];
   var fTypes=["全部"].concat(types);
   var q=S.txSearch.toLowerCase();
   var filtered=S.T.filter(function(t){
@@ -1304,8 +1349,8 @@ function rTx(){
   if(S.showForm==="t"||isEd){
     var ev=function(k,d){return isEd&&edTx?(edTx[k]!==undefined?edTx[k]:d):d;};
     var curType=isEd&&edTx?edTx.type:"買入";
-    // amt sign rules: 買入=負(支出), 入金/賣出/配息/現金利息/匯費補貼=正
-    var amtSign=["買入"].indexOf(curType)>=0?"-":"+";
+    // amt sign rules: 買入/出金/預扣稅=負(支出), 入金/賣出/配息/現金利息/匯費補貼=正
+    var amtSign=["買入","出金","預扣稅"].indexOf(curType)>=0?"-":"+";
     var amtAbs=isEd&&edTx?Math.abs(edTx.amt||0):"";
     html+="<div class='fb'><div style='font-size:13px;font-weight:500;margin-bottom:10px'>"+(isEd?"編輯交易（"+edTx.date+"）":"新增交易")+"</div><div class='fg'>";
     var curAcct=isEd&&edTx?ev("source","FT"):"FT";
@@ -1319,7 +1364,7 @@ function rTx(){
     html+="<div><div class='fl'>金額(USD) <span id='ft-amt-sign' style='color:var(--text2);font-size:11px'>"+amtSign+"（自動計算）</span></div><input id='ft-amt-abs' type='number' value='"+amtAbs+"' placeholder='留空自動算' min='0' oninput='autoCalcAmt()'><input type='hidden' id='ft-amt' value='"+(isEd&&edTx?ev("amt",""):"")+"'></div>";
     html+="<div><div class='fl'>匯款手續費(NTD)</div><input id='ft-wire' type='number' value='"+ev("wire","")+"' placeholder='0'></div>";
     html+="<div style='display:flex;align-items:flex-end;gap:8px;grid-column:span 2'><button class='btn btn-blue' onclick='"+(isEd?"saveEditTx":"addTx")+"()' style='flex:1'>"+(isEd?"儲存修改":"確認新增")+"</button><button class='btn-sm' onclick='cancelTxEdit()' style='padding:8px 12px'>取消</button></div>";
-    html+="</div>"+(S.showForm==="t"?"<div class='fh'>💡 買入自動帶出負數、賣出/入金自動帶入正數</div>":"")+"</div>";
+    html+="</div>"+(S.showForm==="t"?"<div class='fh'>💡 買入/出金/預扣稅會自動計算為負數支出</div>":"")+"</div>";
     html+="<script>setTimeout(function(){onTxTypeChange(document.getElementById('ft-type')&&document.getElementById('ft-type').value||'買入');},30);<\/script>";
   }
   html+="<div class='panel'><div class='ph'><span>顯示 "+filtered.length+" / "+S.T.length+" 筆</span></div>";
@@ -1513,7 +1558,8 @@ async function fetchNews(){
   });
   var q="("+terms.join(" OR ")+") AND (stock OR shares OR earnings OR market OR investor)";
   try{
-    var url="/api/news?q="+encodeURIComponent(q)+"&apiKey="+encodeURIComponent(S.newsApiKey);
+    // Modify URL for news API structure
+    var url="https://newsapi.org/v2/everything?q="+encodeURIComponent(q)+"&apiKey="+encodeURIComponent(S.newsApiKey);
     var r=await fetch(url);
     var d=await r.json();
     if(d.status!=="ok")throw new Error(d.message||"API error");
@@ -1776,8 +1822,8 @@ function addHolding(){
 }
 function delHolding(id){if(!confirm("確定刪除？"))return;S.H=S.H.filter(function(h){return h.id!==id;});sv("H");render();}
 // ── Transaction form helpers ──
-var TX_OUT=["買入"]; // types where money goes OUT (negative amt)
-var TX_IN=["賣出","入金","配息","現金利息","匯費補貼","出金"]; // positive amt
+var TX_OUT=["買入","出金","預扣稅"]; // types where money goes OUT (negative amt)
+var TX_IN=["賣出","入金","配息","現金利息","匯費補貼"]; // positive amt
 
 function onTxTypeChange(type){
   var sign=document.getElementById("ft-amt-sign");
@@ -1786,7 +1832,7 @@ function onTxTypeChange(type){
   var symRow=document.getElementById("ft-sym")&&document.getElementById("ft-sym").closest("div");
   if(sign)sign.textContent=(TX_OUT.indexOf(type)>=0?"−（支出，自動計算）":"＋（收入，自動計算）");
   // show/hide sym, shares, price based on type
-  var isTrade=["買入","賣出"].indexOf(type)>=0;
+  var isTrade=["買入","賣出","轉出"].indexOf(type)>=0;
   var isDiv=type==="配息";
   if(symRow)symRow.style.display=(isTrade||isDiv)?"":"none";
   if(sharesRow)sharesRow.style.display=isTrade?"":"none";

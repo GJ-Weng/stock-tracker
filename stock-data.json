@@ -429,6 +429,19 @@
       "note": "",
       "fd": "2025-12-03",
       "acct": "Schwab"
+    },
+    {
+      "id": "1781609509742-i0vm",
+      "sym": "KBSX",
+      "shares": 300,
+      "cost": 1.24,
+      "price": 1.24,
+      "chg": 0,
+      "div": 0,
+      "realized": 0,
+      "note": "",
+      "fd": "2026-04-21",
+      "acct": "GT"
     }
   ],
   "T": [
@@ -5695,6 +5708,18 @@
       "desc": "MICROSOFT CORP",
       "source": "Schwab",
       "fromSchwab": true
+    },
+    {
+      "id": "1781609509742-5kh2",
+      "date": "2026-04-21",
+      "type": "買入",
+      "sym": "KBSX",
+      "shares": 300,
+      "price": 1.24,
+      "fee": 0.3,
+      "amt": -372.3,
+      "wire": 0,
+      "source": "GT"
     }
   ],
   "E": [
@@ -6371,10 +6396,10 @@
     }
   ],
   "acc": {
-    "cash": 64451.62999999999,
+    "cash": 64079.329999999994,
     "cashFT": 4578.84,
     "cashSchwab": 47509.7,
-    "cashCathay": 12363.09,
+    "cashCathay": 11990.79,
     "cashAdj": {
       "FT": 0,
       "Schwab": 0,

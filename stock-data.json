@@ -2032,20 +2032,6 @@
       "desc": "MARVELL TECHNOLOGY INC         COMMON STOCK                   UNSOLICITED"
     },
     {
-      "id": "1781608381163-j171",
-      "source": "FT",
-      "fromFSV": true,
-      "date": "2026-06-04",
-      "type": "入金",
-      "sym": "",
-      "shares": 0,
-      "price": 0,
-      "fee": 0,
-      "amt": 2500,
-      "wire": 0,
-      "desc": "Wire Funds Received FedRef 20260604MMQFMP2N001983 SEN(20260604050065)"
-    },
-    {
       "id": "1781608381163-peff",
       "source": "FT",
       "fromFSV": true,

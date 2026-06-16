@@ -437,7 +437,6 @@ function ghLoad(){
 }
 
 // ─── PRICE UPDATE ───
-// ─── PRICE UPDATE ───
 async function updatePrices(){
   if(S.updating)return;
   var _rawSyms=S.H.filter(function(h){return h.shares>0&&!h.sym.includes("Call")&&!h.sym.includes("Put");}).map(function(h){return h.sym;});

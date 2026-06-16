@@ -589,19 +589,28 @@ function parseSchwabDate(s){
   if(p.length!==3)return clean;
   return p[2]+"-"+p[0].padStart(2,"0")+"-"+p[1].padStart(2,"0");
 }
-function classifySchwab(action){
-  var a=action.trim();
+function classifySchwab(action,desc,sym,qty){
+  var a=(action||"").trim();
+  desc=((desc||"")).toUpperCase();
   if(a==="Buy")return"買入";
-  if(a==="Reinvest Shares")return"買入";  // dividend reinvestment = buy
+  if(a==="Reinvest Shares")return"買入";
   if(a==="Sell")return"賣出";
   if(a==="Qualified Dividend"||a==="Cash Dividend"||a==="Qual Div Reinvest")return"配息";
   if(a==="Credit Interest"||a==="Bond Interest")return"現金利息";
   if(a==="Wire Received"||a==="Wire Funds Received")return"入金";
   if(a==="NRA Tax Adj")return"預扣稅";
-  // Journaled Shares / Security Transfer = TD→Schwab ACAT stock migration → treat as 買入 (uses cost basis from price field)
-  if(a==="Journaled Shares"||a==="Security Transfer")return"買入";
-  // Internal Transfer = cash movement between Schwab accounts → treat as 入金
-  if(a==="Internal Transfer")return"入金";
+  if(a==="Journaled Shares"){
+    if(desc.includes("W-8 WITHHOLDING"))return"預扣稅";
+    if(desc.includes("STOCK SPLIT"))return"股票分割";
+    if(desc.includes("TRANSFER OF SECURITY OR OPTION OUT"))return"其他";
+    if(desc.includes("CASH MOVEMENT"))return"其他";
+    return"其他";
+  }
+  if(a==="Internal Transfer"){
+    if(sym&&qty&&parseFloat(qty)>0)return"買入"; // TD→Schwab stock transfer in
+    return"入金"; // cash transfer
+  }
+  if(a==="Security Transfer")return"出金"; // ACAT out
   return"其他";
 }
 var schwabImp={rows:[],step:0};
@@ -659,15 +668,15 @@ function rSchwabPanel(){
   }
   // Build preview
   var rows=schwabImp.rows;
-  var included=rows.filter(function(r){return classifySchwab(r.action)!=="其他";});
-  var skipped=rows.filter(function(r){return classifySchwab(r.action)==="其他";});
-  var badgeMap={"買入":"bb","賣出":"bs","配息":"bd","現金利息":"bi","入金":"bd","預扣稅":"bs"};
+  var included=rows.filter(function(r){return classifySchwab(r.action,r.desc,r.sym,r.qty)!=="其他";});
+  var skipped=rows.filter(function(r){return classifySchwab(r.action,r.desc,r.sym,r.qty)==="其他";});
+  var badgeMap={"買入":"bb","賣出":"bs","配息":"bd","現金利息":"bi","入金":"bd","預扣稅":"bs","出金":"bs","股票分割":"br"};
   var html="<div class='sb' id='schwab-panel'><h3>📋 嘉信預覽（"+included.length+" 筆）</h3>";
   if(skipped.length)html+="<div class='wb' style='margin-bottom:10px'>⚠️ 略過 "+skipped.length+" 筆（無法識別的類型，不影響交易紀錄）</div>";
   html+="<div class='sx' style='max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px'>";
   html+="<table><thead><tr><th>日期</th><th>類別</th><th>代號</th><th class='num'>股數</th><th class='num'>成交價</th><th class='num'>金額</th></tr></thead><tbody>";
   included.forEach(function(r){
-    var t=classifySchwab(r.action);
+    var t=classifySchwab(r.action,r.desc,r.sym,r.qty);
     html+="<tr><td style='font-size:12px;color:var(--text2)'>"+r.date+"</td>";
     html+="<td><span class='badge "+(badgeMap[t]||"br")+"'>"+t+"</span></td>";
     html+="<td>"+(r.sym?"<strong>"+esc(r.sym)+"</strong>":"—")+"</td>";
@@ -705,7 +714,7 @@ function schwabConfirmImport(){
 
   // Step 1: Build S.T with all transactions
   allRows.forEach(function(r){
-    var type=classifySchwab(r.action);
+    var type=classifySchwab(r.action,r.desc,r.sym,r.qty);
     var t={id:gid(),date:r.date,type:type,sym:r.sym,shares:Math.abs(r.qty),
       price:r.price,fee:Math.abs(r.fee),amt:r.amount,wire:0,desc:r.desc,source:"Schwab"};
     S.T.push(t);
@@ -714,28 +723,32 @@ function schwabConfirmImport(){
   // Step 2: Build holdings directly (handles sells with no buy history from TD)
   var hMap={};
   allRows.forEach(function(r){
-    var sym=r.sym;if(!sym)return;
-    var type=classifySchwab(r.action);
-    var qty=Math.abs(r.qty);
-    if(type==="買入"&&qty>0){
-      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:r.date};
+    var sym=r.sym;
+    var type=classifySchwab(r.action,r.desc,r.sym,r.qty);
+    var qty=Math.abs(r.qty||0);
+    if(!sym&&type!=="入金"&&type!=="現金利息"&&type!=="預扣稅")return;
+    if(type==="買入"&&qty>0&&sym){
+      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:r.date,div:0,realized:0,noCost:false};
       var ns=hMap[sym].shares+qty;
-      hMap[sym].cost=ns>0?(hMap[sym].shares*hMap[sym].cost+qty*r.price)/ns:0;
+      if(r.price){hMap[sym].cost=ns>0?(hMap[sym].shares*hMap[sym].cost+qty*r.price)/ns:0;}
+      else{hMap[sym].noCost=true;}
       hMap[sym].shares=ns;
-    }else if(type==="賣出"&&qty>0){
-      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:r.date,realized:0};
+      if(!hMap[sym].fd||r.date<hMap[sym].fd)hMap[sym].fd=r.date;
+    }else if(type==="賣出"&&qty>0&&sym){
+      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:r.date,div:0,realized:0,noCost:false};
       hMap[sym].realized=(hMap[sym].realized||0)+((r.price-(hMap[sym].cost||0))*qty-Math.abs(r.fee||0));
       hMap[sym].shares=Math.max(0,hMap[sym].shares-qty);
-    }else if(type==="配息"&&r.amount>0){
-      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:r.date};
-      hMap[sym].div=(hMap[sym].div||0)+r.amount;
+    }else if(type==="配息"&&sym){
+      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:r.date,div:0,realized:0,noCost:false};
+      hMap[sym].div=(hMap[sym].div||0)+(r.amount||0);
     }
   });
   // Append Schwab holdings to existing non-Schwab holdings (don't replace)
   var schwabH=Object.keys(hMap).map(function(sym){
     var h=hMap[sym];
     return{id:gid(),sym:sym,shares:h.shares,cost:parseFloat((h.cost||0).toFixed(6)),
-      price:0,chg:0,div:parseFloat((h.div||0).toFixed(2)),realized:parseFloat((h.realized||0).toFixed(2)),note:"",fd:h.fd,acct:"Schwab"};
+      price:0,chg:0,div:parseFloat((h.div||0).toFixed(2)),realized:parseFloat((h.realized||0).toFixed(2)),
+      note:h.noCost?"⚠ 請補填均成本（TD遷移）":"",fd:h.fd,acct:"Schwab"};
   });
   S.H=S.H.concat(schwabH);
 

@@ -718,16 +718,16 @@ function schwabConfirmImport(){
   var allRows=schwabImp.rows;
   allRows.sort(function(a,b){return a.date.localeCompare(b.date);});
   
-  // 增量匯入：利用簡單比對避免重複新增（可自行調整邏輯），此處為避免直接覆蓋
   var existingSchwabT = S.T.filter(t => t.source === "Schwab");
-  S.T=S.T.filter(function(t){return t.source&&t.source!=="Schwab";});
+  // 🚨 修正：移除這行會刪除舊紀錄的程式碼！(不再清空 S.T 裡的 Schwab)
+  // S.T=S.T.filter(function(t){return t.source&&t.source!=="Schwab";});
   
   var newCount = 0;
   allRows.forEach(function(r){
     var type=classifySchwab(r.action, r.desc, r.qty);
     if (type === "其他") return;
     
-    // 檢查是否已存在相似紀錄
+    // 檢查是否已存在相似紀錄，存在就跳過不重複新增
     var exists = existingSchwabT.some(t => t.date === r.date && t.type === type && t.sym === r.sym && Math.abs(t.amt - r.amount) < 0.01);
     if (exists) return;
     
@@ -737,10 +737,9 @@ function schwabConfirmImport(){
     newCount++;
   });
   
-  // 保留其他帳戶持倉
+  // 重新計算持倉，所以先清空嘉信的「持倉」，下面會用完整的 S.T 重新建立
   S.H=S.H.filter(function(h){return h.acct&&h.acct!=="Schwab";});
   
-  // 重建嘉信持倉
   var hMap={};
   var schwabTransactions = S.T.filter(t => t.source === "Schwab").sort((a,b) => a.date.localeCompare(b.date));
   
@@ -776,9 +775,8 @@ function schwabConfirmImport(){
 
   sv("T");sv("H");
   toast("✅ 匯入成功！新增了 " + newCount + " 筆紀錄");
-  schwabImp={rows:[],step:2};  // step 2 = ask for cash
+  schwabImp={rows:[],step:2}; 
   render();
-  // Auto update prices after import
   setTimeout(function(){updatePrices();},500);
 }
 
@@ -898,9 +896,11 @@ function fsvConfirmImport(){
   var rows=fsvBuildRows();
   rows.sort(function(a,b){return a.date.localeCompare(b.date);});
   
-  // 增量匯入機制
   var existingFT = S.T.filter(t => t.source === "FT");
-  S.T=S.T.filter(function(t){return t.source&&t.source!=="FT";});
+  // 🚨 修正：移除這行會刪除舊紀錄的程式碼！(不再清空 S.T 裡的 FT)
+  // S.T=S.T.filter(function(t){return t.source&&t.source!=="FT";});
+  
+  // 只清空 FT 的持倉，因為下面會用交易紀錄完整重建
   S.H=S.H.filter(function(h){return h.acct&&h.acct!=="FT";});
   
   var added=0;
@@ -911,7 +911,7 @@ function fsvConfirmImport(){
     var t=Object.assign({id:gid(),source:"FT"},r);
     S.T.push(t);added++;
   });
-  // Rebuild FT holdings from transactions (reliable, handles sells correctly)
+  
   var ftMap={};
   S.T.filter(function(t){return t.source==="FT";}).sort(function(a,b){return a.date.localeCompare(b.date);}).forEach(function(tx){
     var sym=tx.sym,shares=tx.shares,price=tx.price,fee=tx.fee||0,amt=tx.amt||0;
@@ -936,7 +936,6 @@ function fsvConfirmImport(){
       price:ex?ex.price:0,chg:ex?ex.chg:0,div:parseFloat(h.div.toFixed(2)),
       realized:parseFloat(h.realized.toFixed(2)),note:ex?ex.note:"",fd:h.fd,acct:"FT"};
   });
-  // Handle ONDS Call (option) specially
   var callEntry=S.H.filter(function(h){return h.acct==="FT"&&h.isOption;});
   S.H=S.H.filter(function(h){return h.acct&&h.acct!=="FT"&&!h.isOption;}).concat(ftHoldings).concat(callEntry);
   sv("T");sv("H");

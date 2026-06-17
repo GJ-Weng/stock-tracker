@@ -624,19 +624,6 @@
       "source": "Schwab"
     },
     {
-      "id": "1781616903624-0q05",
-      "date": "2022-08-11",
-      "type": "買入",
-      "sym": "AAPL",
-      "shares": 0.014,
-      "price": 169.8844,
-      "fee": 0,
-      "amt": -2.41,
-      "wire": 0,
-      "desc": "TDA TRAN - Bought 0.014 (AAPL) @169.8844",
-      "source": "Schwab"
-    },
-    {
       "id": "1781616903624-6vq7",
       "date": "2022-08-11",
       "type": "配息",

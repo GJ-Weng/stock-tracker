@@ -1721,9 +1721,9 @@
       "type": "買入",
       "sym": "DIS",
       "shares": 1.002,
-      "price": 0,
+      "price": 168,
       "fee": 0,
-      "amt": 0,
+      "amt": -168.34,
       "wire": 0,
       "desc": "WALT DISNEY CO",
       "source": "Schwab"

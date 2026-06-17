@@ -2184,32 +2184,6 @@
       "source": "Schwab"
     },
     {
-      "id": "1781616903625-y1t8",
-      "date": "2024-11-12",
-      "type": "賣出",
-      "sym": "AAPL",
-      "shares": 15,
-      "price": 225,
-      "fee": 0.09,
-      "amt": 3374.91,
-      "wire": 0,
-      "desc": "APPLE INC",
-      "source": "Schwab"
-    },
-    {
-      "id": "1781616903625-gs73",
-      "date": "2024-11-13",
-      "type": "賣出",
-      "sym": "TSLA",
-      "shares": 12,
-      "price": 338,
-      "fee": 0.11,
-      "amt": 4055.89,
-      "wire": 0,
-      "desc": "TESLA INC",
-      "source": "Schwab"
-    },
-    {
       "id": "1781616903625-zcfd",
       "date": "2024-11-14",
       "type": "買入",
@@ -2301,19 +2275,6 @@
       "source": "Schwab"
     },
     {
-      "id": "1781616903625-z4pj",
-      "date": "2024-11-19",
-      "type": "賣出",
-      "sym": "TSLA",
-      "shares": 15,
-      "price": 338,
-      "fee": 0.14,
-      "amt": 5069.86,
-      "wire": 0,
-      "desc": "TESLA INC",
-      "source": "Schwab"
-    },
-    {
       "id": "1781616903625-g0dv",
       "date": "2024-11-20",
       "type": "買入",
@@ -2387,19 +2348,6 @@
       "price": 25.9,
       "fee": 0,
       "amt": -259,
-      "wire": 0,
-      "desc": "NEBIUS GROUP N V FCLASS A",
-      "source": "Schwab"
-    },
-    {
-      "id": "1781616903625-b9qv",
-      "date": "2024-12-03",
-      "type": "賣出",
-      "sym": "NBIS",
-      "shares": 10,
-      "price": 27,
-      "fee": 0.01,
-      "amt": 269.99,
       "wire": 0,
       "desc": "NEBIUS GROUP N V FCLASS A",
       "source": "Schwab"
@@ -2545,32 +2493,6 @@
       "amt": -240,
       "wire": 0,
       "desc": "CERENCE INC",
-      "source": "Schwab"
-    },
-    {
-      "id": "1781616903625-qswq",
-      "date": "2025-01-06",
-      "type": "賣出",
-      "sym": "SMCI",
-      "shares": 5,
-      "price": 34.9,
-      "fee": 0,
-      "amt": 174.5,
-      "wire": 0,
-      "desc": "SUPER MICRO COMPUTER INC",
-      "source": "Schwab"
-    },
-    {
-      "id": "1781616903625-43lu",
-      "date": "2025-01-06",
-      "type": "賣出",
-      "sym": "GGLL",
-      "shares": 5,
-      "price": 47.77,
-      "fee": 0.01,
-      "amt": 238.84,
-      "wire": 0,
-      "desc": "DIREXION DAILY GOOGL BULL 2X ETF",
       "source": "Schwab"
     },
     {
@@ -6172,9 +6094,9 @@
     }
   ],
   "acc": {
-    "cash": 4872.53,
+    "cash": 2892.5499999999993,
     "cashFT": 4579.23,
-    "cashSchwab": 186.6,
+    "cashSchwab": -1793.38,
     "cashCathay": 106.7,
     "cashAdj": {
       "FT": 1.31,

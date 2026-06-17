@@ -390,6 +390,19 @@
       "note": "",
       "fd": "2026-06-12",
       "acct": "FT"
+    },
+    {
+      "id": "1781672749922-t3j6",
+      "sym": "AMZN",
+      "shares": 5,
+      "cost": 125,
+      "price": 125,
+      "chg": 0,
+      "div": 0,
+      "realized": 0,
+      "note": "",
+      "fd": "2024-05-17",
+      "acct": "Schwab"
     }
   ],
   "T": [
@@ -5575,6 +5588,18 @@
       "amt": -1600,
       "wire": 0,
       "desc": "SPACE EXPLORATION TECHNOLOGIES CORP CLASS A COMMON STOCK      UNSOLICITED                    PRODUCT DESCRIPTION UNDER      SEPARATE COVER"
+    },
+    {
+      "id": "1781672749922-r6xo",
+      "date": "2024-05-17",
+      "type": "買入",
+      "sym": "AMZN",
+      "shares": 5,
+      "price": 125,
+      "fee": 0,
+      "amt": -625,
+      "wire": 0,
+      "source": "Schwab"
     }
   ],
   "E": [

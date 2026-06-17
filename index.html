@@ -1633,6 +1633,7 @@ function buildInsightPanel(p){
 // ─── MARKET CALENDAR & EARNINGS ───
 
 // 2026 key market dates (hardcoded)
+function daysFromNow(dateStr){if(!dateStr)return null;var diff=new Date(dateStr)-new Date(today());return Math.round(diff/86400000);}
 // 每年1月更新一次（Fed + BLS 年初公布全年日程）
 var MARKET_EVENTS=[
   // ── FOMC 利率決議（結果公布日，各會議第2天）──

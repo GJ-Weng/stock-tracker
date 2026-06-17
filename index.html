@@ -1338,7 +1338,7 @@ function rTx(){
   if(bm){
     var selCount=Object.keys(S.txSelected).length;
     html+="<button class='btn' onclick='txSelectAll()'>全選("+filtered.length+")</button>";
-    html+="<button class='btn-red' onclick='txBatchDelete()'"+(!selCount?" disabled":"")+">🗑 刪除("+selCount+")</button>";
+    html+="<button id='tx-batch-del' class='btn-red' onclick='txBatchDelete()'"+(!selCount?" disabled":"")+">🗑 刪除("+selCount+")</button>";
     html+="<button class='btn' onclick='S.txBatch=false;S.txSelected={};render()'>取消</button>";
   }else{
     html+="<button class='btn' onclick='S.txBatch=true;S.txSelected={};render()'>☑ 批次刪除</button>";
@@ -1387,7 +1387,7 @@ function rTx(){
     html+="<td class='num'>"+(t.wire?"NT$"+fn(t.wire,0):"—")+"</td>";
     html+="<td class='num'>"+(t.wire?"NT$"+fn(t.wire,0):"—")+"</td>";
     if(S.txBatch){
-      html+="<td style='text-align:center'><input type='checkbox' "+(S.txSelected[t.id]?"checked":"")+" onchange='S.txSelected[\""+t.id+"\"]=(this.checked?1:0);if(!this.checked)delete S.txSelected[\""+t.id+"\"];render()'></td></tr>";
+      html+="<td style='text-align:center'><input type='checkbox' "+(S.txSelected[t.id]?"checked":"")+" onchange='S.txSelected[\""+t.id+"\"]=(this.checked?1:0);if(!this.checked)delete S.txSelected[\""+t.id+"\"];txUpdateBatchUI()'></td></tr>";
     }else{
       html+="<td><div style='display:flex;gap:4px'>";
       html+="<td><div style='display:flex;gap:4px'>";
@@ -1795,6 +1795,17 @@ function setHoldingsView(v){S.holdingsView=v;render();}
 function setTab(t){S.tab=t;S.showForm=null;S.editTxId=null;S.editPriceId=null;render();}
 function toggleForm(f){S.showForm=S.showForm===f?null:f;S.editTxId=null;render();}
 function setFilter(f){S.filterType=f;render();}
+function txUpdateBatchUI(){
+  // Only update header counts without re-rendering the whole page
+  var selCount=Object.keys(S.txSelected).length;
+  var delBtn=document.getElementById("tx-batch-del");
+  var countEl=document.getElementById("tx-batch-count");
+  if(delBtn){
+    delBtn.textContent="🗑 刪除("+selCount+")";
+    delBtn.disabled=selCount===0;
+  }
+  if(countEl)countEl.textContent=selCount;
+}
 function txSelectAll(){
   var txAcct=S.txAcct||"全部";
   var q=S.txSearch.toLowerCase();

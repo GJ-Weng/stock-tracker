@@ -1755,19 +1755,6 @@
       "source": "Schwab"
     },
     {
-      "id": "1781616903625-54s3",
-      "date": "2024-05-13",
-      "type": "買入",
-      "sym": "AAPL",
-      "shares": 15.122,
-      "price": 0,
-      "fee": 0,
-      "amt": 0,
-      "wire": 0,
-      "desc": "APPLE INC",
-      "source": "Schwab"
-    },
-    {
       "id": "1781616903625-u456",
       "date": "2024-05-13",
       "type": "入金",

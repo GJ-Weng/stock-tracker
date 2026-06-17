@@ -2,40 +2,40 @@
   "v": 1,
   "H": [
     {
-      "id": "1781616903625-er8d",
-      "sym": "AAPL",
-      "shares": 0.16,
-      "cost": 175.63,
-      "price": 299.24,
-      "chg": 2.82,
-      "div": 11.59,
-      "realized": 733.85,
-      "note": "⚠ 請補填均成本（TD遷移）",
-      "fd": "2022-08-11",
-      "acct": "Schwab"
-    },
-    {
       "id": "1781616903625-dfth",
       "sym": "MSFT",
-      "shares": 1.0274,
-      "cost": 374.272657,
+      "shares": 0.020399999999999998,
+      "cost": 385.670113,
       "price": 393.83,
       "chg": -5.93,
       "div": 7.7,
       "realized": 0,
       "note": "⚠ 請補填均成本（TD遷移）",
-      "fd": "2022-09-08",
+      "fd": "2022-12-08",
+      "acct": "Schwab"
+    },
+    {
+      "id": "1781616903625-er8d",
+      "sym": "AAPL",
+      "shares": 0.11000000000000001,
+      "cost": 187.754399,
+      "price": 299.24,
+      "chg": 2.82,
+      "div": 11.59,
+      "realized": 0,
+      "note": "⚠ 請補填均成本（TD遷移）",
+      "fd": "2023-02-16",
       "acct": "Schwab"
     },
     {
       "id": "1781616903625-6b5z",
       "sym": "INTC",
-      "shares": 0,
+      "shares": 10.105999999999998,
       "cost": 35.47306,
       "price": 126.63,
       "chg": 2.06,
       "div": 1.26,
-      "realized": 29.58,
+      "realized": 0,
       "note": "⚠ 請補填均成本（TD遷移）",
       "fd": "2023-06-15",
       "acct": "Schwab"
@@ -43,12 +43,12 @@
     {
       "id": "1781616903625-td32",
       "sym": "DIS",
-      "shares": 0,
-      "cost": 103.065068,
+      "shares": 1.0107000000000002,
+      "cost": 167.384804,
       "price": 101.45,
       "chg": 1.41,
       "div": 2.21,
-      "realized": 10.08,
+      "realized": 0,
       "note": "⚠ 請補填均成本（TD遷移）",
       "fd": "2024-01-10",
       "acct": "Schwab"
@@ -56,12 +56,12 @@
     {
       "id": "1781616903625-nnpj",
       "sym": "TSLA",
-      "shares": 3,
-      "cost": 328.44,
+      "shares": 24,
+      "cost": 300.756667,
       "price": 404.66,
       "chg": -6.49,
       "div": 0,
-      "realized": 1902.43,
+      "realized": 0,
       "note": "⚠ 請補填均成本（TD遷移）",
       "fd": "2024-01-25",
       "acct": "Schwab"
@@ -95,12 +95,12 @@
     {
       "id": "1781616903625-atdw",
       "sym": "NVDL",
-      "shares": 0,
+      "shares": 30,
       "cost": 75.166667,
       "price": 0,
       "chg": 0,
       "div": 0,
-      "realized": -725.04,
+      "realized": 0,
       "note": "",
       "fd": "2024-11-20",
       "acct": "Schwab"
@@ -108,12 +108,12 @@
     {
       "id": "1781616903625-szmp",
       "sym": "NBIS",
-      "shares": 0,
+      "shares": 10,
       "cost": 25.9,
       "price": 0,
       "chg": 0,
       "div": 0,
-      "realized": 10.99,
+      "realized": 0,
       "note": "",
       "fd": "2024-12-02",
       "acct": "Schwab"
@@ -121,12 +121,12 @@
     {
       "id": "1781616903625-86ja",
       "sym": "SMCI",
-      "shares": 0,
+      "shares": 5,
       "cost": 44.5,
       "price": 0,
       "chg": 0,
       "div": 0,
-      "realized": -48,
+      "realized": 0,
       "note": "",
       "fd": "2024-12-03",
       "acct": "Schwab"
@@ -134,12 +134,12 @@
     {
       "id": "1781616903625-a0ir",
       "sym": "GGLL",
-      "shares": 0,
+      "shares": 5,
       "cost": 48.5,
       "price": 0,
       "chg": 0,
       "div": 1.7,
-      "realized": -3.66,
+      "realized": 0,
       "note": "",
       "fd": "2024-12-12",
       "acct": "Schwab"
@@ -155,19 +155,6 @@
       "realized": 0,
       "note": "",
       "fd": "2025-01-06",
-      "acct": "Schwab"
-    },
-    {
-      "id": "1781616903625-6nc7",
-      "sym": "SOFI",
-      "shares": 15,
-      "cost": 14.99,
-      "price": 17.71,
-      "chg": 0.55,
-      "div": 0,
-      "realized": 0,
-      "note": "",
-      "fd": "2025-02-21",
       "acct": "Schwab"
     },
     {
@@ -5990,9 +5977,9 @@
     }
   ],
   "acc": {
-    "cash": 2892.5499999999993,
+    "cash": -12093.349999999999,
     "cashFT": 4579.23,
-    "cashSchwab": -1793.38,
+    "cashSchwab": -16779.28,
     "cashCathay": 106.7,
     "cashAdj": {
       "FT": 1.31,

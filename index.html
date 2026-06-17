@@ -467,20 +467,12 @@ function applyTx(tx){
   if(!sym||!shares||shares<=0)return true;
   var i;
   if(type==="買入"){
-    i=S.H.findIndex(function(h){return h.sym===sym;});
-    var acct=tx.source||"FT";
-    if(i>=0&&S.H[i].acct===acct){
+    var acct=tx.source||((S.H.find(function(h){return h.sym===sym&&h.acct&&h.acct!=="FT";})||{}).acct)||"FT";
+    if(!tx.source)tx.source=acct; // normalise
+    i=S.H.findIndex(function(h){return h.sym===sym&&h.acct===acct;});
+    if(i>=0){
       var ns=S.H[i].shares+shares,nc=(S.H[i].shares*S.H[i].cost+shares*price)/ns;
       S.H=S.H.map(function(h,j){return j===i?Object.assign({},h,{shares:ns,cost:parseFloat(nc.toFixed(6))}):h;});
-    }else if(i>=0&&S.H[i].acct!==acct){
-      // Different account - add as separate holding
-      var existAcct=S.H.find(function(h){return h.sym===sym&&h.acct===acct;});
-      if(existAcct){
-        var ei=S.H.indexOf(existAcct),ns2=existAcct.shares+shares,nc2=(existAcct.shares*existAcct.cost+shares*price)/ns2;
-        S.H=S.H.map(function(h,j){return j===ei?Object.assign({},h,{shares:ns2,cost:parseFloat(nc2.toFixed(6))}):h;});
-      }else{
-        S.H.push({id:gid(),sym:sym,shares:shares,cost:price,price:price,chg:0,div:0,realized:0,note:"",fd:date||today(),acct:acct});
-      }
     }else{
       S.H.push({id:gid(),sym:sym,shares:shares,cost:price,price:price,chg:0,div:0,realized:0,note:"",fd:date||today(),acct:acct});
     }

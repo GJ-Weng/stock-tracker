@@ -221,6 +221,19 @@
       "note": "",
       "fd": "2026-06-12",
       "acct": "FT"
+    },
+    {
+      "id": "1781704125993-xwpa",
+      "sym": "NVDA",
+      "shares": 35,
+      "cost": 141,
+      "price": 141,
+      "chg": 0,
+      "div": 0,
+      "realized": 0,
+      "note": "",
+      "fd": "2026-11-19",
+      "acct": "Schwab"
     }
   ],
   "T": [
@@ -2338,6 +2351,18 @@
       "amt": -1600,
       "wire": 0,
       "desc": "SPACE EXPLORATION TECHNOLOGIES CORP CLASS A COMMON STOCK      UNSOLICITED                    PRODUCT DESCRIPTION UNDER      SEPARATE COVER"
+    },
+    {
+      "id": "1781704125993-neom",
+      "date": "2026-11-19",
+      "type": "買入",
+      "sym": "NVDA",
+      "shares": 35,
+      "price": 141,
+      "fee": 0,
+      "amt": -4935,
+      "wire": 0,
+      "source": "Schwab"
     }
   ],
   "E": [

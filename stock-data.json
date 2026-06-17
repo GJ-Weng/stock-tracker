@@ -1365,19 +1365,6 @@
       "source": "Schwab"
     },
     {
-      "id": "1781616903625-lz7v",
-      "date": "2023-12-08",
-      "type": "賣出",
-      "sym": "AMD",
-      "shares": 12,
-      "price": 130,
-      "fee": 0.01,
-      "amt": 1559.99,
-      "wire": 0,
-      "desc": "TDA TRAN - Sold 12 (AMD) @130.0000",
-      "source": "Schwab"
-    },
-    {
       "id": "1781616903625-xt9i",
       "date": "2023-12-14",
       "type": "買入",

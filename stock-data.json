@@ -2,6 +2,19 @@
   "v": 1,
   "H": [
     {
+      "id": "1781704125993-xwpa",
+      "sym": "NVDA",
+      "shares": 51,
+      "cost": 137.489216,
+      "price": 141,
+      "chg": 0,
+      "div": 0,
+      "realized": 0,
+      "note": "",
+      "fd": "2024-06-10",
+      "acct": "Schwab"
+    },
+    {
       "id": "1781618001106-9wmh",
       "sym": "ALAB",
       "shares": 0,
@@ -221,19 +234,6 @@
       "note": "",
       "fd": "2026-06-12",
       "acct": "FT"
-    },
-    {
-      "id": "1781704125993-xwpa",
-      "sym": "NVDA",
-      "shares": 51,
-      "cost": 137.489216,
-      "price": 141,
-      "chg": 0,
-      "div": 0,
-      "realized": 0,
-      "note": "",
-      "fd": "2026-11-19",
-      "acct": "Schwab"
     }
   ],
   "T": [
@@ -3075,9 +3075,9 @@
     }
   ],
   "acc": {
-    "cash": 14653.14,
+    "cash": 7641.19,
     "cashFT": 4579.23,
-    "cashSchwab": 9967.21,
+    "cashSchwab": 2955.26,
     "cashCathay": 106.7,
     "cashAdj": {
       "FT": 1.31,

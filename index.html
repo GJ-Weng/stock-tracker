@@ -1723,7 +1723,7 @@ async function fetchEarnings(){
 function renderInsightPanel(){
   var el=document.getElementById("insight-panel");
   if(!el)return;
-  el.innerHTML=buildInsightPanel(calcPortfolio());
+  el.innerHTML=buildInsightPanel(calc());
 }
 
 function daysFromNow(dateStr){

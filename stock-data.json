@@ -1768,19 +1768,6 @@
       "source": "Schwab"
     },
     {
-      "id": "1781616903625-wfgv",
-      "date": "2024-05-13",
-      "type": "買入",
-      "sym": "TSLA",
-      "shares": 12,
-      "price": 0,
-      "fee": 0,
-      "amt": 0,
-      "wire": 0,
-      "desc": "TESLA INC",
-      "source": "Schwab"
-    },
-    {
       "id": "1781616903625-u456",
       "date": "2024-05-13",
       "type": "入金",

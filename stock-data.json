@@ -225,8 +225,8 @@
     {
       "id": "1781704125993-xwpa",
       "sym": "NVDA",
-      "shares": 50,
-      "cost": 137.9,
+      "shares": 51,
+      "cost": 137.489216,
       "price": 141,
       "chg": 0,
       "div": 0,
@@ -2385,6 +2385,18 @@
       "price": 135,
       "fee": 0,
       "amt": -1350,
+      "wire": 0,
+      "source": "Schwab"
+    },
+    {
+      "id": "1781704281991-qgaq",
+      "date": "2025-03-03",
+      "type": "買入",
+      "sym": "NVDA",
+      "shares": 1,
+      "price": 116.95,
+      "fee": 0,
+      "amt": -116.95,
       "wire": 0,
       "source": "Schwab"
     }

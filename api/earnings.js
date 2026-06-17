@@ -8,35 +8,31 @@ export default async function handler(req, res) {
 
   await Promise.all(syms.map(async s => {
     try {
-      const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(s)}?modules=calendarEvents,earnings`;
+      // Use v8 chart API (same as quote.js) - more reliable than v10
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s)}?interval=1d&range=1d&modules=calendarEvents`;
       const r = await fetch(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
           'Accept': 'application/json',
+          'Accept-Language': 'en-US,en;q=0.9',
         }
       });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const d = await r.json();
-      const result = d.quoteSummary?.result?.[0];
-      const cal = result?.calendarEvents;
-      const earn = result?.earnings;
+      const meta = d.chart?.result?.[0]?.meta;
 
-      // Next earnings date
-      const dates = cal?.earnings?.earningsDate;
+      // v8 has earningsTimestamp in meta
       let nextDate = null;
-      if (dates && dates.length > 0) {
-        const ts = dates[0]?.raw;
-        if (ts) nextDate = new Date(ts * 1000).toISOString().slice(0, 10);
+      if (meta?.earningsTimestampStart) {
+        nextDate = new Date(meta.earningsTimestampStart * 1000).toISOString().slice(0, 10);
+      } else if (meta?.earningsTimestamp) {
+        nextDate = new Date(meta.earningsTimestamp * 1000).toISOString().slice(0, 10);
       }
-
-      // EPS estimate
-      const epsEst = earn?.earningsChart?.currentQuarterEstimate?.fmt || null;
-      const epsActual = earn?.earningsChart?.quarterly?.slice(-1)[0]?.actual?.fmt || null;
 
       results[s] = {
         nextEarnings: nextDate,
-        epsEstimate: epsEst,
-        lastEps: epsActual,
+        epsEstimate: null,
+        lastEps: null,
       };
     } catch (e) {
       results[s] = { error: e.message };

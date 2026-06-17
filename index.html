@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>退休目標追蹤</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -334,10 +333,10 @@ const INIT_E=[
 // ─── STATE ───
 var S={holdingsView:"all",dashView:"all",editCostId:null,editCostVal:"",showZero:false,quickTrade:null,
   tab:"dash",H:null,T:null,E:null,acc:null,
-  apiKey:"",ghToken:"",ghUser:"",ghRepo:"",ghSHA:"",
+  ghToken:"",ghUser:"",ghRepo:"",ghSHA:"",
   showForm:null,filterType:"全部",txSearch:"",txAcct:"全部",
   sortCol:"",sortDir:-1,showExtraCols:false,fxMode:"twd",editTxId:null,editFxId:null,editPriceId:null,editPriceVal:"",
-  updating:false,syncing:false,chartInst:null,
+  updating:false,syncing:false,
   imp:{rows:[],symMap:{},step:0}
 };
 function sv(k){
@@ -994,37 +993,6 @@ function clearAll(){
 
 // ─── CHART ───
 var CC=["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#06b6d4","#f97316","#84cc16","#ec4899","#6366f1"];
-function drawChart(p){
-  var dashView=S.dashView||"all";
-  var baseRows=(dashView==="all")?p.act:p.act.filter(function(h){return h.acct===dashView;});
-  var act;
-  if(dashView==="all"){
-    var mg={};
-    baseRows.forEach(function(h){
-      if(!mg[h.sym])mg[h.sym]={sym:h.sym,shares:0,cost:0,price:h.price,chg:h.chg,isOption:h.isOption};
-      var ns=mg[h.sym].shares+h.shares;
-      mg[h.sym].cost=ns>0?(mg[h.sym].shares*mg[h.sym].cost+h.shares*h.cost)/ns:0;
-      mg[h.sym].shares=ns;
-    });
-    act=Object.values(mg).filter(function(h){return mktVal(h)>0;});
-  }else{
-    act=baseRows.filter(function(h){return mktVal(h)>0;});
-  }
-  var totalMkt=act.reduce(function(s,h){return s+mktVal(h);},0);
-  if(!act.length)return;
-  var el=document.getElementById("pie-chart");if(!el)return;
-  if(S.chartInst)S.chartInst.destroy();
-  S.chartInst=new Chart(el,{type:"doughnut",
-    data:{labels:act.map(function(h){return h.sym;}),
-      datasets:[{data:act.map(function(h){return+(h.shares*h.price).toFixed(2);}),backgroundColor:CC,borderWidth:0,hoverOffset:6}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
-      tooltip:{callbacks:{label:function(ctx){var tot=ctx.dataset.data.reduce(function(a,b){return a+b;},0);
-        return " "+ctx.label+": $"+fn(ctx.raw,0)+" ("+(ctx.raw/tot*100).toFixed(1)+"%)";}}}}}}); 
-  var lg=document.getElementById("pie-legend");
-  if(lg)lg.innerHTML=act.map(function(h,i){
-    return "<div class='li'><span class='ld' style='background:"+CC[i%10]+"'></span><span>"+esc(h.sym)+"</span><span style='margin-left:auto;font-family:ui-monospace,monospace;font-size:11px'>"+(h.shares*h.price/p.mkt*100).toFixed(1)+"%</span></div>";
-  }).join("");
-}
 
 // ─── RENDERS ───
 function rCard(l,v,s,c){return "<div class='card'><div class='cl'>"+l+"</div><div class='cv "+(c||"")+"'>"+v+"</div><div class='cs'>"+s+"</div></div>";}
@@ -1537,10 +1505,8 @@ function rSettings(){
   html+="<button class='btn' onclick='syncToGitHub()'>⬆ 立即同步</button>";
   html+="</div><div class='ib' style='margin-top:10px'>💡 Token 申請：GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Contents: Read and Write</div></div>";
   html+=rImportPanel();
-  html+="<div class='sb'><h3>📰 NewsAPI Key（盤前新聞）</h3><p style='font-size:12px;color:var(--text2);margin-bottom:10px'>前往 newsapi.org 免費註冊取得，每日 100 次免費請求。</p>";
-  html+="<div class='kr'><input type='password' id='news-key-inp' placeholder='你的 NewsAPI Key…' value='"+esc(S.newsApiKey||"")+"'><button class='btn btn-blue' onclick='saveNewsApiKey()'>儲存並載入新聞</button></div></div>";
-  html+="<div class='sb'><h3>🔑 Anthropic API Key（報價備援）</h3>";
-  html+="<div class='kr'><input type='password' id='api-key-inp' placeholder='sk-ant-api03-…' value='"+esc(S.apiKey)+"'><button class='btn btn-blue' onclick='saveApiKey()'>儲存</button></div></div>";
+
+
   // ── Manual realized adj + clear account ──
   html+="<div class='sb'><h3>✏️ 手動已實現損益調整</h3>";
   html+="<div style='font-size:12px;color:var(--text2);margin-bottom:10px'>平倉後帳戶現金 − 累計入金 = 填入此欄，系統加入損益計算。</div>";
@@ -1749,7 +1715,7 @@ function render(){
     else if(S.tab==="tx")m.innerHTML=rTx();
     else if(S.tab==="fx")m.innerHTML=rFX();
     else m.innerHTML=rSettings();
-    if(S.tab==="dash")requestAnimationFrame(function(){drawChart(p);});
+    
     if(S.editPriceId){var el=document.getElementById("ep-"+S.editPriceId);if(el){el.focus();el.select();}}
   if(S.editCostId){
     var ec=document.getElementById("ec-"+S.editCostId);
@@ -1917,8 +1883,6 @@ function onCashAdj(acct,v){
   S.acc.cashAdj[acct]=parseFloat(v)||0;
   sv("acc");recalcCash();render();
 }
-function saveApiKey(){S.apiKey=document.getElementById("api-key-inp").value.trim();localStorage.setItem("ft_apiKey",S.apiKey);toast("✅ API Key 已儲存");}
-function saveNewsApiKey(){S.newsApiKey=(document.getElementById("news-key-inp")||{}).value||"";localStorage.setItem("ft_newsApiKey",S.newsApiKey);toast("✅ NewsAPI Key 已儲存");}
 function sortH(col){S.sortDir=S.sortCol===col?S.sortDir*-1:-1;S.sortCol=col;render();}
 function startEditPrice(id,v){S.editPriceId=id;S.editPriceVal=String(v);render();}
 function startEditCost(id,v){S.editCostId=id;S.editCostVal=String(v);render();}
@@ -2119,8 +2083,6 @@ if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
 // cashSchwab is in S.acc (from localStorage or GitHub)
 // cashFT is always recalculated from transactions
 if(S.T.length>0)recalcCash();
-S.apiKey=localStorage.getItem("ft_apiKey")||"";
-  S.newsApiKey=localStorage.getItem("ft_newsApiKey")||"";
 S.ghToken=localStorage.getItem("ft_ghToken")||"";
 S.ghUser=localStorage.getItem("ft_ghUser")||"";
 S.ghRepo=localStorage.getItem("ft_ghRepo")||"";

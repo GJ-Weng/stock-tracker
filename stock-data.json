@@ -663,19 +663,6 @@
       "source": "Schwab"
     },
     {
-      "id": "1781616903624-59bj",
-      "date": "2022-09-08",
-      "type": "買入",
-      "sym": "MSFT",
-      "shares": 0.002,
-      "price": 258.0186,
-      "fee": 0,
-      "amt": -0.43,
-      "wire": 0,
-      "desc": "TDA TRAN - Bought 0.002 (MSFT) @258.0186",
-      "source": "Schwab"
-    },
-    {
       "id": "1781616903624-h5gd",
       "date": "2022-09-08",
       "type": "配息",

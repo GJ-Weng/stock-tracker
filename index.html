@@ -1576,18 +1576,23 @@ function rInsightPanel(p){
   // ── 3. Recent Transactions ──
   html+="<div class='ph'>近期交易</div>";
   html+="<div style='overflow-y:auto;flex:1'>";
-  var recent=S.T.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).slice(0,12);
+  var recent=S.T.filter(function(t){return t.type==="買入"||t.type==="賣出";})
+    .sort(function(a,b){return a.date.localeCompare(b.date)||0;}).slice(-15).reverse();
   if(!recent.length){
-    html+="<div style='padding:12px 14px;font-size:11px;color:var(--text3)'>尚無交易紀錄</div>";
+    html+="<div style='padding:12px 14px;font-size:11px;color:var(--text3)'>尚無買賣紀錄</div>";
   }else{
     recent.forEach(function(t){
       var scls={"FT":"bft","Schwab":"bsw","GT":"bgt"}[t.source||"FT"]||"br";
+      var slbl={"FT":"FT","Schwab":"嘉信","GT":"國泰"}[t.source||"FT"]||t.source||"FT";
       html+="<div style='padding:7px 14px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center'>";
       html+="<div style='display:flex;flex-direction:column;gap:2px'>";
       html+="<div style='display:flex;align-items:center;gap:4px'>"+rBadge(t.type)+(t.sym?"<strong style='font-size:12px'>"+esc(t.sym)+"</strong>":"")+"</div>";
-      html+="<div style='font-size:10px;color:var(--text3)'>"+t.date+"<span class='badge "+scls+"' style='font-size:9px;margin-left:4px'>"+t.source||"FT"+"</span></div>";
+      html+="<div style='font-size:10px;color:var(--text3)'>"+t.date+" <span class='badge "+scls+"' style='font-size:9px'>"+slbl+"</span>"+(t.shares?" · "+fn(t.shares,t.shares%1===0?0:4)+"股":"")+"</div>";
       html+="</div>";
-      html+="<div style='font-size:12px;font-weight:600;font-family:ui-monospace,monospace;"+((t.amt||0)>=0?"color:var(--green)":"color:var(--red)")+"'>"+(t.amt>=0?"+":"")+"$"+fn(Math.abs(t.amt||0),2)+"</div>";
+      html+="<div style='text-align:right'>";
+      html+="<div style='font-size:12px;font-weight:600;font-family:ui-monospace,monospace;"+(t.type==="賣出"?"color:var(--green)":"color:var(--red)")+"'>"+(t.type==="賣出"?"+":"")+fn(Math.abs(t.amt||0),0)+"</div>";
+      if(t.price)html+="<div style='font-size:10px;color:var(--text3)'>@$"+fn(t.price,2)+"</div>";
+      html+="</div>";
       html+="</div>";
     });
   }

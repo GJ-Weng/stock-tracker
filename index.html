@@ -59,7 +59,7 @@ main{padding:0;width:100%}
 .kpi-cell{padding:12px 20px;border-right:0.5px solid var(--border);min-height:80px}
 .kpi-cell:last-child{border-right:none}
 /* 2-col dash layout */
-.dash-layout{display:grid;grid-template-columns:220px 1fr 300px;min-height:400px;width:100%}
+.dash-layout{display:grid;grid-template-columns:220px 1fr 280px;min-height:calc(100vh - 90px);width:100%}
 @media(max-width:1200px){.dash-layout{grid-template-columns:220px 1fr}}
 @media(max-width:900px){.dash-layout{grid-template-columns:1fr}}
 .dash-left{padding:14px 16px;border-right:0.5px solid var(--border);background:var(--bg);display:flex;flex-direction:column;gap:14px}
@@ -95,7 +95,7 @@ main{padding:0;width:100%}
 /* sections */
 .panel{border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--bg);box-shadow:var(--shadow)}
 .ph{padding:9px 14px;background:var(--bg);font-size:10px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:0.5px solid var(--border)}
-.sx{overflow-x:auto}.sy{max-height:460px;overflow-y:auto}
+.sx{overflow-x:auto}.sy{max-height:calc(100vh - 180px);overflow-y:auto}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
 th{text-align:left;padding:8px 12px;font-size:10px;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);background:var(--bg3);white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0;z-index:1;letter-spacing:.1em;text-transform:uppercase}
 th:hover{color:var(--text);background:var(--bg3)}
@@ -1185,20 +1185,7 @@ function rDash(p){
   html+="</tbody></table></div></div>";
   html+="</div>"; // end dash-right
 
-  // ── News panel (right sidebar) ──
-  html+="<div style='width:300px;min-width:260px;border-left:0.5px solid var(--border);background:var(--bg);display:flex;flex-direction:column'>";
-  html+="<div class='ph' style='display:flex;justify-content:space-between;align-items:center'>";
-  html+="<span>📰 市場動態</span>";
-  html+="<button class='btn-sm' onclick='NEWS_STATE.lastFetch=0;fetchNews()'>重新整理</button>";
-  html+="</div>";
-  html+="<div id='news-panel' style='overflow-y:auto;flex:1;max-height:calc(100vh - 130px)'>";
-  if(!S.newsApiKey){
-    html+="<div style='padding:14px;font-size:11px;color:var(--text2);line-height:1.7'>請到「設定」頁填入 NewsAPI Key 以啟用市場新聞功能。<br><br><a href='https://newsapi.org/register' target='_blank' style='color:var(--blue)'>免費申請 →</a></div>";
-  }else{
-    html+="<div style='padding:14px;text-align:center;color:var(--text2);font-size:12px'><span class='spin'></span> 載入中…</div>";
-  }
-  html+="</div>";
-  html+="</div>"; // end news panel
+  html+=rInsightPanel(p);
 
   html+="</div>"; // end dash-layout
   return html;
@@ -1524,146 +1511,89 @@ function rSettings(){
 }
 
 
-// ─── NEWS ───
-var NEWS_STATE={articles:[],loading:false,error:"",lastFetch:0};
 
-// Sym → full company name for better news search
-var SYM_NAMES={
-  "AAPL":"Apple","MSFT":"Microsoft","NVDA":"NVIDIA","TSLA":"Tesla","AMZN":"Amazon",
-  "GOOGL":"Alphabet Google","META":"Meta Facebook","PLTR":"Palantir","SOFI":"SoFi Technologies",
-  "ONDS":"Ondas Holdings","KBSX":"Kiora Pharmaceuticals","MU":"Micron Technology",
-  "MRVL":"Marvell Technology","NOK":"Nokia","RMBS":"Rambus","IREN":"IREN Limited",
-  "SATS":"EchoStar","ALAB":"Astera Labs","AMD":"Advanced Micro Devices","INTC":"Intel",
-  "QCOM":"Qualcomm","AVGO":"Broadcom","AAON":"AAON","CRWD":"CrowdStrike",
-  "CRNC":"Cerence","NET":"Cloudflare","SNOW":"Snowflake","UBER":"Uber"
-};
 
-async function fetchNews(){
-  if(!S.newsApiKey){NEWS_STATE.error="請先在設定頁填入 NewsAPI Key";renderNewsPanel();return;}
-  if(NEWS_STATE.loading)return;
-  var now=Date.now();
-  if(now-NEWS_STATE.lastFetch<300000&&NEWS_STATE.articles.length){renderNewsPanel();return;}
-  NEWS_STATE.loading=true;NEWS_STATE.error="";
-  renderNewsPanel();
-  var syms=[...new Set(S.H.filter(function(h){return h.shares>0&&!h.sym.includes("Call")&&!h.sym.includes("Put");}).map(function(h){return h.sym;}))].slice(0,6);
-  if(!syms.length){NEWS_STATE.loading=false;NEWS_STATE.error="尚無持倉";renderNewsPanel();return;}
-  // Build query using company names + stock keyword to improve relevance
-  var terms=syms.map(function(s){
-    var name=SYM_NAMES[s];
-    return name?'"'+name+'"':'"'+s+'" stock';
+// ─── INSIGHT PANEL ───
+function rInsightPanel(p){
+  var html="<div style='border-left:0.5px solid var(--border);background:var(--bg);display:flex;flex-direction:column;overflow:hidden'>";
+
+  // ── 1. Account Performance ──
+  html+="<div class='ph'>績效摘要</div>";
+  html+="<div style='padding:12px 14px;border-bottom:0.5px solid var(--border)'>";
+  var acctsInfo=[
+    {name:"Firstrade",acct:"FT",badge:"bft"},
+    {name:"嘉信",acct:"Schwab",badge:"bsw"},
+    {name:"國泰複委托",acct:"GT",badge:"bgt"}
+  ];
+  acctsInfo.forEach(function(ai){
+    var hList=S.H.filter(function(h){return h.acct===ai.acct;});
+    var mkt=0,cost=0,real=0;
+    hList.forEach(function(h){mkt+=h.shares*h.price;cost+=h.shares*h.cost;real+=h.realized||0;});
+    var cash=ai.acct==="FT"?(S.acc.cashFT||0):ai.acct==="Schwab"?(S.acc.cashSchwab||0):(S.acc.cashCathay||0);
+    var total=mkt+cash;
+    var unreal=mkt-cost;
+    if(total<1&&Math.abs(unreal)<1&&Math.abs(real)<1)return;
+    var ret=cost>0?unreal/cost:0;
+    html+="<div style='display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border)'>";
+    html+="<div style='display:flex;align-items:center;gap:6px'><span class='badge "+ai.badge+"' style='font-size:10px'>"+ai.name+"</span></div>";
+    html+="<div style='text-align:right'>";
+    html+="<div style='font-size:12px;font-weight:600;font-family:ui-monospace,monospace'>$"+fn(total,0)+"</div>";
+    html+="<div style='font-size:10px;color:"+(unreal>=0?"var(--green)":"var(--red)")+"'>"+(unreal>=0?"+":"")+"$"+fn(unreal,0)+" ("+fp(ret)+")</div>";
+    html+="</div></div>";
   });
-  var q="("+terms.join(" OR ")+") AND (stock OR shares OR earnings OR market OR investor)";
-  try{
-    var url="/api/news?q="+encodeURIComponent(q)+"&apiKey="+encodeURIComponent(S.newsApiKey);
-    var r=await fetch(url);
-    var d=await r.json();
-    if(d.status!=="ok")throw new Error(d.message||"API error");
-    // Filter: must contain at least one sym or company name in title/description
-    var filtered=(d.articles||[]).filter(function(a){
-      var txt=((a.title||"")+" "+(a.description||"")).toUpperCase();
-      return syms.some(function(s){
-        var name=(SYM_NAMES[s]||"").toUpperCase().split(" ")[0];
-        return txt.includes(s) || (name.length>3&&txt.includes(name));
-      });
+  html+="</div>";
+
+  // ── 2. Portfolio Health ──
+  html+="<div class='ph'>持倉健康度</div>";
+  html+="<div style='padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;flex-direction:column;gap:6px'>";
+  var totalMkt=p.mkt||1;
+  var activeH=S.H.filter(function(h){return h.shares>0&&h.price>0;});
+  // Concentration warnings (>20% of portfolio)
+  var concentrated=activeH.filter(function(h){return (h.shares*h.price)/totalMkt>0.2;});
+  if(concentrated.length){
+    concentrated.forEach(function(h){
+      var pct=(h.shares*h.price)/totalMkt*100;
+      html+="<div style='display:flex;align-items:center;gap:6px;font-size:11px'>";
+      html+="<span style='color:var(--yellow)'>⚠</span>";
+      html+="<span><strong>"+h.sym+"</strong> 佔倉 "+pct.toFixed(1)+"%，集中度偏高</span></div>";
     });
-    NEWS_STATE.articles=filtered;
-    NEWS_STATE.lastFetch=Date.now();
-    NEWS_STATE.error="";
-  }catch(e){
-    NEWS_STATE.error="新聞載入失敗："+e.message;
   }
-  NEWS_STATE.loading=false;
-  renderNewsPanel();
-}
-
-// Keywords that indicate non-financial content - filter these out
-var NEWS_EXCLUDE_WORDS=["horror","entertainment","recipe","fashion","travel","sports","soccer","football","basketball","baseball","nfl","nba","mlb","world cup","stadium workers","apple watch","airpods","macbook","iphone deal","ipad deal","sale","discount","coupon","#entertainment","del toro","movie","film","tv show","series","album","song","concert","oscar","emmy","grammy","celebrity","tiananmen","anti-corruption","neo-familism"];
-
-function matchSym(a){
-  var title=((a.title||"")+" "+(a.description||"")).toUpperCase();
-  var mySyms=[...new Set(S.H.filter(function(h){return h.shares>0&&!h.sym.includes("Call")&&!h.sym.includes("Put");}).map(function(h){return h.sym;}))];
-  // Check each holding
-  for(var i=0;i<mySyms.length;i++){
-    var s=mySyms[i];
-    var name=(SYM_NAMES[s]||"").toUpperCase().split(" ")[0];
-    if(title.includes(" "+s+" ")||title.startsWith(s+" ")||title.includes(s+"'S")||title.includes(s+",")||title.includes(s+")")){return s;}
-    if(name.length>4&&title.includes(name)){return s;}
+  // Big losers (>20% down)
+  var bigLoss=activeH.filter(function(h){return h.cost>0&&(h.price-h.cost)/h.cost<-0.2;}).sort(function(a,b){return(a.price-a.cost)/a.cost-(b.price-b.cost)/b.cost;}).slice(0,3);
+  if(bigLoss.length){
+    bigLoss.forEach(function(h){
+      var ret=(h.price-h.cost)/h.cost*100;
+      html+="<div style='display:flex;align-items:center;gap:6px;font-size:11px'>";
+      html+="<span style='color:var(--red)'>↓</span>";
+      html+="<span><strong>"+h.sym+"</strong> <span class='neg'>"+ret.toFixed(1)+"%</span></span></div>";
+    });
   }
-  return null;
-}
+  if(!concentrated.length&&!bigLoss.length){
+    html+="<div style='font-size:11px;color:var(--text3)'>✓ 無集中度或大幅虧損警示</div>";
+  }
+  html+="</div>";
 
-function isFinancialNews(a){
-  var txt=((a.title||"")+" "+(a.description||"")).toLowerCase();
-  // Exclude non-financial topics
-  for(var i=0;i<NEWS_EXCLUDE_WORDS.length;i++){if(txt.includes(NEWS_EXCLUDE_WORDS[i]))return false;}
-  // Must contain at least one financial keyword OR a matched sym
-  var finWords=["stock","shares","earnings","revenue","profit","investor","market","nasdaq","nyse","sec","ipo","valuation","analyst","upgrade","downgrade","buy","sell","hold","quarter","fiscal","guidance","outlook","fund","etf"];
-  return finWords.some(function(w){return txt.includes(w);});
-}
-
-function renderNewsPanel(){
-  var el=document.getElementById("news-panel");
-  if(!el)return;
-  var html="";
-  if(NEWS_STATE.loading){
-    html="<div style='padding:16px;text-align:center;color:var(--text2);font-size:12px'><span class='spin'></span> 載入新聞中…</div>";
-  }else if(NEWS_STATE.error){
-    html="<div style='padding:12px 16px;color:var(--red);font-size:12px'>⚠ "+esc(NEWS_STATE.error)+"</div>";
-  }else if(!NEWS_STATE.articles.length){
-    html="<div style='padding:12px 16px;color:var(--text2);font-size:12px'>尚無新聞，請填入 NewsAPI Key 或稍後再試。</div>";
+  // ── 3. Recent Transactions ──
+  html+="<div class='ph'>近期交易</div>";
+  html+="<div style='overflow-y:auto;flex:1'>";
+  var recent=S.T.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).slice(0,12);
+  if(!recent.length){
+    html+="<div style='padding:12px 14px;font-size:11px;color:var(--text3)'>尚無交易紀錄</div>";
   }else{
-    var acctBadgeCls={"FT":"bft","Schwab":"bsw","GT":"bgt"};
-    // Score each article: find matching sym + check if financial
-    var processed=NEWS_STATE.articles.map(function(a){
-      var sym=matchSym(a);
-      var isFinancial=isFinancialNews(a);
-      return{a:a,sym:sym,ok:sym&&isFinancial};
+    recent.forEach(function(t){
+      var scls={"FT":"bft","Schwab":"bsw","GT":"bgt"}[t.source||"FT"]||"br";
+      html+="<div style='padding:7px 14px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center'>";
+      html+="<div style='display:flex;flex-direction:column;gap:2px'>";
+      html+="<div style='display:flex;align-items:center;gap:4px'>"+rBadge(t.type)+(t.sym?"<strong style='font-size:12px'>"+esc(t.sym)+"</strong>":"")+"</div>";
+      html+="<div style='font-size:10px;color:var(--text3)'>"+t.date+"<span class='badge "+scls+"' style='font-size:9px;margin-left:4px'>"+t.source||"FT"+"</span></div>";
+      html+="</div>";
+      html+="<div style='font-size:12px;font-weight:600;font-family:ui-monospace,monospace;"+((t.amt||0)>=0?"color:var(--green)":"color:var(--red)")+"'>"+(t.amt>=0?"+":"")+"$"+fn(Math.abs(t.amt||0),2)+"</div>";
+      html+="</div>";
     });
-    // Sort: matched+financial first, then matched only, then rest
-    var sorted=processed.filter(function(x){return x.ok;})
-      .concat(processed.filter(function(x){return x.sym&&!x.ok;}))
-      .concat(processed.filter(function(x){return !x.sym&&isFinancialNews(x.a);}));
-    var shown=sorted.slice(0,12);
-    if(!shown.length){
-      html="<div style='padding:14px;color:var(--text2);font-size:12px'>未找到相關財經新聞，請點「重新整理」再試。</div>";
-    }else{
-      shown.forEach(function(x){
-        var a=x.a,sym=x.sym;
-        var pub=a.publishedAt?new Date(a.publishedAt):null;
-        var timeStr=pub?timeSince(pub):"";
-        var srcName=a.source&&a.source.name?a.source.name:"";
-        // Find which acct this sym belongs to
-        var holding=sym&&S.H.find(function(h){return h.sym===sym&&h.shares>0;});
-        var acctCls=holding?acctBadgeCls[holding.acct||"FT"]||"br":"bft";
-        html+="<div style='padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;flex-direction:column;gap:4px'>";
-        if(sym){
-          html+="<div style='display:flex;gap:5px;align-items:center;flex-wrap:wrap'>";
-          html+="<span class='badge "+acctCls+"' style='font-size:10px'>"+sym+"</span>";
-          if(holding){html+="<span style='font-size:10px;color:var(--text3)'>"+fn(holding.price,2)+" · "+(holding.shares*(holding.price-holding.cost)>=0?"<span class='pos'>":"<span class='neg'>")+(holding.shares*(holding.price-holding.cost)>=0?"+":"")+fp((holding.price-holding.cost)/holding.cost)+"</span></span>";}
-          html+="</div>";
-        }
-        html+="<a href='"+esc(a.url)+"' target='_blank' style='font-size:12px;font-weight:500;color:var(--text);text-decoration:none;line-height:1.45;display:block'>"+esc(a.title||"")+"</a>";
-        if(a.description&&a.description.length>20){
-          html+="<div style='font-size:11px;color:var(--text2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden'>"+esc(a.description)+"</div>";
-        }
-        html+="<div style='display:flex;gap:8px;font-size:10px;color:var(--text3);margin-top:1px'>";
-        if(srcName)html+="<span>"+esc(srcName)+"</span>";
-        if(timeStr)html+="<span>"+timeStr+"</span>";
-        html+="</div></div>";
-      });
-    }
-    var updTime=NEWS_STATE.lastFetch?new Date(NEWS_STATE.lastFetch).toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"}):"";
-    if(updTime)html+="<div style='padding:8px 14px;font-size:10px;color:var(--text3);border-top:0.5px solid var(--border)'>上次更新 "+updTime+"</div>";
   }
-  el.innerHTML=html;
-}
-
-function timeSince(date){
-  var s=Math.floor((Date.now()-date)/1000);
-  if(s<60)return "剛剛";
-  var m=Math.floor(s/60);if(m<60)return m+"分前";
-  var h=Math.floor(m/60);if(h<24)return h+"小時前";
-  return Math.floor(h/24)+"天前";
+  html+="</div>";
+  html+="</div>"; // end insight panel
+  return html;
 }
 
 // ─── MASTER RENDER ───
@@ -1687,7 +1617,7 @@ function render(){
     else if(S.tab==="tx")m.innerHTML=rTx();
     else if(S.tab==="fx")m.innerHTML=rFX();
     else m.innerHTML=rSettings();
-    if(S.tab==="dash"){requestAnimationFrame(function(){drawChart(p);});if(S.newsApiKey&&!S.newsFetched){S.newsFetched=true;fetchNews();}else if(S.newsApiKey){renderNewsPanel();}}
+    if(S.tab==="dash")requestAnimationFrame(function(){drawChart(p);});
     if(S.editPriceId){var el=document.getElementById("ep-"+S.editPriceId);if(el){el.focus();el.select();}}
   if(S.editCostId){
     var ec=document.getElementById("ec-"+S.editCostId);
@@ -2011,8 +1941,6 @@ if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
 if(S.T.length>0)recalcCash();
 S.apiKey=localStorage.getItem("ft_apiKey")||"";
   S.newsApiKey=localStorage.getItem("ft_newsApiKey")||"";
-  S.newsCache={};
-  S.newsFetched=false;
 S.ghToken=localStorage.getItem("ft_ghToken")||"";
 S.ghUser=localStorage.getItem("ft_ghUser")||"";
 S.ghRepo=localStorage.getItem("ft_ghRepo")||"";

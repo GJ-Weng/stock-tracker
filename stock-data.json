@@ -2860,19 +2860,6 @@
       "source": "Schwab"
     },
     {
-      "id": "1781616903625-ekgg",
-      "date": "2025-07-23",
-      "type": "買入",
-      "sym": "DIS",
-      "shares": 0.0029,
-      "price": 122.6668,
-      "fee": 0,
-      "amt": -0.35,
-      "wire": 0,
-      "desc": "DISNEY WALT CO",
-      "source": "Schwab"
-    },
-    {
       "id": "1781616903625-iqr9",
       "date": "2025-07-23",
       "type": "預扣稅",

@@ -1053,19 +1053,6 @@
       "source": "Schwab"
     },
     {
-      "id": "1781616903625-ih6h",
-      "date": "2023-06-14",
-      "type": "賣出",
-      "sym": "GGR",
-      "shares": 100,
-      "price": 3.3,
-      "fee": 0.01,
-      "amt": 329.99,
-      "wire": 0,
-      "desc": "TDA TRAN - Sold ...100 (GGR) @3.3000",
-      "source": "Schwab"
-    },
-    {
       "id": "1781616903625-7en0",
       "date": "2023-06-15",
       "type": "買入",
@@ -1245,19 +1232,6 @@
       "amt": 0.01,
       "wire": 0,
       "desc": "TDA TRAN - FREE BALANCE INTEREST ADJUSTMENT",
-      "source": "Schwab"
-    },
-    {
-      "id": "1781616903625-1pm1",
-      "date": "2023-10-12",
-      "type": "賣出",
-      "sym": "META",
-      "shares": 5,
-      "price": 330,
-      "fee": 0.01,
-      "amt": 1649.99,
-      "wire": 0,
-      "desc": "TDA TRAN - Sold 5 (META) @330.0000",
       "source": "Schwab"
     },
     {

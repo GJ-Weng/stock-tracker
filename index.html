@@ -1579,6 +1579,8 @@ function buildInsightPanel(p){
   html+="<div style='padding:8px 14px;border-bottom:0.5px solid var(--border)'>";
   if(EARNINGS_STATE.loading){
     html+="<div style='font-size:11px;color:var(--text3);padding:4px 0'><span class='spin'></span> 載入中…</div>";
+  }else if(EARNINGS_STATE.error){
+    html+="<div style='font-size:11px;color:var(--red);line-height:1.5'>⚠ "+esc(EARNINGS_STATE.error)+"</div>";
   }else{
     var earnItems=[];
     Object.keys(EARNINGS_STATE.data).forEach(function(sym){
@@ -1661,39 +1663,52 @@ function buildInsightPanel(p){
 // ─── MARKET CALENDAR & EARNINGS ───
 
 // 2026 key market dates (hardcoded)
+// 每年1月更新一次（Fed + BLS 年初公布全年日程）
 var MARKET_EVENTS=[
-  {date:"2026-06-18",label:"FOMC 利率決議",type:"fed"},
+  // ── FOMC 利率決議（結果公布日，各會議第2天）──
+  {date:"2026-06-17",label:"FOMC 利率決議",type:"fed"},
   {date:"2026-07-29",label:"FOMC 利率決議",type:"fed"},
-  {date:"2026-09-16",label:"FOMC 利率決議",type:"fed"},
-  {date:"2026-11-04",label:"FOMC 利率決議",type:"fed"},
-  {date:"2026-12-16",label:"FOMC 利率決議",type:"fed"},
-  {date:"2026-06-10",label:"CPI 通膨數據",type:"cpi"},
-  {date:"2026-07-14",label:"CPI 通膨數據",type:"cpi"},
-  {date:"2026-08-12",label:"CPI 通膨數據",type:"cpi"},
-  {date:"2026-09-11",label:"CPI 通膨數據",type:"cpi"},
-  {date:"2026-10-13",label:"CPI 通膨數據",type:"cpi"},
-  {date:"2026-11-12",label:"CPI 通膨數據",type:"cpi"},
-  {date:"2026-12-11",label:"CPI 通膨數據",type:"cpi"},
-  {date:"2026-07-31",label:"PCE 物價指數",type:"pce"},
-  {date:"2026-08-28",label:"PCE 物價指數",type:"pce"},
-  {date:"2026-09-25",label:"PCE 物價指數",type:"pce"},
+  {date:"2026-09-16",label:"FOMC 利率決議 ★含點陣圖",type:"fed"},
+  {date:"2026-10-28",label:"FOMC 利率決議",type:"fed"},
+  {date:"2026-12-09",label:"FOMC 利率決議 ★含點陣圖",type:"fed"},
+  // ── CPI 通膨數據（BLS 公布日）──
+  {date:"2026-06-11",label:"CPI 通膨數據（5月）",type:"cpi"},
+  {date:"2026-07-14",label:"CPI 通膨數據（6月）",type:"cpi"},
+  {date:"2026-08-12",label:"CPI 通膨數據（7月）",type:"cpi"},
+  {date:"2026-09-11",label:"CPI 通膨數據（8月）",type:"cpi"},
+  {date:"2026-10-13",label:"CPI 通膨數據（9月）",type:"cpi"},
+  {date:"2026-11-12",label:"CPI 通膨數據（10月）",type:"cpi"},
+  {date:"2026-12-11",label:"CPI 通膨數據（11月）",type:"cpi"},
+  // ── PCE 物價指數（BEA 公布日）──
+  {date:"2026-06-26",label:"PCE 物價指數（5月）",type:"pce"},
+  {date:"2026-07-31",label:"PCE 物價指數（6月）",type:"pce"},
+  {date:"2026-08-28",label:"PCE 物價指數（7月）",type:"pce"},
+  {date:"2026-09-25",label:"PCE 物價指數（8月）",type:"pce"},
+  {date:"2026-10-30",label:"PCE 物價指數（9月）",type:"pce"},
+  {date:"2026-11-25",label:"PCE 物價指數（10月）",type:"pce"},
+  {date:"2026-12-23",label:"PCE 物價指數（11月）",type:"pce"},
 ];
 
-var EARNINGS_STATE={data:{},loading:false,lastFetch:0};
+var EARNINGS_STATE={data:{},loading:false,lastFetch:0,error:""};
 
 async function fetchEarnings(){
   if(EARNINGS_STATE.loading)return;
   var now=Date.now();
-  if(now-EARNINGS_STATE.lastFetch<3600000&&Object.keys(EARNINGS_STATE.data).length)return; // 1hr cache
+  if(now-EARNINGS_STATE.lastFetch<3600000&&Object.keys(EARNINGS_STATE.data).length)return;
   EARNINGS_STATE.loading=true;
+  EARNINGS_STATE.error="";
   var syms=[...new Set(S.H.filter(function(h){return h.shares>0&&!h.sym.includes("Call")&&!h.sym.includes("Put");}).map(function(h){return h.sym;}))].slice(0,10);
   if(!syms.length){EARNINGS_STATE.loading=false;renderInsightPanel();return;}
   try{
     var r=await fetch("/api/earnings?sym="+syms.join(","));
+    if(!r.ok)throw new Error("API 回應 "+r.status+"，請確認 api/earnings.js 已部署到 Vercel");
     var d=await r.json();
     EARNINGS_STATE.data=d;
     EARNINGS_STATE.lastFetch=Date.now();
-  }catch(e){console.warn("earnings fetch error",e);}
+  }catch(e){
+    EARNINGS_STATE.error=e.message;
+    console.warn("earnings fetch error",e);
+  }
   EARNINGS_STATE.loading=false;
   renderInsightPanel();
 }

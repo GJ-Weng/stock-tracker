@@ -1185,7 +1185,7 @@ function rDash(p){
   html+="</tbody></table></div></div>";
   html+="</div>"; // end dash-right
 
-  html+=rInsightPanel(p);
+  html+="<div id='insight-panel' style='display:contents'>"+buildInsightPanel(p)+"</div>";
 
   html+="</div>"; // end dash-layout
   return html;
@@ -1514,7 +1514,8 @@ function rSettings(){
 
 
 // ─── INSIGHT PANEL ───
-function rInsightPanel(p){
+function buildInsightPanel(p){
+  var todayStr=today();
   var html="<div style='border-left:0.5px solid var(--border);background:var(--bg);display:flex;flex-direction:column;overflow:hidden'>";
 
   // ── 1. Account Performance ──
@@ -1573,7 +1574,62 @@ function rInsightPanel(p){
   }
   html+="</div>";
 
-  // ── 3. Recent Transactions ──
+  // ── 3. Upcoming Earnings ──
+  html+="<div class='ph' style='display:flex;justify-content:space-between'><span>📅 財報日期</span><button class='btn-sm' onclick='EARNINGS_STATE.lastFetch=0;fetchEarnings()'>更新</button></div>";
+  html+="<div style='padding:8px 14px;border-bottom:0.5px solid var(--border)'>";
+  if(EARNINGS_STATE.loading){
+    html+="<div style='font-size:11px;color:var(--text3);padding:4px 0'><span class='spin'></span> 載入中…</div>";
+  }else{
+    var earnItems=[];
+    Object.keys(EARNINGS_STATE.data).forEach(function(sym){
+      var d=EARNINGS_STATE.data[sym];
+      if(d.nextEarnings){
+        var days=daysFromNow(d.nextEarnings);
+        if(days!==null&&days>=-1&&days<=60)earnItems.push({sym:sym,date:d.nextEarnings,days:days,eps:d.epsEstimate});
+      }
+    });
+    earnItems.sort(function(a,b){return a.days-b.days;});
+    if(!earnItems.length){
+      html+="<div style='font-size:11px;color:var(--text3)'>點「更新」載入財報日期</div>";
+    }else{
+      earnItems.forEach(function(e){
+        var urgent=e.days<=7;
+        var dayLabel=e.days===0?"今天":e.days===1?"明天":e.days<0?"已過":""+e.days+"天後";
+        html+="<div style='display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:0.5px solid var(--border)'>";
+        html+="<div><strong style='font-size:12px"+(urgent?";color:var(--red)":"")+"'>"+esc(e.sym)+"</strong>"+(e.eps?"<span style='font-size:10px;color:var(--text3);margin-left:4px'>EPS預期 "+e.eps+"</span>":"")+"</div>";
+        html+="<span style='font-size:11px;font-weight:600;"+(urgent?"color:var(--red)":"color:var(--text2)")+"'>"+dayLabel+"</span>";
+        html+="</div>";
+      });
+    }
+  }
+  html+="</div>";
+
+  // ── 4. Market Calendar (next 30 days) ──
+  html+="<div class='ph'>🗓 市場大事</div>";
+  html+="<div style='padding:8px 14px;border-bottom:0.5px solid var(--border)'>";
+  var upcoming=MARKET_EVENTS.filter(function(e){
+    var days=daysFromNow(e.date);
+    return days!==null&&days>=-1&&days<=30;
+  }).sort(function(a,b){return a.date.localeCompare(b.date);});
+  if(!upcoming.length){
+    html+="<div style='font-size:11px;color:var(--text3)'>近 30 天無重大事件</div>";
+  }else{
+    upcoming.forEach(function(e){
+      var days=daysFromNow(e.date);
+      var dayLabel=days===0?"今天":days===1?"明天":days<0?"昨天":""+days+"天後";
+      var typeColor=e.type==="fed"?"var(--blue)":e.type==="cpi"?"var(--yellow)":"var(--green)";
+      var urgent=days>=0&&days<=3;
+      html+="<div style='display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:0.5px solid var(--border)'>";
+      html+="<div style='display:flex;align-items:center;gap:5px'>";
+      html+="<span style='width:6px;height:6px;border-radius:50%;background:"+typeColor+";display:inline-block;flex-shrink:0'></span>";
+      html+="<span style='font-size:11px"+(urgent?";font-weight:600;color:var(--text)":"")+"'>"+esc(e.label)+"</span></div>";
+      html+="<span style='font-size:11px;font-weight:600;"+(urgent?"color:var(--red)":"color:var(--text2)")+"'>"+dayLabel+"</span>";
+      html+="</div>";
+    });
+  }
+  html+="</div>";
+
+  // ── 5. Recent Transactions ──
   html+="<div class='ph'>近期交易</div>";
   html+="<div style='overflow-y:auto;flex:1'>";
   var recent=S.T.filter(function(t){return t.type==="買入"||t.type==="賣出";})
@@ -1601,6 +1657,59 @@ function rInsightPanel(p){
   return html;
 }
 
+
+// ─── MARKET CALENDAR & EARNINGS ───
+
+// 2026 key market dates (hardcoded)
+var MARKET_EVENTS=[
+  {date:"2026-06-18",label:"FOMC 利率決議",type:"fed"},
+  {date:"2026-07-29",label:"FOMC 利率決議",type:"fed"},
+  {date:"2026-09-16",label:"FOMC 利率決議",type:"fed"},
+  {date:"2026-11-04",label:"FOMC 利率決議",type:"fed"},
+  {date:"2026-12-16",label:"FOMC 利率決議",type:"fed"},
+  {date:"2026-06-10",label:"CPI 通膨數據",type:"cpi"},
+  {date:"2026-07-14",label:"CPI 通膨數據",type:"cpi"},
+  {date:"2026-08-12",label:"CPI 通膨數據",type:"cpi"},
+  {date:"2026-09-11",label:"CPI 通膨數據",type:"cpi"},
+  {date:"2026-10-13",label:"CPI 通膨數據",type:"cpi"},
+  {date:"2026-11-12",label:"CPI 通膨數據",type:"cpi"},
+  {date:"2026-12-11",label:"CPI 通膨數據",type:"cpi"},
+  {date:"2026-07-31",label:"PCE 物價指數",type:"pce"},
+  {date:"2026-08-28",label:"PCE 物價指數",type:"pce"},
+  {date:"2026-09-25",label:"PCE 物價指數",type:"pce"},
+];
+
+var EARNINGS_STATE={data:{},loading:false,lastFetch:0};
+
+async function fetchEarnings(){
+  if(EARNINGS_STATE.loading)return;
+  var now=Date.now();
+  if(now-EARNINGS_STATE.lastFetch<3600000&&Object.keys(EARNINGS_STATE.data).length)return; // 1hr cache
+  EARNINGS_STATE.loading=true;
+  var syms=[...new Set(S.H.filter(function(h){return h.shares>0&&!h.sym.includes("Call")&&!h.sym.includes("Put");}).map(function(h){return h.sym;}))].slice(0,10);
+  if(!syms.length){EARNINGS_STATE.loading=false;renderInsightPanel();return;}
+  try{
+    var r=await fetch("/api/earnings?sym="+syms.join(","));
+    var d=await r.json();
+    EARNINGS_STATE.data=d;
+    EARNINGS_STATE.lastFetch=Date.now();
+  }catch(e){console.warn("earnings fetch error",e);}
+  EARNINGS_STATE.loading=false;
+  renderInsightPanel();
+}
+
+function renderInsightPanel(){
+  var el=document.getElementById("insight-panel");
+  if(!el)return;
+  el.innerHTML=buildInsightPanel(calcPortfolio());
+}
+
+function daysFromNow(dateStr){
+  if(!dateStr)return null;
+  var diff=new Date(dateStr)-new Date(today());
+  return Math.round(diff/86400000);
+}
+
 // ─── MASTER RENDER ───
 function render(){
   try{
@@ -1622,7 +1731,7 @@ function render(){
     else if(S.tab==="tx")m.innerHTML=rTx();
     else if(S.tab==="fx")m.innerHTML=rFX();
     else m.innerHTML=rSettings();
-    if(S.tab==="dash")requestAnimationFrame(function(){drawChart(p);});
+    if(S.tab==="dash"){requestAnimationFrame(function(){drawChart(p);});if(!EARNINGS_STATE.lastFetch)fetchEarnings();}
     if(S.editPriceId){var el=document.getElementById("ep-"+S.editPriceId);if(el){el.focus();el.select();}}
   if(S.editCostId){
     var ec=document.getElementById("ec-"+S.editCostId);
@@ -1946,6 +2055,8 @@ if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
 if(S.T.length>0)recalcCash();
 S.apiKey=localStorage.getItem("ft_apiKey")||"";
   S.newsApiKey=localStorage.getItem("ft_newsApiKey")||"";
+  S.earningsCache={};
+  S.earningsLastFetch=0;
 S.ghToken=localStorage.getItem("ft_ghToken")||"";
 S.ghUser=localStorage.getItem("ft_ghUser")||"";
 S.ghRepo=localStorage.getItem("ft_ghRepo")||"";

@@ -2535,19 +2535,6 @@
       "source": "Schwab"
     },
     {
-      "id": "1781616903625-4bv9",
-      "date": "2025-01-28",
-      "type": "賣出",
-      "sym": "NVDL",
-      "shares": 30,
-      "price": 51,
-      "fee": 0.04,
-      "amt": 1529.96,
-      "wire": 0,
-      "desc": "GRANITESHARES NVDA LNG DAILY ETF",
-      "source": "Schwab"
-    },
-    {
       "id": "1781616903625-lrz5",
       "date": "2025-02-07",
       "type": "買入",
@@ -3146,19 +3133,6 @@
       "source": "Schwab"
     },
     {
-      "id": "1781616903625-itdw",
-      "date": "2025-11-06",
-      "type": "賣出",
-      "sym": "INTC",
-      "shares": 10.106,
-      "price": 38.4,
-      "fee": 0,
-      "amt": 388.07,
-      "wire": 0,
-      "desc": "INTEL CORP",
-      "source": "Schwab"
-    },
-    {
       "id": "1781616903625-hqe3",
       "date": "2025-11-13",
       "type": "買入",
@@ -3273,19 +3247,6 @@
       "amt": 0.51,
       "wire": 0,
       "desc": "NVIDIA CORP",
-      "source": "Schwab"
-    },
-    {
-      "id": "1781616903625-hn37",
-      "date": "2026-01-13",
-      "type": "賣出",
-      "sym": "DIS",
-      "shares": 1.0116,
-      "price": 113.0289,
-      "fee": 0,
-      "amt": 114.34,
-      "wire": 0,
-      "desc": "DISNEY WALT CO",
       "source": "Schwab"
     },
     {

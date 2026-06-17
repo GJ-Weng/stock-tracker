@@ -2561,19 +2561,6 @@
       "source": "Schwab"
     },
     {
-      "id": "1781616903625-8e1b",
-      "date": "2025-02-21",
-      "type": "買入",
-      "sym": "SOFI",
-      "shares": 15,
-      "price": 14.99,
-      "fee": 0,
-      "amt": -224.85,
-      "wire": 0,
-      "desc": "SOFI TECHNOLOGIES INC",
-      "source": "Schwab"
-    },
-    {
       "id": "1781616903625-ncd4",
       "date": "2025-03-03",
       "type": "買入",

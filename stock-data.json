@@ -1729,32 +1729,6 @@
       "source": "Schwab"
     },
     {
-      "id": "1781616903625-x0ad",
-      "date": "2024-05-13",
-      "type": "其他",
-      "sym": "INTC",
-      "shares": 10.064,
-      "price": 0,
-      "fee": 0,
-      "amt": 0,
-      "wire": 0,
-      "desc": "TDA TRAN - TRANSFER OF SECURITY OR OPTION OUT (INTC)",
-      "source": "Schwab"
-    },
-    {
-      "id": "1781616903625-w242",
-      "date": "2024-05-13",
-      "type": "買入",
-      "sym": "INTC",
-      "shares": 10.064,
-      "price": 0,
-      "fee": 0,
-      "amt": 0,
-      "wire": 0,
-      "desc": "INTEL CORP",
-      "source": "Schwab"
-    },
-    {
       "id": "1781616903625-wczp",
       "date": "2024-05-13",
       "type": "買入",

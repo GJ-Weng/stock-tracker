@@ -537,13 +537,17 @@ function recalcCash(){
 function rebuildFromTx(){
   if(!confirm("根據所有交易紀錄重新計算持倉股數、均成本、損益。\n現價、備註保留。確定？"))return;
   var map={};
+  // Pre-build acct lookup from existing holdings (preserves manually set accounts)
+  var existAcctMap={};
+  S.H.forEach(function(h){if(h.sym&&h.acct&&h.acct!=="FT")existAcctMap[h.sym]=h.acct;});
   var sorted=S.T.slice().sort(function(a,b){return a.date.localeCompare(b.date);});
   sorted.forEach(function(tx){
     var sym=tx.sym,shares=tx.shares,price=tx.price,fee=tx.fee||0,amt=tx.amt||0;
     if(!sym)return;
-    var mapKey=sym+(tx.source||"FT");
+    var txAcct=tx.source||(existAcctMap[sym]||"FT");
+    var mapKey=sym+txAcct;
     if(tx.type==="買入"&&shares>0&&price>0){
-      if(!map[mapKey])map[mapKey]={sym:sym,shares:0,cost:0,realized:0,div:0,fd:tx.date,acct:tx.source||"FT"};
+      if(!map[mapKey])map[mapKey]={sym:sym,shares:0,cost:0,realized:0,div:0,fd:tx.date,acct:txAcct};
       var ns=map[mapKey].shares+shares;
       map[mapKey].cost=ns>0?(map[mapKey].shares*map[mapKey].cost+shares*price)/ns:0;
       map[mapKey].shares=ns;
@@ -1162,8 +1166,11 @@ function rDash(p){
   html+="</tr></thead><tbody>";
   dashRows.forEach(function(h){
     var mv=h.shares*h.price,ur=h.shares*(h.price-h.cost),ret=h.cost>0?(h.price-h.cost)/h.cost:0,ann=annualReturn(h.cost,h.price,h.fd);
-    var _dab={"FT":"bft","Schwab":"bsw","GT":"bgt"}[h.acct||"FT"]||"br";
-    var _dal={"FT":"Firstrade","Schwab":"嘉信","GT":"國泰"}[h.acct]||h.acct||"FT";
+    // In merged (all-acct) view, find which accounts hold this sym
+    var _symHoldings=S.H.filter(function(x){return x.sym===h.sym&&x.shares>0;});
+    var _accts=[...new Set(_symHoldings.map(function(x){return x.acct||"FT";}))]; 
+    var _dab=_accts.length===1?({"FT":"bft","Schwab":"bsw","GT":"bgt"}[_accts[0]]||"br"):"br";
+    var _dal=_accts.length===1?({"FT":"Firstrade","Schwab":"嘉信","GT":"國泰"}[_accts[0]]||_accts[0]):_accts.map(function(a){return {"FT":"FT","Schwab":"嘉信","GT":"國泰"}[a]||a;}).join("+");
     html+="<tr><td><strong style='letter-spacing:.04em;font-size:13px'>"+esc(h.sym)+"</strong>"+(h.note?"<div style='font-size:10px;color:var(--text3)'>"+esc(h.note)+"</div>":"")+"</td>"+(isAll?"<td><span class='badge "+_dab+"'>"+_dal+"</span></td>":"");
     html+="<td class='num'><span class='editable' data-type='shares' data-id='"+h.id+"' data-val='"+h.shares+"'>"+fn(h.shares,h.shares%1===0?0:6)+"</span></td>";
     var isEC=S.editCostId===h.id;

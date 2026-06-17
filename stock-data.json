@@ -225,8 +225,8 @@
     {
       "id": "1781704125993-xwpa",
       "sym": "NVDA",
-      "shares": 35,
-      "cost": 141,
+      "shares": 40,
+      "cost": 138.625,
       "price": 141,
       "chg": 0,
       "div": 0,
@@ -2361,6 +2361,18 @@
       "price": 141,
       "fee": 0,
       "amt": -4935,
+      "wire": 0,
+      "source": "Schwab"
+    },
+    {
+      "id": "1781704233937-s8ws",
+      "date": "2024-06-10",
+      "type": "買入",
+      "sym": "NVDA",
+      "shares": 5,
+      "price": 122,
+      "fee": 0,
+      "amt": -610,
       "wire": 0,
       "source": "Schwab"
     }

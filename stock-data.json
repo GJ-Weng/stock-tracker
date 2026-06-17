@@ -1742,19 +1742,6 @@
       "source": "Schwab"
     },
     {
-      "id": "1781616903625-c14z",
-      "date": "2024-05-13",
-      "type": "買入",
-      "sym": "AMZN",
-      "shares": 5,
-      "price": 0,
-      "fee": 0,
-      "amt": 0,
-      "wire": 0,
-      "desc": "AMAZON.COM INC",
-      "source": "Schwab"
-    },
-    {
       "id": "1781616903625-u456",
       "date": "2024-05-13",
       "type": "入金",

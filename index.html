@@ -467,8 +467,7 @@ function applyTx(tx){
   if(!sym||!shares||shares<=0)return true;
   var i;
   if(type==="買入"){
-    var acct=tx.source||((S.H.find(function(h){return h.sym===sym&&h.acct&&h.acct!=="FT";})||{}).acct)||"FT";
-    if(!tx.source)tx.source=acct; // normalise
+    var acct=tx.source||(existAcctMap&&existAcctMap[sym])||((S.H.find(function(h){return h.sym===sym&&h.acct&&h.acct!=="FT";})||{}).acct)||"FT";
     i=S.H.findIndex(function(h){return h.sym===sym&&h.acct===acct;});
     if(i>=0){
       var ns=S.H[i].shares+shares,nc=(S.H[i].shares*S.H[i].cost+shares*price)/ns;
@@ -1332,7 +1331,7 @@ function rTx(){
   html+="<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px'>";
   html+="<div class='filter-bar'>"+fTypes.map(function(ft){return "<button class='chip"+(S.filterType===ft?" active":"")+"'onclick=\"setFilter('"+ft+"')\">"+ ft+"</button>";}).join("");
   html+="<input class='si' placeholder='搜尋代號…' value='"+esc(S.txSearch)+"' oninput='S.txSearch=this.value;render()'></div>";
-  html+="<div style='display:flex;gap:6px'><button class='btn' onclick='exportTxExcel()'>↓ Excel</button><button class='btn btn-blue' onclick=\"toggleForm('t')\">＋ 新增</button></div></div>";
+  html+="<div style='display:flex;gap:6px'><button class='btn' onclick='batchSetAcct()'>🔧 批次設帳戶</button><button class='btn' onclick='exportTxExcel()'>↓ Excel</button><button class='btn btn-blue' onclick=\"toggleForm('t')\">＋ 新增</button></div></div>";
   if(S.showForm==="t"||isEd){
     var ev=function(k,d){return isEd&&edTx?(edTx[k]!==undefined?edTx[k]:d):d;};
     var curType=isEd&&edTx?edTx.type:"買入";
@@ -1341,6 +1340,7 @@ function rTx(){
     var amtAbs=isEd&&edTx?Math.abs(edTx.amt||0):"";
     html+="<div class='fb'><div style='font-size:13px;font-weight:500;margin-bottom:10px'>"+(isEd?"編輯交易（"+edTx.date+"）":"新增交易")+"</div><div class='fg'>";
     var curAcct=isEd&&edTx?ev("source","FT"):"FT";
+    // Note: default is FT; user must manually select account for Schwab/GT
     html+="<div><div class='fl'>日期</div><input id='ft-date' type='date' value='"+ev("date",today())+"'></div>";
     html+="<div><div class='fl'>帳戶</div><select id='ft-source'><option value='FT'"+(curAcct==='FT'?' selected':'')+">Firstrade</option><option value='Schwab'"+(curAcct==='Schwab'?' selected':'')+">嘉信</option><option value='GT'"+(curAcct==='GT'?' selected':'')+">國泰複委托</option></select></div>";
     html+="<div><div class='fl'>類別</div><select id='ft-type' onchange='onTxTypeChange(this.value)'>"+types.map(function(t){return"<option"+(isEd&&edTx.type===t?" selected":"")+">"+t+"</option>";}).join("")+"</select></div>";
@@ -1760,6 +1760,26 @@ function setHoldingsView(v){S.holdingsView=v;render();}
 function setTab(t){S.tab=t;S.showForm=null;S.editTxId=null;S.editPriceId=null;render();}
 function toggleForm(f){S.showForm=S.showForm===f?null:f;S.editTxId=null;render();}
 function setFilter(f){S.filterType=f;render();}
+function batchSetAcct(){
+  var sym=prompt("輸入要修改的股票代號（如 KBSX）：");
+  if(!sym)return;
+  sym=sym.trim().toUpperCase();
+  var acct=prompt("設定帳戶（FT / Schwab / GT）：","GT");
+  if(!acct||!["FT","Schwab","GT"].includes(acct))return alert("帳戶代碼錯誤，請輸入 FT、Schwab 或 GT");
+  var count=0;
+  S.T=S.T.map(function(t){
+    if(t.sym===sym){count++;return Object.assign({},t,{source:acct});}
+    return t;
+  });
+  // Also update holdings acct
+  S.H=S.H.map(function(h){
+    if(h.sym===sym)return Object.assign({},h,{acct:acct});
+    return h;
+  });
+  sv("T");sv("H");
+  toast("✅ 已將 "+count+" 筆 "+sym+" 交易設為 "+acct);
+  render();
+}
 function exportTxExcel(){
   if(typeof XLSX==="undefined"){toast("❌ XLSX 函式庫未載入");return;}
   var txAcct=S.txAcct||"全部";

@@ -1577,11 +1577,8 @@ function buildInsightPanel(p){
   // ── 3. Upcoming Earnings ──
   html+="<div class='ph' style='display:flex;justify-content:space-between'><span>📅 財報日期</span><button class='btn-sm' onclick='EARNINGS_STATE.lastFetch=0;fetchEarnings()'>更新</button></div>";
   html+="<div style='padding:8px 14px;border-bottom:0.5px solid var(--border)'>";
-  if(EARNINGS_STATE.debugRaw&&!EARNINGS_STATE.loading){
-    html+="<div style='font-size:9px;color:var(--text3);word-break:break-all;padding:4px 0;border-bottom:0.5px solid var(--border);margin-bottom:4px'>debug: "+esc(EARNINGS_STATE.debugRaw)+"</div>";
-  }
   if(EARNINGS_STATE.loading){
-    html+="<div style='font-size:11px;color:var(--text3);padding:4px 0'><span class='spin'></span> 載入中…</div>";
+    html+="<div style='font-size:11px;color:var(--text3);padding:4px 0'><span class='spin'></span> 載入中（約 2-3 秒）…</div>";
   }else if(EARNINGS_STATE.error){
     html+="<div style='font-size:11px;color:var(--red);line-height:1.5'>⚠ "+esc(EARNINGS_STATE.error)+"</div>";
   }else{
@@ -1700,14 +1697,13 @@ async function fetchEarnings(){
   if(now-EARNINGS_STATE.lastFetch<3600000&&Object.keys(EARNINGS_STATE.data).length)return;
   EARNINGS_STATE.loading=true;
   EARNINGS_STATE.error="";
-  var syms=[...new Set(S.H.filter(function(h){return h.shares>0&&!h.sym.includes("Call")&&!h.sym.includes("Put");}).map(function(h){return h.sym;}))].slice(0,10);
+  var syms=[...new Set(S.H.filter(function(h){return h.shares>0&&!h.sym.includes("Call")&&!h.sym.includes("Put")&&!h.sym.includes("/")&&!h.sym.includes(" ");}).map(function(h){return h.sym;}))].slice(0,5);
   if(!syms.length){EARNINGS_STATE.loading=false;renderInsightPanel();return;}
   try{
     var r=await fetch("/api/earnings?sym="+syms.join(","));
     var rawText=await r.text();
     if(!r.ok)throw new Error("API "+r.status+": "+rawText.slice(0,200));
     var d=JSON.parse(rawText);
-    EARNINGS_STATE.debugRaw=JSON.stringify(d).slice(0,300);
     var allErrs=Object.keys(d).length>0&&Object.values(d).every(function(v){return v.error;});
     if(allErrs){throw new Error("Yahoo Finance: "+Object.values(d)[0].error);}
     EARNINGS_STATE.data=d;

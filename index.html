@@ -1333,7 +1333,20 @@ function rTx(){
   html+="<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px'>";
   html+="<div class='filter-bar'>"+fTypes.map(function(ft){return "<button class='chip"+(S.filterType===ft?" active":"")+"'onclick=\"setFilter('"+ft+"')\">"+ ft+"</button>";}).join("");
   html+="<input class='si' placeholder='搜尋代號…' value='"+esc(S.txSearch)+"' oninput='S.txSearch=this.value;render()'></div>";
-  html+="<div style='display:flex;gap:6px'><button class='btn' onclick='batchSetAcct()'>🔧 批次設帳戶</button><button class='btn' onclick='exportTxExcel()'>↓ Excel</button><button class='btn btn-blue' onclick=\"toggleForm('t')\">＋ 新增</button></div></div>";
+  var bm=S.txBatch;
+  html+="<div style='display:flex;gap:6px'>";
+  if(bm){
+    var selCount=Object.keys(S.txSelected).length;
+    html+="<button class='btn' onclick='txSelectAll()'>全選("+filtered.length+")</button>";
+    html+="<button class='btn-red' onclick='txBatchDelete()'"+(!selCount?" disabled":"")+">🗑 刪除("+selCount+")</button>";
+    html+="<button class='btn' onclick='S.txBatch=false;S.txSelected={};render()'>取消</button>";
+  }else{
+    html+="<button class='btn' onclick='S.txBatch=true;S.txSelected={};render()'>☑ 批次刪除</button>";
+    html+="<button class='btn' onclick='batchSetAcct()'>🔧 批次設帳戶</button>";
+    html+="<button class='btn' onclick='exportTxExcel()'>↓ Excel</button>";
+    html+="<button class='btn btn-blue' onclick=\"toggleForm('t')\">＋ 新增</button>";
+  }
+  html+="</div></div>";
   if(S.showForm==="t"||isEd){
     var ev=function(k,d){return isEd&&edTx?(edTx[k]!==undefined?edTx[k]:d):d;};
     var curType=isEd&&edTx?edTx.type:"買入";

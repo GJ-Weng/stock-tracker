@@ -608,7 +608,7 @@ function classifySchwab(action,desc,sym,qty){
   if(a==="Security Transfer")return"出金"; // ACAT out
   return"其他";
 }
-var schwabImp={rows:[],step:0};
+var schwabImp={rows:[],step:0,fromDate:""};
 function openSchwabImport(){document.getElementById("schwab-file").click();}
 function onSchwabFile(input){
   var f=input.files[0];if(!f)return;
@@ -663,11 +663,25 @@ function rSchwabPanel(){
   }
   // Build preview
   var rows=schwabImp.rows;
-  var included=rows.filter(function(r){return classifySchwab(r.action,r.desc,r.sym,r.qty)!=="其他";});
+  var fromDate=schwabImp.fromDate||"";
+  var allIncluded=rows.filter(function(r){return classifySchwab(r.action,r.desc,r.sym,r.qty)!=="其他";});
+  var included=fromDate?allIncluded.filter(function(r){return r.date>=fromDate;}):allIncluded;
   var skipped=rows.filter(function(r){return classifySchwab(r.action,r.desc,r.sym,r.qty)==="其他";});
   var badgeMap={"買入":"bb","賣出":"bs","配息":"bd","現金利息":"bi","入金":"bd","預扣稅":"bs","出金":"bs","股票分割":"br"};
-  var html="<div class='sb' id='schwab-panel'><h3>📋 嘉信預覽（"+included.length+" 筆）</h3>";
-  if(skipped.length)html+="<div class='wb' style='margin-bottom:10px'>⚠️ 略過 "+skipped.length+" 筆（無法識別的類型，不影響交易紀錄）</div>";
+  // Find earliest and latest dates for hint
+  var allDates=allIncluded.map(function(r){return r.date;}).filter(Boolean).sort();
+  var minDate=allDates[0]||"";
+  var maxDate=allDates[allDates.length-1]||"";
+  var html="<div class='sb' id='schwab-panel'><h3>📋 嘉信預覽（"+allIncluded.length+" 筆）</h3>";
+  // Date filter row
+  html+="<div style='display:flex;align-items:flex-end;gap:8px;margin-bottom:12px;padding:10px 12px;background:var(--bg2);border-radius:var(--radius);border:0.5px solid var(--border)'>";
+  html+="<div style='flex:1'><div class='fl'>只匯入此日期之後（排除 TD 舊資料）</div>";
+  html+="<input type='date' id='schwab-from-date' value='"+esc(fromDate)+"' onchange='schwabImp.fromDate=this.value;render()' style='width:100%'></div>";
+  if(minDate)html+="<div style='font-size:11px;color:var(--text3)'>CSV 範圍<br>"+minDate+"<br>→ "+maxDate+"</div>";
+  html+="<button class='btn-sm' onclick='schwabImp.fromDate=\"\";render()'>全部</button>";
+  html+="</div>";
+  html+="<div class='ib' style='margin-bottom:10px'>顯示 <strong>"+included.length+"</strong> 筆"+(fromDate?" ("+fromDate+" 之後)":"")+"，略過 "+skipped.length+" 筆</div>";
+  if(skipped.length)html+="<div class='wb' style='margin-bottom:10px'>⚠️ 略過 "+skipped.length+" 筆（股票分割、轉出紀錄等）</div>";
   html+="<div class='sx' style='max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px'>";
   html+="<table><thead><tr><th>日期</th><th>類別</th><th>代號</th><th class='num'>股數</th><th class='num'>成交價</th><th class='num'>金額</th></tr></thead><tbody>";
   included.forEach(function(r){
@@ -681,7 +695,7 @@ function rSchwabPanel(){
   });
   html+="</tbody></table></div>";
   html+="<div style='display:flex;gap:8px'>";
-  html+="<button class='btn btn-blue' onclick='schwabConfirmImport()'>✅ 確認匯入 "+included.length+" 筆</button>";
+  html+="<button class='btn btn-blue' onclick='schwabConfirmImport()'>"+"✅ 確認匯入 "+included.length+" 筆"+(fromDate?" ("+fromDate+"起)":"")+"</button>";
   html+="<button class='btn' onclick='schwabImp={rows:[],step:0};render()'>取消</button>";
   html+="</div></div>";
   return html;
@@ -701,7 +715,8 @@ function schwabSetCash(){
   S.tab="dash";render();
 }
 function schwabConfirmImport(){
-  var allRows=schwabImp.rows;
+  var fromDate=schwabImp.fromDate||"";
+  var allRows=fromDate?schwabImp.rows.filter(function(r){return r.date>=fromDate;}):schwabImp.rows;
   allRows.sort(function(a,b){return a.date.localeCompare(b.date);});
   // Keep other accounts' data, only replace Schwab entries
   S.T=S.T.filter(function(t){return t.source&&t.source!=="Schwab";});
@@ -1357,10 +1372,15 @@ function rTx(){
     html+="<td class='num'>"+(t.fee?fn(t.fee,2):"—")+"</td>";
     html+="<td class='num "+cv(t.amt)+"'>"+(t.amt>=0?"+":"")+"$"+fn(t.amt,2)+"</td>";
     html+="<td class='num'>"+(t.wire?"NT$"+fn(t.wire,0):"—")+"</td>";
-    html+="<td><div style='display:flex;gap:4px'>";
-    html+="<button class='btn-sm' onclick='startEditTx(\""+t.id+"\")'>編輯</button>";
-    html+="<button class='btn-red' onclick='delTx(\""+t.id+"\")'>刪除</button>";
-    html+="</div></td></tr>";
+    html+="<td class='num'>"+(t.wire?"NT$"+fn(t.wire,0):"—")+"</td>";
+    if(S.txBatch){
+      html+="<td style='text-align:center'><input type='checkbox' "+(S.txSelected[t.id]?"checked":"")+" onchange='S.txSelected[\""+t.id+"\"]=(this.checked?1:0);if(!this.checked)delete S.txSelected[\""+t.id+"\"];render()'></td></tr>";
+    }else{
+      html+="<td><div style='display:flex;gap:4px'>";
+      html+="<td><div style='display:flex;gap:4px'>";
+      html+="<button class='btn-sm' onclick='startEditTx(&quot;"+t.id+"&quot;)'>編輯</button>";
+      html+="<button class='btn-red' onclick='delTx(&quot;"+t.id+"&quot;)'>刪除</button>";
+    }
   });
   html+="</tbody></table></div></div>";
   return "<div class='page-body'>"+html+"</div>";
@@ -1762,6 +1782,27 @@ function setHoldingsView(v){S.holdingsView=v;render();}
 function setTab(t){S.tab=t;S.showForm=null;S.editTxId=null;S.editPriceId=null;render();}
 function toggleForm(f){S.showForm=S.showForm===f?null:f;S.editTxId=null;render();}
 function setFilter(f){S.filterType=f;render();}
+function txSelectAll(){
+  var txAcct=S.txAcct||"全部";
+  var q=S.txSearch.toLowerCase();
+  var vis=S.T.filter(function(t){
+    var acctOk=(txAcct==="全部"||(t.source||"FT")===txAcct);
+    return acctOk&&(S.filterType==="全部"||t.type===S.filterType)&&(!q||(t.sym||"").toLowerCase().includes(q)||t.type.includes(q));
+  });
+  var allSel=vis.every(function(t){return S.txSelected[t.id];});
+  vis.forEach(function(t){if(allSel)delete S.txSelected[t.id];else S.txSelected[t.id]=1;});
+  render();
+}
+function txBatchDelete(){
+  var ids=Object.keys(S.txSelected);
+  if(!ids.length){toast("請先勾選要刪除的交易");return;}
+  if(!confirm("確定刪除勾選的 "+ids.length+" 筆交易？此操作無法復原。"))return;
+  S.T=S.T.filter(function(t){return!S.txSelected[t.id];});
+  sv("T");recalcCash();sv("acc");
+  S.txBatch=false;S.txSelected={};
+  toast("✅ 已刪除 "+ids.length+" 筆交易");
+  render();
+}
 function batchSetAcct(){
   var sym=prompt("輸入要修改的股票代號（如 KBSX）：");
   if(!sym)return;

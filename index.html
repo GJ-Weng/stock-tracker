@@ -342,7 +342,7 @@ var S={holdingsView:"all",dashView:"all",editCostId:null,editCostVal:"",showZero
   ghToken:"",ghUser:"",ghRepo:"",ghSHA:"",
   showForm:null,filterType:"全部",txSearch:"",txAcct:"全部",txDateFrom:"",txDateTo:"",txBatch:false,txSelected:{},
   sortCol:"",sortDir:-1,showExtraCols:false,fxMode:"twd",editTxId:null,editFxId:null,editPriceId:null,editPriceVal:"",
-  updating:false,syncing:false,
+  updating:false,syncing:false,lastUpdate:"",updateErrors:[],
   imp:{rows:[],symMap:{},step:0}
 };
 function sv(k){
@@ -450,21 +450,27 @@ async function updatePrices(){
   var _rawSyms=S.H.filter(function(h){return h.shares>0&&!h.sym.includes("Call")&&!h.sym.includes("Put");}).map(function(h){return h.sym;});
   var syms=_rawSyms.filter(function(s,i){return _rawSyms.indexOf(s)===i;});
   if(!syms.length){toast("沒有有效持倉");return;}
-  S.updating=true;render();
+  S.updating=true;S.updateErrors=[];render();
   try{
     var r=await fetch("/api/quote?sym="+encodeURIComponent(syms.join(",")));
     if(!r.ok)throw new Error("API "+r.status);
     var data=await r.json();
-    var n=0;
+    var n=0,errs=[];
     S.H=S.H.map(function(h){
-      if(data[h.sym]&&!data[h.sym].error){
+      if(data[h.sym]){
+        if(data[h.sym].error){errs.push(h.sym);return h;}
         n++;
         return Object.assign({},h,{price:parseFloat(data[h.sym].price.toFixed(2)),chg:parseFloat((data[h.sym].chg||0).toFixed(2))});
       }
       return h;
     });
+    S.updateErrors=errs;
+    var now=new Date();
+    S.lastUpdate=now.getHours().toString().padStart(2,"0")+":"+now.getMinutes().toString().padStart(2,"0");
     sv("H");
-    toast(n>0?"✅ 已更新 "+n+" 支報價（"+new Date().toLocaleTimeString()+"）":"❌ 無法取得報價，請確認網路");
+    if(n>0&&errs.length===0)toast("✅ 已更新 "+n+" 支報價（"+S.lastUpdate+"）");
+    else if(n>0)toast("⚠️ 更新 "+n+" 支，"+errs.length+" 支失敗："+errs.join(", "));
+    else toast("❌ 無法取得報價，請確認網路");
   }catch(e){toast("❌ 更新失敗："+e.message);}
   S.updating=false;render();
 }
@@ -1281,7 +1287,8 @@ function rDash(p){
   html+="<div class='panel'>";
   html+="<div class='ph'>";
   html+="<span style='color:var(--text2);font-size:11px'>"+(isAll?"整合檢視":viewLabel)+"的持倉</span>";
-  html+=rUBtn(S.updating?"<span class='spin'></span> 更新中…":"🔄 更新報價","updatePrices",S.updating);
+  var _updLabel=S.updating?"<span class='spin'></span> 更新中…":"🔄 更新報價"+(S.lastUpdate?" · "+S.lastUpdate:"")+(S.updateErrors&&S.updateErrors.length?" ⚠"+S.updateErrors.length:"");
+  html+=rUBtn(_updLabel,"updatePrices",S.updating);
   html+="</div>";
   html+="<div class='sx'><table><thead><tr>";
   html+="<th>代號</th>"+(isAll?"<th>帳戶</th>":"")
@@ -1294,7 +1301,8 @@ function rDash(p){
     var _accts=[...new Set(_symHoldings.map(function(x){return x.acct||"FT";}))]; 
     var _dab=_accts.length===1?({"FT":"bft","Schwab":"bsw","GT":"bgt"}[_accts[0]]||"br"):"br";
     var _dal=_accts.length===1?({"FT":"Firstrade","Schwab":"嘉信","GT":"國泰"}[_accts[0]]||_accts[0]):_accts.map(function(a){return {"FT":"FT","Schwab":"嘉信","GT":"國泰"}[a]||a;}).join("+");
-    html+="<tr><td><strong style='letter-spacing:.04em;font-size:13px'>"+esc(h.sym)+"</strong>"+(h.note?"<div style='font-size:10px;color:var(--text3)'>"+esc(h.note)+"</div>":"")+"</td>"+(isAll?"<td><span class='badge "+_dab+"'>"+_dal+"</span></td>":"");
+    var _hasErr=S.updateErrors&&S.updateErrors.indexOf(h.sym)>=0;
+    html+="<tr><td><strong style='letter-spacing:.04em;font-size:13px'>"+esc(h.sym)+"</strong>"+(_hasErr?"<span style='color:var(--red);font-size:10px;margin-left:4px' title='報價更新失敗'>⚠</span>":"")+(h.note?"<div style='font-size:10px;color:var(--text3)'>"+esc(h.note)+"</div>":"")+"</td>"+(isAll?"<td><span class='badge "+_dab+"'>"+_dal+"</span></td>":"");
     html+="<td class='num'><span class='editable' data-type='shares' data-id='"+h.id+"' data-val='"+h.shares+"'>"+fn(h.shares,h.shares%1===0?0:6)+"</span></td>";
     var isEC=S.editCostId===h.id;
     if(isEC){html+="<td class='num'><input id='ec-"+h.id+"' type='number' value='"+S.editCostVal+"' style='width:80px;padding:3px 6px;font-size:11px;text-align:right'></td>";}
@@ -1350,7 +1358,8 @@ if(!S.showZero)rows=rows.filter(function(h){return h.shares>0;});
   var zeroCount=totalH.filter(function(h){return h.shares<=0;}).length;
   html+="<span style='color:var(--text2);font-size:13px'>"+viewH.length+" 支持倉"+(zeroCount&&!S.showZero?" ("+zeroCount+"支已清倉隱藏)":"")+"</span>";
   html+="<div style='display:flex;gap:8px;flex-wrap:wrap'>";
-  html+=rUBtn(S.updating?"<span class='spin'></span> 更新中":"🔄 更新報價","updatePrices",S.updating);
+  var _updLabel2=S.updating?"<span class='spin'></span> 更新中":"🔄 更新報價"+(S.lastUpdate?" · "+S.lastUpdate:"")+(S.updateErrors&&S.updateErrors.length?" ⚠"+S.updateErrors.length:"");
+  html+=rUBtn(_updLabel2,"updatePrices",S.updating);
   html+="<button class='btn' onclick='rebuildFromTx()'>🔁 從交易重建</button>";
   html+="<button class='btn' onclick='S.showZero=!S.showZero;render()'>"+(S.showZero?"隱藏已清倉":"顯示已清倉")+"</button>";
   html+="<button class='btn btn-blue' onclick=\"toggleForm('h')\">＋ 新增持倉</button>";
@@ -1824,7 +1833,7 @@ function buildInsightPanel(p){
 
 
   // ── 4. Market Calendar (next 30 days) ──
-  html+="<div class='ph'>🗓 市場大事</div>";
+  html+="<div class='ph'>🗓 市場大事<span style='font-size:9px;color:var(--text3);font-weight:400;margin-left:auto'>日程來源：Fed/BLS 2026年初公告</span></div>";
   html+="<div style='padding:8px 14px;border-bottom:0.5px solid var(--border)'>";
   var upcoming=MARKET_EVENTS.filter(function(e){
     var days=daysFromNow(e.date);
@@ -2220,18 +2229,11 @@ function addTx(){
 }
 function renderKeepScroll(){
   var sy=window.pageYOffset||document.documentElement.scrollTop||0;
-  // Lock scroll position during re-render
   document.documentElement.style.scrollBehavior="auto";
   render();
-  // Restore immediately and also after paint
-  window.scrollTo(0,sy);
-  document.documentElement.scrollTop=sy;
-  document.body.scrollTop=sy;
+  // Single rAF restore - if still jumps, the culprit is an autofocus inside render()
   requestAnimationFrame(function(){
     window.scrollTo(0,sy);
-    document.documentElement.scrollTop=sy;
-    setTimeout(function(){window.scrollTo(0,sy);},0);
-    setTimeout(function(){window.scrollTo(0,sy);},100);
   });
 }
 function startEditTx(id){S.editTxId=id;S.showForm=null;renderKeepScroll();}

@@ -1000,6 +1000,151 @@ function rCard(l,v,s,c){return "<div class='card'><div class='cl'>"+l+"</div><di
 function rBadge(t){var m={"買入":"bi","賣出":"bd","入金":"bb","現金利息":"br","匯費補貼":"br","配息":"bd","預扣稅":"bs"};return "<span class='badge "+(m[t]||"br")+"'>"+ t+"</span>";}
 function rUBtn(text,fn,loading){return "<button class='ubtn"+(loading?" loading":"")+"' onclick='"+fn+"()'>"+text+"</button>";}
 
+// ─── NAV CHART ───
+function calcNavSnapshots(){
+  // Build monthly NAV snapshots from transaction history + current prices
+  var sorted=S.T.slice().sort(function(a,b){return a.date.localeCompare(b.date);});
+  if(!sorted.length)return[];
+
+  // Determine month range
+  var firstDate=sorted[0].date.slice(0,7); // YYYY-MM
+  var nowDate=today().slice(0,7);
+  var months=[];
+  var cur=new Date(firstDate+"-01");
+  var end=new Date(nowDate+"-01");
+  while(cur<=end){
+    months.push(cur.toISOString().slice(0,7));
+    cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);
+  }
+
+  // Build a holdings map evolving month by month
+  var holdMap={};  // sym -> {shares, cost}
+  var cashUSD=0;
+  var txIdx=0;
+  var snapshots=[];
+
+  months.forEach(function(ym){
+    var monthEnd=ym+"-31"; // safe upper bound
+    // Apply all transactions up to end of this month
+    while(txIdx<sorted.length&&sorted[txIdx].date<=monthEnd){
+      var t=sorted[txIdx];
+      var sym=t.sym;
+      var amt=t.amt||0;
+      if(t.type==="買入"&&sym&&t.shares>0&&t.price>0){
+        if(!holdMap[sym])holdMap[sym]={shares:0,cost:0};
+        var ns=holdMap[sym].shares+t.shares;
+        holdMap[sym].cost=ns>0?(holdMap[sym].shares*holdMap[sym].cost+t.shares*t.price)/ns:0;
+        holdMap[sym].shares=ns;
+        cashUSD+=amt; // negative
+      }else if(t.type==="賣出"&&sym&&t.shares>0){
+        if(holdMap[sym]){
+          holdMap[sym].shares=Math.max(0,holdMap[sym].shares-t.shares);
+          cashUSD+=amt; // positive
+        }
+      }else if(t.type!=="入金"){
+        cashUSD+=amt;
+      }
+      txIdx++;
+    }
+    // Add FX deposits up to this month
+    var fxDeposit=0;
+    S.E.forEach(function(e){if((e.date||"")<=monthEnd)fxDeposit+=e.usd||0;});
+
+    // Estimate portfolio value: use current prices (best available approximation)
+    var mktVal=0;
+    Object.keys(holdMap).forEach(function(sym){
+      var h=S.H.find(function(x){return x.sym===sym;});
+      var price=h?h.price:0;
+      mktVal+=holdMap[sym].shares*price;
+    });
+    // cash = FX deposits + transaction cash flows
+    var cashEst=fxDeposit+cashUSD;
+    snapshots.push({ym:ym,total:mktVal+Math.max(0,cashEst),invested:fxDeposit});
+  });
+  return snapshots;
+}
+
+function rNavChart(p){
+  var snaps=calcNavSnapshots();
+  if(snaps.length<2)return"";
+
+  var W=560,H=130,padL=52,padR=12,padT=14,padB=28;
+  var cW=W-padL-padR,cH=H-padT-padB;
+  var vals=snaps.map(function(s){return s.total;});
+  var invVals=snaps.map(function(s){return s.invested;});
+  var maxV=Math.max(Math.max.apply(null,vals),Math.max.apply(null,invVals),1);
+  var minV=0;
+  var range=maxV-minV||1;
+  var goal=1000000;
+
+  function xp(i){return padL+i/(snaps.length-1)*cW;}
+  function yp(v){return padT+cH-(v-minV)/range*cH;}
+
+  // Build polylines
+  var navPts=snaps.map(function(s,i){return xp(i)+","+yp(s.total);}).join(" ");
+  var invPts=snaps.map(function(s,i){return xp(i)+","+yp(s.invested);}).join(" ");
+
+  // X axis labels (show ~4 evenly spaced)
+  var labelStep=Math.max(1,Math.floor(snaps.length/4));
+  var xLabels="";
+  snaps.forEach(function(s,i){
+    if(i===0||i===snaps.length-1||(i%labelStep===0)){
+      xLabels+="<text x='"+xp(i)+"' y='"+(H-6)+"' text-anchor='middle' style='font-size:9px;fill:var(--text3);font-family:inherit'>"+s.ym.slice(2)+"</text>";
+    }
+  });
+
+  // Y axis labels (0, mid, max)
+  function fmtY(v){return v>=1000000?"$"+(v/1000000).toFixed(1)+"M":v>=1000?"$"+(v/1000).toFixed(0)+"k":"$"+Math.round(v);}
+  var yLabels="";
+  [0,maxV/2,maxV].forEach(function(v){
+    yLabels+="<text x='"+(padL-5)+"' y='"+(yp(v)+3)+"' text-anchor='end' style='font-size:9px;fill:var(--text3);font-family:inherit'>"+fmtY(v)+"</text>";
+    yLabels+="<line x1='"+padL+"' y1='"+yp(v)+"' x2='"+(W-padR)+"' y2='"+yp(v)+"' stroke='var(--border)' stroke-width='0.5' stroke-dasharray='3 3'/>";
+  });
+
+  // Goal line (only if within view range)
+  var goalLine="";
+  if(goal<=maxV*1.1){
+    var gy=yp(goal);
+    goalLine="<line x1='"+padL+"' y1='"+gy+"' x2='"+(W-padR)+"' y2='"+gy+"' stroke='var(--green)' stroke-width='1' stroke-dasharray='4 3' opacity='.6'/>";
+    goalLine+="<text x='"+(W-padR-2)+"' y='"+(gy-4)+"' text-anchor='end' style='font-size:9px;fill:var(--green);font-family:inherit'>目標 $1M</text>";
+  }
+
+  // Last value label
+  var lastSnap=snaps[snaps.length-1];
+  var lastX=xp(snaps.length-1),lastY=yp(lastSnap.total);
+
+  var svg="<svg viewBox='0 0 "+W+" "+H+"' width='100%' style='display:block'>";
+  svg+=yLabels;
+  svg+=goalLine;
+  // Invested area (fill under invested line)
+  var invArea="M"+xp(0)+","+yp(0)+" "+snaps.map(function(s,i){return"L"+xp(i)+","+yp(s.invested);}).join(" ")+" L"+xp(snaps.length-1)+","+yp(0)+" Z";
+  svg+="<path d='"+invArea+"' fill='var(--blue)' opacity='.08'/>";
+  // NAV area (fill under NAV line)
+  var navArea="M"+xp(0)+","+yp(0)+" "+snaps.map(function(s,i){return"L"+xp(i)+","+yp(s.total);}).join(" ")+" L"+xp(snaps.length-1)+","+yp(0)+" Z";
+  svg+="<path d='"+navArea+"' fill='var(--blue)' opacity='.13'/>";
+  // Invested line
+  svg+="<polyline points='"+invPts+"' fill='none' stroke='var(--blue)' stroke-width='1.2' stroke-dasharray='4 3' opacity='.5'/>";
+  // NAV line
+  svg+="<polyline points='"+navPts+"' fill='none' stroke='var(--blue)' stroke-width='2'/>";
+  // Last dot
+  svg+="<circle cx='"+lastX+"' cy='"+lastY+"' r='3.5' fill='var(--blue)'/>";
+  svg+=xLabels;
+  svg+="</svg>";
+
+  // Legend
+  var legend="<div style='display:flex;gap:14px;margin-top:4px;flex-wrap:wrap'>";
+  legend+="<span style='font-size:10px;color:var(--text2);display:flex;align-items:center;gap:4px'><span style='width:16px;height:2px;background:var(--blue);display:inline-block'></span>資產淨值</span>";
+  legend+="<span style='font-size:10px;color:var(--text2);display:flex;align-items:center;gap:4px'><span style='width:16px;height:2px;background:var(--blue);opacity:.5;display:inline-block;border-top:1.5px dashed var(--blue)'></span>累計入金</span>";
+  if(goal<=maxV*1.1)legend+="<span style='font-size:10px;color:var(--green);display:flex;align-items:center;gap:4px'><span style='width:16px;height:1.5px;background:var(--green);opacity:.6;display:inline-block'></span>退休目標</span>";
+  legend+="<span style='font-size:10px;font-weight:600;color:var(--blue);font-family:ui-monospace,monospace;margin-left:auto'>$"+fn(lastSnap.total,0)+"</span>";
+  legend+="</div>";
+
+  return "<div class='panel' style='margin-bottom:10px'>"
+    +"<div class='ph'><span style='color:var(--text2);font-size:11px'>資產走勢</span><span style='font-size:10px;color:var(--text3)'>以現價估算歷史持倉</span></div>"
+    +"<div style='padding:10px 14px 8px'>"+svg+legend+"</div>"
+    +"</div>";
+}
+
 function rDash(p){
   var acctCash=S.acc||{};
   var dashView=S.dashView||"all";
@@ -1130,6 +1275,7 @@ function rDash(p){
 
   // ── Right: holdings overview ──
   html+="<div class='dash-right'>";
+  html+=rNavChart(p);
   var dashRows;
   if(dashView==="all"){
     var merged2={};

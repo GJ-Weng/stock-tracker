@@ -524,7 +524,14 @@ function loadFromGitHubPublic(){
     });
     S.lastSyncFromCloud=new Date().toLocaleTimeString();
     render();
-    toast("✅ 同步完成（"+S.lastSyncFromCloud+"）");
+    toast("✅ 同步完成，正在更新股價…",2000);
+    // Auto-fetch latest prices after data sync
+    updatePrices().then(function(){
+      toast("✅ 資料與股價已更新（"+S.lastSyncFromCloud+"）");
+    }).catch(function(){
+      render();
+      toast("✅ 同步完成（股價更新失敗，顯示快取價格）",3000);
+    });
   }).catch(function(e){
     toast("❌ 同步失敗："+e.message,4000);
   });
@@ -2117,9 +2124,9 @@ function rMobileSyncBar() {
 
 function rMobileHome(p) {
   var kTotal = p.totalUSD || 0;
-  var kUnreal = p.unrealized || 0;
-  var kToday = p.todayPnl || 0;
-  var kROI = p.invested > 0 ? (kTotal - p.invested) / p.invested : 0;
+  var kUnreal = p.unreal || 0;
+  var kToday = p.todayChg || 0;
+  var kROI = p.totalInvested > 0 ? (kTotal - p.totalInvested) / p.totalInvested : 0;
   var goal = 1000000;
   var pct = Math.min(kTotal / goal * 100, 100);
 
@@ -2138,7 +2145,7 @@ function rMobileHome(p) {
   html += "</div>";
   html += "<div class='m-hero-row'>";
   html += "<div class='m-kpi-mini'><div class='m-kpi-mini-label'>整體報酬率</div><div class='m-kpi-mini-val "+(kROI>=0?"pos":"neg")+"'>"+(kROI>=0?"+":"")+fp(kROI)+"</div></div>";
-  html += "<div class='m-kpi-mini'><div class='m-kpi-mini-label'>已實現損益</div><div class='m-kpi-mini-val "+(p.realized>=0?"pos":"neg")+"'>"+(p.realized>=0?"+":"")+"$"+fn(p.realized,0)+"</div></div>";
+  html += "<div class='m-kpi-mini'><div class='m-kpi-mini-label'>已實現損益</div><div class='m-kpi-mini-val "+(p.real>=0?"pos":"neg")+"'>"+(p.real>=0?"+":"")+"$"+fn(p.real,0)+"</div></div>";
   html += "</div>";
   html += "</div>";
 

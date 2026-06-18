@@ -1543,10 +1543,86 @@ function rSettings(){
 
 
 
+// ─── DONUT CHART HELPER ───
+function buildDonut(items,cx,cy,r,strokeW){
+  // items: [{label,value,color}]
+  var total=items.reduce(function(s,i){return s+i.value;},0);
+  if(total<=0)return"";
+  var segs="",angle=-Math.PI/2;
+  items.forEach(function(item){
+    var slice=item.value/total*Math.PI*2;
+    if(slice<0.001)return;
+    var x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle);
+    var x2=cx+r*Math.cos(angle+slice),y2=cy+r*Math.sin(angle+slice);
+    var large=slice>Math.PI?1:0;
+    segs+="<path d='M"+cx+" "+cy+" L"+x1+" "+y1+" A"+r+" "+r+" 0 "+large+" 1 "+x2+" "+y2+" Z' fill='"+item.color+"' stroke='var(--bg)' stroke-width='"+strokeW+"' data-label='"+esc(item.label)+"' data-pct='"+((item.value/total*100).toFixed(1))+"' style='cursor:pointer;transition:opacity .15s' onmouseover=\"this.style.opacity='.75';document.getElementById('donut-tip').textContent=this.dataset.label+' '+this.dataset.pct+'%'\" onmouseout=\"this.style.opacity='1';document.getElementById('donut-tip').textContent='持倉佔比'\"/>";
+    angle+=slice;
+  });
+  return segs;
+}
+
 // ─── INSIGHT PANEL ───
 function buildInsightPanel(p){
   var todayStr=today();
   var html="<div style='border-left:0.5px solid var(--border);background:var(--bg);display:flex;flex-direction:column;overflow:hidden'>";
+
+  // ── 0. Portfolio Donut + Asset Mix ──
+  var activeH=S.H.filter(function(h){return h.shares>0&&h.price>0;});
+  var donutColors=["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#06b6d4","#f97316","#84cc16","#ec4899","#6366f1","#14b8a6","#e879f9"];
+  var donutItems=activeH.map(function(h,i){return{label:h.sym,value:h.shares*h.price,color:donutColors[i%donutColors.length]};}).sort(function(a,b){return b.value-a.value;});
+  // asset class totals
+  var stockMkt=activeH.filter(function(h){return!h.isOption;}).reduce(function(s,h){return s+h.shares*h.price;},0);
+  var optMkt=activeH.filter(function(h){return h.isOption;}).reduce(function(s,h){return s+h.shares*h.price;},0);
+  var cashTotal=p.cash||0;
+  var grandTotal=stockMkt+optMkt+cashTotal;
+  var stockPct=grandTotal>0?stockMkt/grandTotal*100:0;
+  var optPct=grandTotal>0?optMkt/grandTotal*100:0;
+  var cashPct=grandTotal>0?cashTotal/grandTotal*100:0;
+
+  html+="<div class='ph'>持倉佔比</div>";
+  html+="<div style='padding:12px 14px;border-bottom:0.5px solid var(--border)'>";
+  if(donutItems.length===0){
+    html+="<div style='font-size:11px;color:var(--text3);text-align:center;padding:12px 0'>尚無持倉</div>";
+  }else{
+    // SVG donut
+    html+="<svg viewBox='0 0 200 130' width='100%' style='max-height:130px'>";
+    html+=buildDonut(donutItems,65,65,52,2.5);
+    // inner hole label
+    html+="<circle cx='65' cy='65' r='30' fill='var(--bg)'/>";
+    html+="<text x='65' y='60' text-anchor='middle' style='font-size:9px;fill:var(--text3);font-family:inherit'>總市值</text>";
+    html+="<text x='65' y='74' text-anchor='middle' style='font-size:11px;font-weight:600;fill:var(--text);font-family:ui-monospace,monospace'>$"+fn(p.mkt,0)+"</text>";
+    // legend (top 6)
+    var legendItems=donutItems.slice(0,6);
+    legendItems.forEach(function(item,i){
+      var lx=138,ly=16+i*19;
+      var pct=(item.value/(p.mkt||1)*100).toFixed(1);
+      html+="<rect x='"+lx+"' y='"+(ly-7)+"' width='8' height='8' rx='2' fill='"+item.color+"'/>";
+      html+="<text x='"+(lx+12)+"' y='"+ly+"' style='font-size:10px;fill:var(--text2);font-family:inherit'>"+esc(item.label)+"</text>";
+      html+="<text x='199' y='"+ly+"' text-anchor='end' style='font-size:10px;fill:var(--text2);font-family:ui-monospace,monospace'>"+pct+"%</text>";
+    });
+    if(donutItems.length>6){
+      html+="<text x='138' y='"+(16+6*19)+"' style='font-size:10px;fill:var(--text3);font-family:inherit'>+其他 "+(donutItems.length-6)+" 支</text>";
+    }
+    // hover tooltip
+    html+="<text id='donut-tip' x='65' y='130' text-anchor='middle' style='font-size:9px;fill:var(--text3);font-family:inherit'>持倉佔比</text>";
+    html+="</svg>";
+
+    // Asset class bar
+    html+="<div style='margin-top:6px'>";
+    html+="<div style='font-size:10px;color:var(--text3);margin-bottom:5px;letter-spacing:.06em'>資產類別分布</div>";
+    html+="<div style='height:8px;border-radius:4px;overflow:hidden;display:flex;background:var(--bg3)'>";
+    if(stockPct>0)html+="<div style='width:"+stockPct.toFixed(1)+"%;background:#3b82f6' title='股票 "+stockPct.toFixed(1)+"%'></div>";
+    if(cashPct>0)html+="<div style='width:"+cashPct.toFixed(1)+"%;background:#10b981' title='現金 "+cashPct.toFixed(1)+"%'></div>";
+    if(optPct>0)html+="<div style='width:"+optPct.toFixed(1)+"%;background:#f59e0b' title='選擇權 "+optPct.toFixed(1)+"%'></div>";
+    html+="</div>";
+    html+="<div style='display:flex;gap:10px;margin-top:5px;flex-wrap:wrap'>";
+    html+="<span style='font-size:10px;color:var(--text2);display:flex;align-items:center;gap:4px'><span style='width:8px;height:8px;border-radius:2px;background:#3b82f6;display:inline-block'></span>股票 "+stockPct.toFixed(1)+"%</span>";
+    html+="<span style='font-size:10px;color:var(--text2);display:flex;align-items:center;gap:4px'><span style='width:8px;height:8px;border-radius:2px;background:#10b981;display:inline-block'></span>現金 "+cashPct.toFixed(1)+"%</span>";
+    if(optPct>0)html+="<span style='font-size:10px;color:var(--text2);display:flex;align-items:center;gap:4px'><span style='width:8px;height:8px;border-radius:2px;background:#f59e0b;display:inline-block'></span>選擇權 "+optPct.toFixed(1)+"%</span>";
+    html+="</div>";
+    html+="</div>";
+  }
+  html+="</div>";
 
   // ── 1. Account Performance ──
   html+="<div class='ph'>績效摘要</div>";

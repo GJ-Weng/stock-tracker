@@ -149,7 +149,13 @@ tr:hover td{background:var(--bg3)}
 .wb{background:var(--yellow-bg);border-radius:var(--radius);padding:9px 11px;font-size:11px;color:var(--yellow);margin-top:7px;line-height:1.7}
 .kr{display:flex;gap:8px}.kr input{flex:1}
 #cash-panel.open{display:block!important}
-@media(max-width:600px){main{padding:12px}#hd{padding:10px 14px}.ai{display:none}.cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){main{padding:12px}#hd{padding:10px 14px}.ai{display:none}.cards{grid-template-columns:repeat(2,1fr)}
+.kpi-strip{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.kpi-strip::-webkit-scrollbar{display:none}
+.kpi-cell{min-width:72vw;scroll-snap-align:start;border-right:0.5px solid var(--border);flex-shrink:0}
+.kpi-cell:last-child{border-right:none}
+.dash-layout{grid-template-columns:1fr}
+.dash-left{border-right:none;border-bottom:0.5px solid var(--border)}}
 </style>
 </head>
 <body>
@@ -334,7 +340,7 @@ const INIT_E=[
 var S={holdingsView:"all",dashView:"all",editCostId:null,editCostVal:"",showZero:false,quickTrade:null,
   tab:"dash",H:null,T:null,E:null,acc:null,
   ghToken:"",ghUser:"",ghRepo:"",ghSHA:"",
-  showForm:null,filterType:"全部",txSearch:"",txAcct:"全部",txBatch:false,txSelected:{},
+  showForm:null,filterType:"全部",txSearch:"",txAcct:"全部",txDateFrom:"",txDateTo:"",txBatch:false,txSelected:{},
   sortCol:"",sortDir:-1,showExtraCols:false,fxMode:"twd",editTxId:null,editFxId:null,editPriceId:null,editPriceVal:"",
   updating:false,syncing:false,
   imp:{rows:[],symMap:{},step:0}
@@ -1425,7 +1431,8 @@ function rTx(){
   var acctMap={"全部":"全部","FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
   var filtered=S.T.filter(function(t){
     var acctOk=(txAcct==="全部"||(t.source||"FT")===txAcct);
-    return acctOk&&(S.filterType==="全部"||t.type===S.filterType)&&(!q||(t.sym||"").toLowerCase().includes(q)||t.type.includes(q));
+    var dateOk=(!S.txDateFrom||t.date>=S.txDateFrom)&&(!S.txDateTo||t.date<=S.txDateTo);
+    return acctOk&&dateOk&&(S.filterType==="全部"||t.type===S.filterType)&&(!q||(t.sym||"").toLowerCase().includes(q)||t.type.includes(q));
   }).sort(function(a,b){return b.date.localeCompare(a.date);});
   var isEd=!!S.editTxId,edTx=isEd?S.T.find(function(t){return t.id===S.editTxId;}):null;
   var html="";
@@ -1438,7 +1445,11 @@ function rTx(){
   // Type filter + search + buttons
   html+="<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px'>";
   html+="<div class='filter-bar'>"+fTypes.map(function(ft){return "<button class='chip"+(S.filterType===ft?" active":"")+"'onclick=\"setFilter('"+ft+"')\">"+ ft+"</button>";}).join("");
-  html+="<input class='si' placeholder='搜尋代號…' value='"+esc(S.txSearch)+"' oninput='S.txSearch=this.value;render()'></div>";
+  html+="<input class='si' placeholder='搜尋代號…' value='"+esc(S.txSearch)+"' oninput='S.txSearch=this.value;render()'>";
+  html+="<input type='date' value='"+esc(S.txDateFrom)+"' title='開始日期' style='font-size:11px;padding:4px 7px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);width:130px' oninput='S.txDateFrom=this.value;render()'>";
+  html+="<input type='date' value='"+esc(S.txDateTo)+"' title='結束日期' style='font-size:11px;padding:4px 7px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);width:130px' oninput='S.txDateTo=this.value;render()'>";
+  if(S.txDateFrom||S.txDateTo)html+="<button class='btn-sm' onclick='S.txDateFrom="";S.txDateTo="";render()'>✕ 清除日期</button>";
+  html+="</div>";
   var bm=S.txBatch;
   html+="<div style='display:flex;gap:6px'>";
   if(bm){
@@ -1469,7 +1480,7 @@ function rTx(){
     html+="<div><div class='fl'>股數</div><input id='ft-shares' type='number' value='"+ev("shares","")+"' placeholder='0' oninput='autoCalcAmt()'></div>";
     html+="<div><div class='fl'>成交價(USD)</div><input id='ft-price' type='number' value='"+ev("price","")+"' placeholder='0' oninput='autoCalcAmt()'></div>";
     html+="<div><div class='fl'>手續費</div><input id='ft-fee' type='number' value='"+ev("fee","")+"' placeholder='0' oninput='autoCalcAmt()'></div>";
-    html+="<div><div class='fl'>金額(USD) <span id='ft-amt-sign' style='color:var(--text2);font-size:11px'>"+amtSign+"（自動計算）</span></div><input id='ft-amt-abs' type='number' value='"+amtAbs+"' placeholder='留空自動算' min='0' oninput='autoCalcAmt()'><input type='hidden' id='ft-amt' value='"+(isEd&&edTx?ev("amt",""):"")+"'></div>";
+    html+="<div><div class='fl'>金額(USD) <span id='ft-amt-sign' style='color:var(--text2);font-size:11px'>"+amtSign+"（自動計算）</span></div><input id='ft-amt-abs' type='number' value='"+amtAbs+"' placeholder='留空自動算' min='0' oninput='autoCalcAmt()'><input type='hidden' id='ft-amt' value='"+(isEd&&edTx?ev("amt",""):"")+"'><div id='ft-twd-preview' style='font-size:11px;color:var(--text3);margin-top:3px;min-height:16px'></div></div>";
     html+="<div><div class='fl'>匯款手續費(NTD)</div><input id='ft-wire' type='number' value='"+ev("wire","")+"' placeholder='0'></div>";
     html+="<div style='display:flex;align-items:flex-end;gap:8px;grid-column:span 2'><button class='btn btn-blue' onclick='"+(isEd?"saveEditTx":"addTx")+"()' style='flex:1'>"+(isEd?"儲存修改":"確認新增")+"</button><button class='btn-sm' onclick='cancelTxEdit()' style='padding:8px 12px'>取消</button></div>";
     html+="</div>"+(S.showForm==="t"?"<div class='fh'>💡 買入自動帶出負數、賣出/入金自動帶入正數</div>":"")+"</div>";
@@ -1510,8 +1521,13 @@ function rFX(){
   S.E.forEach(function(e){tu+=e.usd;tt+=e.twd;});
   var avg=tu?tt/tu:0;
   var html="<div class='cards' style='margin-bottom:14px'>";
+  var curRate=S.acc.rate||31.5;
+  var fxDiff=avg>0?curRate-avg:0;
+  var fxDiffPct=avg>0?fxDiff/avg*100:0;
   html+=rCard("累計換出(NTD)","NT$"+fn(tt,0),"");html+=rCard("累計入金(USD)","$"+fn(tu,0),"");
-  html+=rCard("加權平均匯率",avg.toFixed(4),"");html+=rCard("出入金筆數",S.E.length+" 次","");
+  html+=rCard("加權平均換匯","NT$"+avg.toFixed(3),"每 1 USD 平均成本");
+  html+=rCard("現在匯率 vs 成本","NT$"+curRate.toFixed(3),"<span class='"+(fxDiff>=0?"pos":"neg")+"'>"+(fxDiff>=0?"+":"")+fxDiff.toFixed(3)+" ("+fxDiffPct.toFixed(2)+"%)</span>");
+  html+=rCard("出入金筆數",S.E.length+" 次","");
   // sort by date desc, fallback to insertion order
   var sortedE=S.E.slice().sort(function(a,b){return(b.date||"").localeCompare(a.date||"");});
   html+="</div><div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px'>";
@@ -2065,7 +2081,8 @@ function exportTxExcel(){
   var q=S.txSearch.toLowerCase();
   var rows=S.T.filter(function(t){
     var acctOk=(txAcct==="全部"||(t.source||"FT")===txAcct);
-    return acctOk&&(S.filterType==="全部"||t.type===S.filterType)&&(!q||(t.sym||"").toLowerCase().includes(q)||t.type.includes(q));
+    var dateOk=(!S.txDateFrom||t.date>=S.txDateFrom)&&(!S.txDateTo||t.date<=S.txDateTo);
+    return acctOk&&dateOk&&(S.filterType==="全部"||t.type===S.filterType)&&(!q||(t.sym||"").toLowerCase().includes(q)||t.type.includes(q));
   }).sort(function(a,b){return b.date.localeCompare(a.date);});
   var aLbl={"FT":"Firstrade","Schwab":"嘉信","GT":"國泰複委托"};
   var data=rows.map(function(t){
@@ -2177,6 +2194,9 @@ function autoCalcAmt(){
   hiddenAmt.value=isNeg?-absVal:absVal;
   var sign=document.getElementById("ft-amt-sign");
   if(sign)sign.textContent=absVal>0?(isNeg?"− $"+absVal.toFixed(2)+" (支出)":"＋ $"+absVal.toFixed(2)+" (收入)"):(isNeg?"−（支出，自動計算）":"＋（收入，自動計算）");
+  var twdPrev=document.getElementById("ft-twd-preview");
+  if(twdPrev&&absVal>0){var twdAmt=absVal*(S.acc.rate||31.5);twdPrev.textContent="≈ NT$"+(Math.round(twdAmt)).toLocaleString();}
+  else if(twdPrev){twdPrev.textContent="";}
 }
 
 function addTx(){

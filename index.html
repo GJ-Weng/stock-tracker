@@ -334,7 +334,7 @@ const INIT_E=[
 var S={holdingsView:"all",dashView:"all",editCostId:null,editCostVal:"",showZero:false,quickTrade:null,
   tab:"dash",H:null,T:null,E:null,acc:null,
   ghToken:"",ghUser:"",ghRepo:"",ghSHA:"",
-  showForm:null,filterType:"全部",txSearch:"",txAcct:"全部",
+  showForm:null,filterType:"全部",txSearch:"",txAcct:"全部",txBatch:false,txSelected:{},
   sortCol:"",sortDir:-1,showExtraCols:false,fxMode:"twd",editTxId:null,editFxId:null,editPriceId:null,editPriceVal:"",
   updating:false,syncing:false,
   imp:{rows:[],symMap:{},step:0}
@@ -391,6 +391,7 @@ function loadFromGitHub(force){
     if(data.H)S.H=data.H;if(data.T)S.T=data.T;if(data.E)S.E=data.E;if(data.acc)S.acc=data.acc;
     if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
   if(!S.acc.realizedAdj)S.acc.realizedAdj={FT:0,Schwab:0,GT:0};
+    recalcCash();
     ["H","T","E","acc"].forEach(function(k){localStorage.setItem("ft_"+k,JSON.stringify(S[k]));});
     recalcCash();
     return true;
@@ -1212,8 +1213,10 @@ function rHoldings(){
   // Filter holdings by account
   var viewH=(S.holdingsView==="all")?S.H:S.H.filter(function(h){return h.acct===S.holdingsView;});
   // Hide 0-share holdings unless showZero is set
-  if(!S.showZero)viewH=viewH.filter(function(h){return h.shares>0||(h.realized&&h.realized!==0)||h.note;});
-  html+="<span style='color:var(--text2);font-size:13px'>"+viewH.length+" 支（含已出清）</span>";
+  if(!S.showZero)viewH=viewH.filter(function(h){return h.shares>0;});
+  var totalH=(S.holdingsView==="all")?S.H:S.H.filter(function(h){return h.acct===S.holdingsView;});
+  var zeroCount=totalH.filter(function(h){return h.shares<=0;}).length;
+  html+="<span style='color:var(--text2);font-size:13px'>"+viewH.length+" 支持倉"+(zeroCount&&!S.showZero?" ("+zeroCount+"支已清倉隱藏)":"")+"</span>";
   html+="<div style='display:flex;gap:8px;flex-wrap:wrap'>";
   html+=rUBtn(S.updating?"<span class='spin'></span> 更新中":"🔄 更新報價","updatePrices",S.updating);
   html+="<button class='btn' onclick='rebuildFromTx()'>🔁 從交易重建</button>";
@@ -1659,8 +1662,8 @@ function buildInsightPanel(p){
 // ─── MARKET CALENDAR & EARNINGS ───
 
 // 2026 key market dates (hardcoded)
-function daysFromNow(dateStr){if(!dateStr)return null;var diff=new Date(dateStr)-new Date(today());return Math.round(diff/86400000);}
 // 每年1月更新一次（Fed + BLS 年初公布全年日程）
+function daysFromNow(dateStr){if(!dateStr)return null;var diff=new Date(dateStr)-new Date(today());return Math.round(diff/86400000);}
 var MARKET_EVENTS=[
   // ── FOMC 利率決議（結果公布日，各會議第2天）──
   {date:"2026-06-17",label:"FOMC 利率決議",type:"fed"},

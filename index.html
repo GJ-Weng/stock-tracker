@@ -43,14 +43,15 @@ button:hover{background:var(--bg2);color:var(--text)}
 .btn-red:hover{background:var(--red-bg)}
 .btn-sm{background:none;border:0.5px solid var(--border);color:var(--text2);padding:3px 8px;border-radius:var(--radius);font-size:11px}
 .btn-sm:hover{border-color:var(--border2);color:var(--text)}
-#hd{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;border-bottom:0.5px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:100;gap:10px}
+#hd{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;border-bottom:0.5px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:100;gap:10px;min-height:45px}
 #hd h1{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;letter-spacing:.05em}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
-.hr{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hr{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .ai{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
 .ai input{width:80px;padding:4px 7px;font-size:11px}
-nav{display:flex;border-bottom:0.5px solid var(--border);padding:0 20px;overflow-x:auto;background:var(--bg);position:sticky;top:45px;z-index:99}
+nav{display:flex;border-bottom:0.5px solid var(--border);padding:0 16px;overflow-x:auto;scrollbar-width:none;background:var(--bg);position:sticky;top:45px;z-index:99}
 .tab{padding:9px 14px;background:none;border:none;border-bottom:2px solid transparent;font-size:11px;color:var(--text2);cursor:pointer;white-space:nowrap;letter-spacing:.06em}
+nav::-webkit-scrollbar{display:none}
 .tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:500}
 main{padding:0;width:100%}
 /* KPI strip */
@@ -149,13 +150,91 @@ tr:hover td{background:var(--bg3)}
 .wb{background:var(--yellow-bg);border-radius:var(--radius);padding:9px 11px;font-size:11px;color:var(--yellow);margin-top:7px;line-height:1.7}
 .kr{display:flex;gap:8px}.kr input{flex:1}
 #cash-panel.open{display:block!important}
-@media(max-width:600px){main{padding:12px}#hd{padding:10px 14px}.ai{display:none}.cards{grid-template-columns:repeat(2,1fr)}
-.kpi-strip{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-.kpi-strip::-webkit-scrollbar{display:none}
-.kpi-cell{min-width:72vw;scroll-snap-align:start;border-right:0.5px solid var(--border);flex-shrink:0}
-.kpi-cell:last-child{border-right:none}
-.dash-layout{grid-template-columns:1fr}
-.dash-left{border-right:none;border-bottom:0.5px solid var(--border)}}
+@media(max-width:600px){
+  /* Global */
+  main{padding:10px}
+  #hd{padding:8px 12px;flex-wrap:wrap;gap:6px}
+  .ai{display:none}
+
+  /* KPI strip → horizontal scroll cards */
+  .kpi-strip{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .kpi-strip::-webkit-scrollbar{display:none}
+  .kpi-cell{min-width:72vw;scroll-snap-align:start;border-right:0.5px solid var(--border);flex-shrink:0;padding:12px}
+  .kpi-cell:last-child{border-right:none}
+
+  /* Dashboard layout → single column */
+  .dash-layout{grid-template-columns:1fr}
+  .dash-left{border-right:none;border-bottom:0.5px solid var(--border);padding:12px}
+  .dash-right{padding:10px;gap:8px}
+
+  /* NAV chart — limit height on small screens */
+  .dash-right svg{max-height:110px}
+
+  /* Tables — horizontal scroll with fade indicator */
+  .sx{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{font-size:11.5px}
+  th,td{padding:6px 8px}
+
+  /* Forms — full width inputs */
+  .fg{grid-template-columns:1fr}
+  .fb{padding:12px}
+  .si{width:100%}
+  input[type=date]{width:120px;font-size:11px}
+
+  /* Filter bar — wrap nicely */
+  .filter-bar{gap:4px}
+  .chip{font-size:10px;padding:2px 8px}
+
+  /* Cards grid → 2 col */
+  .cards{grid-template-columns:repeat(2,1fr)}
+
+  /* Donut SVG — smaller on phone */
+  #insight-panel svg{max-height:120px}
+
+  /* Buttons bar — wrap */
+  .ubtn{font-size:10px;padding:4px 9px}
+
+  /* Toast — full width at bottom */
+  .toast{left:12px;right:12px;bottom:12px;max-width:none}
+
+  /* Panel headers — smaller text */
+  .ph{font-size:9px;padding:7px 10px}
+
+  /* Insight panel — show below main content */
+  #insight-panel{border-left:none;border-top:0.5px solid var(--border)}
+
+  /* Nav tabs — smaller on phone */
+  nav{padding:0 8px;top:40px}
+  .tab{padding:7px 11px;font-size:10px;letter-spacing:.04em}
+
+  /* Header right side — hide less important items */
+  #ss{display:none}
+  .hr .ai{display:none}
+
+  /* Export button — icon only on phone */
+  .btn-blue{font-size:11px;padding:5px 10px}
+
+  /* Cash panel — full width on phone */
+  #cash-panel{right:-10px;min-width:calc(100vw - 24px)}
+
+  /* Stat rows — tighter */
+  .stat-row{padding:4px 0}
+  .stat-val{font-size:12px}
+
+  /* Progress bar section */
+  .prog-pct{font-size:13px}
+
+  /* Donut legend — smaller font */
+  #insight-panel text{font-size:8px}
+}
+
+/* iPad / mid-size: 601-900px */
+@media(min-width:601px) and (max-width:900px){
+  .dash-layout{grid-template-columns:200px 1fr}
+  #insight-panel{display:none}
+  table{font-size:12px}
+  th,td{padding:7px 10px}
+}
 </style>
 </head>
 <body>

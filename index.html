@@ -221,120 +221,22 @@ function annualReturn(cost,price,fd){
 
 // ─── INIT DATA ───
 const INIT_H=[
-  {id:"h1",sym:"AMZN",shares:0,cost:0,price:245.95,chg:-2.55,div:0,realized:178,note:"已出清",fd:"2025-10-24",acct:"FT"},
-  {id:"h2",sym:"ALAB",shares:0,cost:0,price:163.21,chg:-8.88,div:0,realized:1086.89,note:"已出清",fd:"2025-10-24",acct:"FT"},
-  {id:"h3",sym:"ONDS Call 1/15/27 $7.50",shares:1,cost:700.02,price:0,chg:0,div:0,realized:0,note:"選擇權",fd:"2026-02-01",isOption:true,acct:"FT"},
-  {id:"h4",sym:"ONDS",shares:1200,cost:10.3583,price:9.84,chg:-0.19,div:0,realized:0,note:"",fd:"2026-02-01",acct:"FT"},
-  {id:"h5",sym:"SOFI",shares:100,cost:24.5,price:18.86,chg:0.06,div:0,realized:0,note:"",fd:"2026-02-07",acct:"FT"},
-  {id:"h6",sym:"KBSX",shares:8179,cost:1.2222,price:1.23,chg:-0.02,div:0,realized:0,note:"",fd:"2026-02-12",acct:"FT"},
-  {id:"h7",sym:"TSLA",shares:10,cost:389,price:384.34,chg:-7.62,div:0,realized:0,note:"",fd:"2026-02-14",acct:"FT"},
-  {id:"h8",sym:"RMBS",shares:5,cost:102,price:118.36,chg:-1.66,div:0,realized:0,note:"",fd:"2026-02-28",acct:"FT"},
-  {id:"h9",sym:"NVDA",shares:27,cost:181,price:196.96,chg:-1.91,div:0,realized:0,note:"",fd:"2026-03-22",acct:"FT"},
-];
+  {id:"h1",sym:"AAPL",shares:10,cost:175,price:178,chg:1.2,div:0,realized:0,note:"",fd:"2025-01-01",acct:"FT"},
+  {id:"h2",sym:"MSFT",shares:5,cost:380,price:395,chg:-0.5,div:12,realized:0,note:"",fd:"2025-01-01",acct:"FT"},
+  {id:"h3",sym:"NVDA",shares:8,cost:480,price:520,chg:3.1,div:0,realized:240,note:"",fd:"2025-03-01",acct:"FT"},
+]
 const INIT_T=[
-  {id:"t1",date:d2s(45926),type:"入金",sym:"",shares:0,price:15000,fee:0,amt:15000,wire:1200},
-  {id:"t2",date:d2s(45945),type:"買入",sym:"AMZN",shares:10,price:215,fee:0,amt:-2150,wire:0},
-  {id:"t3",date:d2s(45945),type:"買入",sym:"ALAB",shares:10,price:168.54,fee:0,amt:-1685.4,wire:0},
-  {id:"t4",date:d2s(45945),type:"買入",sym:"ALAB",shares:10,price:160,fee:0,amt:-1600,wire:0},
-  {id:"t5",date:d2s(45945),type:"買入",sym:"ALAB",shares:5,price:165,fee:0,amt:-825,wire:0},
-  {id:"t6",date:d2s(45946),type:"現金利息",sym:"",shares:0,price:0,fee:0,amt:1.25,wire:0},
-  {id:"t7",date:d2s(45960),type:"買入",sym:"AMZN",shares:10,price:224.5,fee:0,amt:-2245,wire:0},
-  {id:"t8",date:d2s(45960),type:"買入",sym:"AMZN",shares:10,price:224.9,fee:0,amt:-2249,wire:0},
-  {id:"t9",date:d2s(45960),type:"買入",sym:"AMZN",shares:10,price:225,fee:0,amt:-2250,wire:0},
-  {id:"t10",date:d2s(45960),type:"買入",sym:"AMZN",shares:8,price:225,fee:0,amt:-1800,wire:0},
-  {id:"t11",date:d2s(45981),type:"賣出",sym:"AMZN",shares:48,price:226.5,fee:0,amt:10872,wire:0},
-  {id:"t12",date:d2s(45981),type:"買入",sym:"ALAB",shares:35,price:158.5,fee:0,amt:-5547.5,wire:0},
-  {id:"t13",date:d2s(45981),type:"買入",sym:"ALAB",shares:36,price:150.2,fee:0,amt:-5407.2,wire:0},
-  {id:"t14",date:d2s(46030),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:150},
-  {id:"t15",date:d2s(46034),type:"匯費補貼",sym:"",shares:0,price:0,fee:0,amt:25,wire:0},
-  {id:"t16",date:d2s(46034),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:150},
-  {id:"t17",date:d2s(46035),type:"匯費補貼",sym:"",shares:0,price:0,fee:0,amt:25,wire:0},
-  {id:"t18",date:d2s(46035),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:150},
-  {id:"t19",date:d2s(46036),type:"匯費補貼",sym:"",shares:0,price:0,fee:0,amt:25,wire:0},
-  {id:"t20",date:d2s(46036),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:150},
-  {id:"t21",date:d2s(46037),type:"匯費補貼",sym:"",shares:0,price:0,fee:0,amt:25,wire:0},
-  {id:"t22",date:d2s(46037),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:150},
-  {id:"t23",date:d2s(46038),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:150},
-  {id:"t24",date:d2s(46042),type:"賣出",sym:"ALAB",shares:36,price:182,fee:0.01,amt:6551.99,wire:0},
-  {id:"t25",date:d2s(46042),type:"匯費補貼",sym:"",shares:0,price:0,fee:0,amt:25,wire:0},
-  {id:"t26",date:d2s(46042),type:"匯費補貼",sym:"",shares:0,price:0,fee:0,amt:25,wire:0},
-  {id:"t27",date:d2s(46043),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:150},
-  {id:"t28",date:d2s(46044),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:150},
-  {id:"t29",date:d2s(46045),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:150},
-  {id:"t30",date:d2s(46045),type:"買入",sym:"ONDS Call",shares:1,price:700,fee:0.02,amt:-700.02,wire:0},
-  {id:"t31",date:d2s(46045),type:"匯費補貼",sym:"",shares:0,price:0,fee:0,amt:50,wire:0},
-  {id:"t32",date:d2s(46045),type:"買入",sym:"ONDS",shares:100,price:12,fee:0,amt:-1200,wire:0},
-  {id:"t33",date:d2s(46048),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:0},
-  {id:"t34",date:d2s(46048),type:"買入",sym:"ONDS",shares:100,price:11.7,fee:0,amt:-1170,wire:0},
-  {id:"t35",date:d2s(46048),type:"匯費補貼",sym:"",shares:0,price:0,fee:0,amt:25,wire:0},
-  {id:"t36",date:d2s(46048),type:"買入",sym:"ONDS",shares:200,price:11,fee:0,amt:-2200,wire:0},
-  {id:"t37",date:d2s(46049),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:150},
-  {id:"t38",date:d2s(46049),type:"匯費補貼",sym:"",shares:0,price:0,fee:0,amt:25,wire:0},
-  {id:"t39",date:d2s(46050),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:150},
-  {id:"t40",date:d2s(46051),type:"匯費補貼",sym:"",shares:0,price:0,fee:0,amt:25,wire:0},
-  {id:"t41",date:d2s(46051),type:"買入",sym:"SOFI",shares:100,price:24.5,fee:0,amt:-2450,wire:0},
-  {id:"t42",date:d2s(46051),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:150},
-  {id:"t43",date:d2s(46052),type:"賣出",sym:"ALAB",shares:60,price:160,fee:0,amt:9600,wire:0},
-  {id:"t44",date:d2s(46052),type:"買入",sym:"ONDS",shares:200,price:10.5,fee:0,amt:-2100,wire:0},
-  {id:"t45",date:d2s(46052),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:150},
-  {id:"t46",date:d2s(46052),type:"買入",sym:"ONDS",shares:300,price:10.2,fee:0,amt:-3060,wire:0},
-  {id:"t47",date:d2s(46055),type:"匯費補貼",sym:"",shares:0,price:0,fee:0,amt:25,wire:0},
-  {id:"t48",date:d2s(46056),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:150},
-  {id:"t49",date:d2s(46056),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1939.55,wire:0},
-  {id:"t50",date:d2s(46056),type:"買入",sym:"KBSX",shares:1700,price:1.14,fee:1.55,amt:-1939.55,wire:0},
-  {id:"t51",date:d2s(46056),type:"匯費補貼",sym:"",shares:0,price:0,fee:0,amt:25,wire:0},
-  {id:"t52",date:d2s(46057),type:"買入",sym:"ONDS",shares:100,price:9.5,fee:0,amt:-950,wire:0},
-  {id:"t53",date:d2s(46057),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:150},
-  {id:"t54",date:d2s(46058),type:"買入",sym:"ONDS",shares:100,price:8.5,fee:0,amt:-850,wire:0},
-  {id:"t55",date:d2s(46058),type:"買入",sym:"TSLA",shares:5,price:388,fee:0,amt:-1940,wire:0},
-  {id:"t56",date:d2s(46058),type:"買入",sym:"ONDS",shares:100,price:9,fee:0,amt:-900,wire:0},
-  {id:"t57",date:d2s(46058),type:"匯費補貼",sym:"",shares:0,price:0,fee:0,amt:25,wire:0},
-  {id:"t58",date:d2s(46058),type:"匯費補貼",sym:"",shares:0,price:0,fee:0,amt:25,wire:0},
-  {id:"t59",date:d2s(46058),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:150},
-  {id:"t60",date:d2s(46059),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1000,wire:150},
-  {id:"t61",date:d2s(46059),type:"匯費補貼",sym:"",shares:0,price:0,fee:0,amt:25,wire:0},
-  {id:"t62",date:d2s(46059),type:"匯費補貼",sym:"",shares:0,price:0,fee:0,amt:25,wire:0},
-  {id:"t63",date:d2s(46062),type:"匯費補貼",sym:"",shares:0,price:0,fee:0,amt:25,wire:0},
-  {id:"t64",date:d2s(46070),type:"現金利息",sym:"",shares:0,price:0,fee:0,amt:1.88,wire:0},
-  {id:"t65",date:d2s(46072),type:"買入",sym:"RMBS",shares:5,price:102,fee:0,amt:-510,wire:0},
-  {id:"t66",date:d2s(46080),type:"入金",sym:"",shares:0,price:0,fee:0,amt:31.75,wire:0},
-  {id:"t67",date:d2s(46080),type:"買入",sym:"KBSX",shares:26,price:1.22,fee:0.03,amt:-31.75,wire:0},
-  {id:"t68",date:d2s(46083),type:"入金",sym:"",shares:0,price:0,fee:0,amt:833.75,wire:0},
-  {id:"t69",date:d2s(46083),type:"買入",sym:"KBSX",shares:706,price:1.18,fee:0.67,amt:-833.75,wire:0},
-  {id:"t70",date:d2s(46084),type:"買入",sym:"TSLA",shares:5,price:390,fee:0,amt:-1950,wire:0},
-  {id:"t71",date:d2s(46084),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1200.96,wire:0},
-  {id:"t72",date:d2s(46084),type:"買入",sym:"KBSX",shares:1000,price:1.2,fee:0.96,amt:-1200.96,wire:0},
-  {id:"t73",date:d2s(46084),type:"入金",sym:"",shares:0,price:0,fee:0,amt:3792.63,wire:0},
-  {id:"t74",date:d2s(46084),type:"買入",sym:"KBSX",shares:3158,price:1.2,fee:3.03,amt:-3792.63,wire:0},
-  {id:"t75",date:d2s(46092),type:"現金利息",sym:"",shares:0,price:0,fee:0,amt:0.64,wire:0},
-  {id:"t76",date:d2s(46094),type:"買入",sym:"NVDA",shares:27,price:181,fee:0,amt:-4887,wire:0},
-  {id:"t77",date:d2s(46094),type:"入金",sym:"",shares:0,price:0,fee:0,amt:244.6,wire:0},
-  {id:"t78",date:d2s(46094),type:"買入",sym:"KBSX",shares:188,price:1.3,fee:0.2,amt:-244.6,wire:0},
-  {id:"t79",date:d2s(46097),type:"現金利息",sym:"",shares:0,price:0,fee:0,amt:1.86,wire:0},
-  {id:"t80",date:d2s(46097),type:"入金",sym:"",shares:0,price:0,fee:0,amt:104.08,wire:0},
-  {id:"t81",date:d2s(46097),type:"買入",sym:"KBSX",shares:80,price:1.3,fee:0.08,amt:-104.08,wire:0},
-  {id:"t82",date:d2s(46099),type:"入金",sym:"",shares:0,price:0,fee:0,amt:418.83,wire:0},
-  {id:"t83",date:d2s(46099),type:"買入",sym:"KBSX",shares:300,price:1.395,fee:0.33,amt:-418.83,wire:0},
-  {id:"t84",date:d2s(46099),type:"入金",sym:"",shares:0,price:0,fee:0,amt:1401.12,wire:0},
-  {id:"t85",date:d2s(46099),type:"買入",sym:"KBSX",shares:1000,price:1.4,fee:1.12,amt:-1401.12,wire:0},
-  {id:"t86",date:d2s(46099),type:"入金",sym:"",shares:0,price:0,fee:0,amt:29.42,wire:0},
-  {id:"t87",date:d2s(46099),type:"買入",sym:"KBSX",shares:21,price:1.3999,fee:0.02,amt:-29.42,wire:0},
-];
+  {id:"t1",date:"2025-01-01",type:"入金",sym:"",shares:0,price:0,fee:0,amt:10000,wire:0,source:"FT"},
+  {id:"t2",date:"2025-01-02",type:"買入",sym:"AAPL",shares:10,price:175,fee:0,amt:-1750,wire:0,source:"FT"},
+  {id:"t3",date:"2025-01-02",type:"買入",sym:"MSFT",shares:5,price:380,fee:0,amt:-1900,wire:0,source:"FT"},
+  {id:"t4",date:"2025-03-01",type:"入金",sym:"",shares:0,price:0,fee:0,amt:5000,wire:0,source:"FT"},
+  {id:"t5",date:"2025-03-02",type:"買入",sym:"NVDA",shares:8,price:480,fee:0,amt:-3840,wire:0,source:"FT"},
+  {id:"t6",date:"2025-06-01",type:"配息",sym:"MSFT",shares:0,price:0,fee:0,amt:12,wire:0,source:"FT"},
+]
 const INIT_E=[
-  {id:"e1",twd:163850,usd:5000,rate:32.77},{id:"e2",twd:65480,usd:2000,rate:32.74},{id:"e3",twd:65420,usd:2000,rate:32.71},{id:"e4",twd:197640,usd:6000,rate:32.94},
-  {id:"e5",twd:10003.52,usd:319,rate:31.359},{id:"e6",twd:10024.18,usd:322,rate:31.131},{id:"e7",twd:10019.69,usd:321,rate:31.214},{id:"e8",twd:9986.15,usd:318,rate:31.403},
-  {id:"e9",twd:9975.17,usd:316,rate:31.567},{id:"e10",twd:9970.75,usd:316,rate:31.553},{id:"e11",twd:10000.04,usd:317.22,rate:31.524},{id:"e12",twd:9999.94,usd:317.66,rate:31.48},
-  {id:"e13",twd:9999.88,usd:317.84,rate:31.462},{id:"e14",twd:10000,usd:317.41,rate:31.505},{id:"e15",twd:10000.14,usd:318.03,rate:31.444},{id:"e16",twd:9999.85,usd:317.94,rate:31.452},
-  {id:"e17",twd:10000.06,usd:318.23,rate:31.424},{id:"e18",twd:10000.16,usd:317.97,rate:31.45},{id:"e19",twd:9999.96,usd:317.58,rate:31.488},{id:"e20",twd:30000.09,usd:954.9,rate:31.417},
-  {id:"e21",twd:29999.91,usd:956.02,rate:31.38},{id:"e22",twd:30000.04,usd:955.02,rate:31.413},{id:"e23",twd:9999.92,usd:317.71,rate:31.475},{id:"e24",twd:10000.14,usd:316.26,rate:31.62},
-  {id:"e25",twd:10000.12,usd:315.82,rate:31.664},{id:"e26",twd:10000.12,usd:315.8,rate:31.666},{id:"e27",twd:10000.09,usd:315.52,rate:31.694},{id:"e28",twd:10000.1,usd:315.61,rate:31.685},
-  {id:"e29",twd:10000.12,usd:315.77,rate:31.669},{id:"e30",twd:9968.54,usd:315.66,rate:31.58},{id:"e31",twd:10000.14,usd:316.17,rate:31.629},{id:"e32",twd:10000.13,usd:316.6,rate:31.586},
-  {id:"e33",twd:10000.14,usd:316.24,rate:31.622},{id:"e34",twd:10000.13,usd:316.56,rate:31.59},{id:"e35",twd:10000.14,usd:315.98,rate:31.648},{id:"e36",twd:10000.12,usd:315.81,rate:31.665},
-  {id:"e37",twd:5000.07,usd:158.03,rate:31.64},{id:"e38",twd:10000.14,usd:316.41,rate:31.605},{id:"e39",twd:4999.91,usd:158.13,rate:31.619},{id:"e40",twd:10000.11,usd:316.81,rate:31.565},
-  {id:"e41",twd:5000.07,usd:158.09,rate:31.628},{id:"e42",twd:9999.85,usd:317.93,rate:31.453},{id:"e43",twd:5000.02,usd:158.63,rate:31.52},{id:"e44",twd:9999.96,usd:319.1,rate:31.338},
-  {id:"e45",twd:5000.08,usd:159.65,rate:31.319},{id:"e46",twd:5000.01,usd:159.16,rate:31.415},{id:"e47",twd:10000.12,usd:316.71,rate:31.575},{id:"e48",twd:2493.23,usd:78.75,rate:31.66},
-  {id:"e49",twd:31585,usd:1000,rate:31.585},{id:"e50",twd:31638,usd:1000,rate:31.638},{id:"e51",twd:9999.96,usd:317.58,rate:31.488},
-];
+  {id:"e1",date:"2025-01-01",bank:"國泰世華",acct:"FT",twd:316500,usd:10000,rate:31.65,note:""},
+  {id:"e2",date:"2025-03-01",bank:"國泰世華",acct:"FT",twd:158000,usd:5000,rate:31.60,note:""},
+]
 
 // ─── STATE ───
 var S={holdingsView:"all",dashView:"all",editCostId:null,editCostVal:"",showZero:false,quickTrade:null,
@@ -346,7 +248,8 @@ var S={holdingsView:"all",dashView:"all",editCostId:null,editCostVal:"",showZero
   imp:{rows:[],symMap:{},step:0}
 };
 function sv(k){
-  localStorage.setItem("ft_"+k,JSON.stringify(S[k]));
+  try{localStorage.setItem("ft_"+k,JSON.stringify(S[k]));}
+  catch(e){toast("❌ 儲存失敗（空間不足），請先備份 JSON",4000);console.error("localStorage sv failed",k,e);return;}
   S._localTs=Date.now();
   clearTimeout(S._syncTimer);
   S._syncTimer=setTimeout(syncToGitHub,2000);
@@ -1181,26 +1084,26 @@ function rDash(p){
   // ── KPI strip ──
   var kpiStyle="style='font-size:21px;font-weight:600;font-family:ui-monospace,monospace;line-height:1.1'";
   var html="<div class='kpi-strip'>";
-  html+="<div class='kpi-cell' style='border-top:3px solid var(--blue)'>";
+  html+="<div class='kpi-cell' style='border-top:3px solid var(--blue)' title='股票市值 + 現金餘額（美金合計）'>";
   html+="<div class='cl'>"+(isAll?"總資產":viewLabel+" 總值")+" USD</div>";
   html+="<div class='cv' "+kpiStyle+">$"+fn(kTotal,0)+"</div>";
   html+="<div class='cs'>≈ NT$"+fn(kTotalTWD,0)+"</div></div>";
 
-  html+="<div class='kpi-cell' style='border-top:3px solid "+(kUnreal>=0?"var(--green)":"var(--red)")+"'>";
+  html+="<div class='kpi-cell' style='border-top:3px solid "+(kUnreal>=0?"var(--green)":"var(--red)")+"' title='目前市值 − 持倉成本（不含現金）'>";
   html+="<div class='cl'>未實現損益</div>";
   html+="<div class='cv "+cv(kUnreal)+"' "+kpiStyle+">"+(kUnreal>=0?"+":"")+"$"+fn(kUnreal,2)+"</div>";
   html+="<div class='cs'>"+(kCost>0?fp(kUnreal/kCost):"—")+"</div></div>";
 
-  html+="<div class='kpi-cell' style='border-top:3px solid "+(kToday>=0?"var(--green)":"var(--red)")+"'>";
+  html+="<div class='kpi-cell' style='border-top:3px solid "+(kToday>=0?"var(--green)":"var(--red)")+"' title='持倉股數 × 今日漲跌幅（股價變動）'>";
   html+="<div class='cl'>今日損益</div>";
   html+="<div class='cv "+cv(kToday)+"' "+kpiStyle+">"+(kToday>=0?"+":"-")+"$"+fn(Math.abs(kToday),2)+"</div>";
   html+="<div class='cs'>市場波動</div></div>";
 
-  html+="<div class='kpi-cell' style='border-top:3px solid "+(kROI>=0?"var(--green)":"var(--red)")+"'>";
+  html+="<div class='kpi-cell' style='border-top:3px solid "+(kROI>=0?"var(--green)":"var(--red)")+"' title='(現有總值 − 累計入金 USD) ÷ 累計入金 USD'>";
   html+="<div class='cl'>"+(isAll?"整體":"帳戶")+"報酬率</div>";
   html+="<div class='cv "+cv(kROI)+"' "+kpiStyle+">"+(kROI>=0?"+":"")+fp(kROI)+"</div>";
   html+="<div class='cs'>以入金USD計算</div></div>";
-  html+="<div class='kpi-cell' style='border-top:3px solid "+(kReal>=0?"var(--green)":"var(--red)")+"'>";
+  html+="<div class='kpi-cell' style='border-top:3px solid "+(kReal>=0?"var(--green)":"var(--red)")+"' title='所有已平倉交易的實現損益總和'>";
   html+="<div class='cl'>已實現損益</div>";
   html+="<div class='cv "+cv(kReal)+"' "+kpiStyle+">"+(kReal>=0?"+":"")+"$"+fn(kReal,2)+"</div>";
   html+="<div class='cs'>"+(kDiv>0?"含配息 $"+fn(kDiv,2):"不含配息")+"</div></div>";
@@ -1326,6 +1229,7 @@ function rDash(p){
 function rHoldings(){
   var fx=avgFx();
   var rows=(S.holdingsView==="all"?S.H:S.H.filter(function(h){return h.acct===S.holdingsView;})).slice();
+var zeroCount=S.H.filter(function(h){return h.shares===0&&(S.holdingsView==="all"||h.acct===S.holdingsView);}).length;
 if(!S.showZero)rows=rows.filter(function(h){return h.shares>0;});
   if(S.sortCol){
     rows.sort(function(a,b){
@@ -1361,7 +1265,7 @@ if(!S.showZero)rows=rows.filter(function(h){return h.shares>0;});
   var _updLabel2=S.updating?"<span class='spin'></span> 更新中":"🔄 更新報價"+(S.lastUpdate?" · "+S.lastUpdate:"")+(S.updateErrors&&S.updateErrors.length?" ⚠"+S.updateErrors.length:"");
   html+=rUBtn(_updLabel2,"updatePrices",S.updating);
   html+="<button class='btn' onclick='rebuildFromTx()'>🔁 從交易重建</button>";
-  html+="<button class='btn' onclick='S.showZero=!S.showZero;render()'>"+(S.showZero?"隱藏已清倉":"顯示已清倉")+"</button>";
+  html+="<button class='"+(S.showZero?"btn":"btn"+(zeroCount>0?" btn-blue":""))+"' onclick='S.showZero=!S.showZero;render()'>"+(S.showZero?"隱藏已清倉":"顯示已清倉"+(zeroCount>0?" ("+zeroCount+")": ""))+"</button>";
   html+="<button class='btn btn-blue' onclick=\"toggleForm('h')\">＋ 新增持倉</button>";
   html+="</div></div>";
   if(S.showForm==="h"){
@@ -1652,7 +1556,7 @@ function rSettings(){
   html+="<div class='fg' style='grid-template-columns:1fr 1fr 1fr'>";
   html+="<div><div class='fl'>GitHub 帳號</div><input id='gh-user' placeholder='你的帳號' value='"+esc(S.ghUser)+"'></div>";
   html+="<div><div class='fl'>Repo 名稱</div><input id='gh-repo' placeholder='stock-tracker' value='"+esc(S.ghRepo)+"'></div>";
-  html+="<div><div class='fl'>Personal Token</div><input id='gh-token' type='password' placeholder='ghp_xxxx' value='"+esc(S.ghToken)+"'></div>";
+  html+="<div><div class='fl'>Personal Token</div><input id='gh-token' type='password' placeholder='ghp_xxxx' value='"+esc(S.ghToken)+"'><div style='font-size:10px;color:var(--text3);margin-top:3px'>Token 存於瀏覽器 localStorage，請勿在公用電腦使用</div></div>";
   html+="</div><div style='display:flex;gap:8px;margin-top:10px'>";
   html+="<button class='btn btn-blue' onclick='saveGHConfig()'>儲存設定</button>";
   html+="<button class='btn' onclick='ghLoad()'>⬇ 從雲端載入</button>";
@@ -1833,7 +1737,9 @@ function buildInsightPanel(p){
 
 
   // ── 4. Market Calendar (next 30 days) ──
-  html+="<div class='ph'>🗓 市場大事<span style='font-size:9px;color:var(--text3);font-weight:400;margin-left:auto'>日程來源：Fed/BLS 2026年初公告</span></div>";
+  var _lastEvent=MARKET_EVENTS[MARKET_EVENTS.length-1];
+  var _evtExpired=_lastEvent&&daysFromNow(_lastEvent.date)<-60;
+  html+="<div class='ph'>🗓 市場大事<span style='font-size:9px;color:"+(_evtExpired?"var(--yellow)":"var(--text3)")+";font-weight:400;margin-left:auto'>"+(_evtExpired?"⚠ 日程已過期，請更新":"日程來源：Fed/BLS 2026年初公告")+"</span></div>";
   html+="<div style='padding:8px 14px;border-bottom:0.5px solid var(--border)'>";
   var upcoming=MARKET_EVENTS.filter(function(e){
     var days=daysFromNow(e.date);

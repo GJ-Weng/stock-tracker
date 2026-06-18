@@ -1187,6 +1187,7 @@ function rDash(p){
 function rHoldings(){
   var fx=avgFx();
   var rows=(S.holdingsView==="all"?S.H:S.H.filter(function(h){return h.acct===S.holdingsView;})).slice();
+if(!S.showZero)rows=rows.filter(function(h){return h.shares>0;});
   if(S.sortCol){
     rows.sort(function(a,b){
       var av,bv;

@@ -2,8 +2,15 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>退休目標追蹤 v2.1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>退休目標追蹤</title>
+<!-- PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="退休追蹤">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f1923">
+<link rel="manifest" href="data:application/json,{%22name%22:%22%E9%80%80%E4%BC%91%E7%9B%AE%E6%A8%99%E8%BF%BD%E8%B9%A4%22,%22short_name%22:%22%E9%80%80%E4%BC%91%E8%BF%BD%E8%B9%A4%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230f1923%22,%22theme_color%22:%22%230f1923%22}">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&display=swap');
@@ -152,88 +159,204 @@ tr:hover td{background:var(--bg3)}
 #cash-panel.open{display:block!important}
 @media(max-width:600px){
   /* Global */
-  main{padding:10px}
-  #hd{padding:8px 12px;flex-wrap:wrap;gap:6px}
-  .ai{display:none}
+  main{padding:8px}
+  #hd{padding:8px 12px;flex-wrap:nowrap;gap:6px}
 
-  /* KPI strip → horizontal scroll cards */
+  /* Nav tabs */
+  nav{padding:0 4px;top:41px}
+  .tab{padding:6px 10px;font-size:10px;letter-spacing:.03em}
+
+  /* Header right side */
+  #ss{display:none}
+  .hr .ai{display:none}
+  .btn-blue{font-size:11px;padding:5px 10px}
+  #cash-panel{right:0;min-width:calc(100vw - 24px)}
+
+  /* KPI strip — 2 cards visible at once (peek at 3rd) */
   .kpi-strip{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   .kpi-strip::-webkit-scrollbar{display:none}
-  .kpi-cell{min-width:72vw;scroll-snap-align:start;border-right:0.5px solid var(--border);flex-shrink:0;padding:12px}
+  .kpi-cell{min-width:56vw;max-width:56vw;scroll-snap-align:start;border-right:0.5px solid var(--border);flex-shrink:0;padding:10px 12px}
   .kpi-cell:last-child{border-right:none}
+  .kpi-cell .cv{font-size:16px}
+  .kpi-cell .cl{font-size:9px}
+  .kpi-cell .cs{font-size:9px}
 
   /* Dashboard layout → single column */
   .dash-layout{grid-template-columns:1fr}
-  .dash-left{border-right:none;border-bottom:0.5px solid var(--border);padding:12px}
-  .dash-right{padding:10px;gap:8px}
+  .dash-left{border-right:none;border-bottom:0.5px solid var(--border);padding:10px 12px}
+  .dash-right{padding:8px 10px;gap:8px}
 
-  /* NAV chart — limit height on small screens */
-  .dash-right svg{max-height:110px}
+  /* NAV chart */
+  .dash-right>div:first-child svg{max-height:100px}
 
-  /* Tables — horizontal scroll with fade indicator */
+  /* Tables */
   .sx{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  table{font-size:11.5px}
-  th,td{padding:6px 8px}
+  table{font-size:11px;min-width:500px}
+  th,td{padding:5px 7px;white-space:nowrap}
 
-  /* Forms — full width inputs */
-  .fg{grid-template-columns:1fr}
-  .fb{padding:12px}
-  .si{width:100%}
-  input[type=date]{width:120px;font-size:11px}
+  /* Hide lower-priority table columns on phone */
+  .col-hide-mobile{display:none}
 
-  /* Filter bar — wrap nicely */
+  /* Forms */
+  .fg{grid-template-columns:1fr 1fr}
+  .fb{padding:10px}
+  .si{width:100%;max-width:none}
+  input[type=date]{width:115px;font-size:11px}
+
+  /* Filter bar */
   .filter-bar{gap:4px}
   .chip{font-size:10px;padding:2px 8px}
 
-  /* Cards grid → 2 col */
+  /* Cards */
   .cards{grid-template-columns:repeat(2,1fr)}
 
-  /* Donut SVG — smaller on phone */
-  #insight-panel svg{max-height:120px}
+  /* Buttons */
+  .ubtn{font-size:10px;padding:4px 8px;gap:4px}
 
-  /* Buttons bar — wrap */
-  .ubtn{font-size:10px;padding:4px 9px}
+  /* Toast */
+  .toast{left:10px;right:10px;bottom:16px;max-width:none;text-align:center}
 
-  /* Toast — full width at bottom */
-  .toast{left:12px;right:12px;bottom:12px;max-width:none}
+  /* Panel headers */
+  .ph{font-size:9px;padding:6px 10px}
 
-  /* Panel headers — smaller text */
-  .ph{font-size:9px;padding:7px 10px}
-
-  /* Insight panel — show below main content */
-  #insight-panel{border-left:none;border-top:0.5px solid var(--border)}
-
-  /* Nav tabs — smaller on phone */
-  nav{padding:0 8px;top:40px}
-  .tab{padding:7px 11px;font-size:10px;letter-spacing:.04em}
-
-  /* Header right side — hide less important items */
-  #ss{display:none}
-  .hr .ai{display:none}
-
-  /* Export button — icon only on phone */
-  .btn-blue{font-size:11px;padding:5px 10px}
-
-  /* Cash panel — full width on phone */
-  #cash-panel{right:-10px;min-width:calc(100vw - 24px)}
-
-  /* Stat rows — tighter */
+  /* Stat rows */
   .stat-row{padding:4px 0}
-  .stat-val{font-size:12px}
-
-  /* Progress bar section */
+  .stat-label{font-size:10px}
+  .stat-val{font-size:11px}
   .prog-pct{font-size:13px}
 
-  /* Donut legend — smaller font */
-  #insight-panel text{font-size:8px}
+  /* Insight panel stacked below */
+  #insight-panel{border-left:none;border-top:0.5px solid var(--border)}
 }
 
-/* iPad / mid-size: 601-900px */
+/* iPad / mid-size: 601–900px */
 @media(min-width:601px) and (max-width:900px){
   .dash-layout{grid-template-columns:200px 1fr}
   #insight-panel{display:none}
   table{font-size:12px}
   th,td{padding:7px 10px}
+  .kpi-cell{padding:10px 14px}
+}
+
+/* ══════════════════════════════════════
+   MOBILE UI — 手機獨立介面
+   ══════════════════════════════════════ */
+.m-only { display: none }
+@media(max-width:600px){
+  /* Hide desktop UI, show mobile UI */
+  .d-only { display: none !important }
+  .m-only { display: block }
+
+  /* Safe area for iPhone notch / home bar */
+  body { padding-bottom: env(safe-area-inset-bottom) }
+  #hd  { padding-top: max(8px, env(safe-area-inset-top)) }
+
+  /* Bottom tab bar */
+  #m-tabbar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--bg);
+    border-top: 0.5px solid var(--border);
+    display: flex;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 200;
+  }
+  .m-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: 8px 4px 6px; gap: 3px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text3); font-size: 9px; letter-spacing: .04em;
+    font-family: inherit; transition: color .15s;
+  }
+  .m-tab.active { color: var(--blue) }
+  .m-tab-icon { font-size: 18px; line-height: 1 }
+
+  /* Main content gets bottom padding for tab bar */
+  #main { padding-bottom: calc(60px + env(safe-area-inset-bottom)) }
+
+  /* Hide original header nav (replaced by bottom tabs) */
+  nav { display: none }
+  #hd { top: 0 }
+
+  /* ── Mobile Home screen ── */
+  .m-hero {
+    background: var(--bg);
+    padding: 20px 16px 16px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .m-hero-label { font-size: 10px; color: var(--text3); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px }
+  .m-hero-total { font-size: 36px; font-weight: 700; font-family: ui-monospace, monospace; color: var(--text); line-height: 1.1 }
+  .m-hero-twd { font-size: 12px; color: var(--text3); margin-top: 3px }
+  .m-hero-row { display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap }
+  .m-kpi-mini {
+    flex: 1; min-width: 130px;
+    background: var(--bg2); border-radius: var(--radius-lg);
+    padding: 10px 12px; border: 0.5px solid var(--border);
+  }
+  .m-kpi-mini-label { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px }
+  .m-kpi-mini-val { font-size: 16px; font-weight: 700; font-family: ui-monospace, monospace }
+
+  /* ── Goal progress bar ── */
+  .m-goal {
+    padding: 14px 16px;
+    background: var(--bg);
+    border-bottom: 0.5px solid var(--border);
+  }
+  .m-goal-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px }
+  .m-goal-label { font-size: 11px; color: var(--text2) }
+  .m-goal-pct { font-size: 18px; font-weight: 700; font-family: ui-monospace, monospace; color: var(--blue) }
+  .m-goal-bar { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden }
+  .m-goal-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--blue), #1D9E75) }
+  .m-goal-note { font-size: 10px; color: var(--text3); margin-top: 5px }
+
+  /* ── Holding cards ── */
+  .m-section-title {
+    font-size: 9px; color: var(--text3); letter-spacing: .14em;
+    text-transform: uppercase; padding: 12px 16px 6px;
+  }
+  .m-holding-card {
+    margin: 0 12px 8px;
+    background: var(--bg); border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg); padding: 12px 14px;
+    box-shadow: var(--shadow);
+  }
+  .m-hc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px }
+  .m-hc-sym { font-size: 16px; font-weight: 700; letter-spacing: .04em }
+  .m-hc-badge { font-size: 9px }
+  .m-hc-price { font-size: 13px; font-weight: 600; font-family: ui-monospace, monospace }
+  .m-hc-chg { font-size: 11px; font-family: ui-monospace, monospace; margin-top: 1px }
+  .m-hc-row { display: flex; gap: 0; border-top: 0.5px solid var(--border); padding-top: 8px; margin-top: 4px }
+  .m-hc-stat { flex: 1; text-align: center }
+  .m-hc-stat:not(:last-child) { border-right: 0.5px solid var(--border) }
+  .m-hc-stat-label { font-size: 9px; color: var(--text3); margin-bottom: 2px; text-transform: uppercase; letter-spacing: .06em }
+  .m-hc-stat-val { font-size: 12px; font-weight: 600; font-family: ui-monospace, monospace }
+
+  /* ── Sync button ── */
+  .m-sync-bar {
+    margin: 12px 12px 0;
+    background: var(--blue-bg); border: 0.5px solid var(--blue);
+    border-radius: var(--radius-lg); padding: 10px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .m-sync-text { font-size: 11px; color: var(--blue) }
+  .m-sync-btn {
+    font-size: 11px; font-weight: 500; padding: 5px 12px;
+    background: var(--blue); color: #fff; border: none;
+    border-radius: var(--radius); cursor: pointer; font-family: inherit;
+  }
+
+  /* ── NAV chart on mobile ── */
+  .m-chart-wrap {
+    margin: 8px 12px;
+    background: var(--bg); border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg); overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .m-chart-title {
+    padding: 8px 12px; font-size: 9px; color: var(--text3);
+    text-transform: uppercase; letter-spacing: .1em;
+    border-bottom: 0.5px solid var(--border);
+    display: flex; justify-content: space-between;
+  }
 }
 </style>
 </head>
@@ -262,13 +385,31 @@ tr:hover td{background:var(--bg3)}
     <button class="btn-blue" onclick="doExport()">↓ 匯出</button>
   </div>
 </div>
-<nav>
+<nav class="d-only">
   <button class="tab" data-tab="dash">總覽</button>
   <button class="tab" data-tab="holdings">持倉</button>
   <button class="tab" data-tab="tx">交易</button>
   <button class="tab" data-tab="fx">出入金</button>
   <button class="tab" data-tab="settings">設定</button>
 </nav>
+<!-- Mobile bottom tab bar -->
+<div id="m-tabbar" class="m-only">
+  <button class="m-tab active" id="mt-home" onclick="mTab('home',this)">
+    <span class="m-tab-icon">📊</span>總覽
+  </button>
+  <button class="m-tab" id="mt-holdings" onclick="mTab('holdings',this)">
+    <span class="m-tab-icon">💼</span>持倉
+  </button>
+  <button class="m-tab" id="mt-chart" onclick="mTab('chart',this)">
+    <span class="m-tab-icon">📈</span>走勢
+  </button>
+  <button class="m-tab" id="mt-tx" onclick="mTab('tx',this)">
+    <span class="m-tab-icon">🗒</span>交易
+  </button>
+  <button class="m-tab" id="mt-more" onclick="mTab('more',this)">
+    <span class="m-tab-icon">⋯</span>更多
+  </button>
+</div>
 <main id="main"></main>
 <div class="toast" id="toast"></div>
 <input type="file" id="fsv-file" accept=".fsv,.csv,.txt" style="display:none" onchange="onFSVFile(this)">
@@ -361,6 +502,33 @@ function calc(){
 
 // ─── GITHUB SYNC ───
 var GH_FILE="stock-data.json";
+
+// Load from public GitHub raw URL (no token needed — for mobile read-only sync)
+function loadFromGitHubPublic(){
+  if(!S.ghUser||!S.ghRepo){toast("請先在設定頁填入 GitHub 使用者名稱和 Repo");return;}
+  var url="https://raw.githubusercontent.com/"+S.ghUser+"/"+S.ghRepo+"/main/"+GH_FILE+"?t="+Date.now();
+  toast("⏳ 同步中…",1500);
+  fetch(url).then(function(r){
+    if(!r.ok)throw new Error("HTTP "+r.status+" — 請確認 Repo 為 Public");
+    return r.json();
+  }).then(function(data){
+    if(data.H)S.H=data.H;
+    if(data.T)S.T=data.T;
+    if(data.E)S.E=data.E;
+    if(data.acc)S.acc=data.acc;
+    if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
+    if(!S.acc.realizedAdj)S.acc.realizedAdj={FT:0,Schwab:0,GT:0};
+    recalcCash();
+    ["H","T","E","acc"].forEach(function(k){
+      try{localStorage.setItem("ft_"+k,JSON.stringify(S[k]));}catch(e){}
+    });
+    S.lastSyncFromCloud=new Date().toLocaleTimeString();
+    render();
+    toast("✅ 同步完成（"+S.lastSyncFromCloud+"）");
+  }).catch(function(e){
+    toast("❌ 同步失敗："+e.message,4000);
+  });
+}
 function ghHdr(){return{"Authorization":"token "+S.ghToken,"Accept":"application/vnd.github.v3+json","Content-Type":"application/json"};}
 function loadFromGitHub(force){
   if(!S.ghToken||!S.ghUser||!S.ghRepo)return Promise.resolve(false);
@@ -1273,8 +1441,8 @@ function rDash(p){
   html+=rUBtn(_updLabel,"updatePrices",S.updating);
   html+="</div>";
   html+="<div class='sx'><table><thead><tr>";
-  html+="<th>代號</th>"+(isAll?"<th>帳戶</th>":"")
-    +"<th class='num'>股數</th><th class='num'>均成本</th><th class='num'>現價</th><th class='num'>今日</th><th class='num'>市值</th><th class='num'>未實現</th><th class='num'>報酬率</th><th class='num'>年化</th>";
+  html+="<th>代號</th>"+(isAll?"<th class='col-hide-mobile'>帳戶</th>":"")
+    +"<th class='num'>股數</th><th class='num col-hide-mobile'>均成本</th><th class='num'>現價</th><th class='num col-hide-mobile'>今日</th><th class='num'>市值</th><th class='num'>未實現</th><th class='num'>報酬率</th><th class='num col-hide-mobile'>年化</th>";
   html+="</tr></thead><tbody>";
   dashRows.forEach(function(h){
     var mv=h.shares*h.price,ur=h.shares*(h.price-h.cost),ret=h.cost>0?(h.price-h.cost)/h.cost:0,ann=annualReturn(h.cost,h.price,h.fd);
@@ -1284,17 +1452,17 @@ function rDash(p){
     var _dab=_accts.length===1?({"FT":"bft","Schwab":"bsw","GT":"bgt"}[_accts[0]]||"br"):"br";
     var _dal=_accts.length===1?({"FT":"Firstrade","Schwab":"嘉信","GT":"國泰"}[_accts[0]]||_accts[0]):_accts.map(function(a){return {"FT":"FT","Schwab":"嘉信","GT":"國泰"}[a]||a;}).join("+");
     var _hasErr=S.updateErrors&&S.updateErrors.indexOf(h.sym)>=0;
-    html+="<tr><td><strong style='letter-spacing:.04em;font-size:13px'>"+esc(h.sym)+"</strong>"+(_hasErr?"<span style='color:var(--red);font-size:10px;margin-left:4px' title='報價更新失敗'>⚠</span>":"")+(h.note?"<div style='font-size:10px;color:var(--text3)'>"+esc(h.note)+"</div>":"")+"</td>"+(isAll?"<td><span class='badge "+_dab+"'>"+_dal+"</span></td>":"");
+    html+="<tr><td><strong style='letter-spacing:.04em;font-size:13px'>"+esc(h.sym)+"</strong>"+(_hasErr?"<span style='color:var(--red);font-size:10px;margin-left:4px' title='報價更新失敗'>⚠</span>":"")+(h.note?"<div style='font-size:10px;color:var(--text3)'>"+esc(h.note)+"</div>":"")+"</td>"+(isAll?"<td class='col-hide-mobile'><span class='badge "+_dab+"'>"+_dal+"</span></td>":"");
     html+="<td class='num'><span class='editable' data-type='shares' data-id='"+h.id+"' data-val='"+h.shares+"'>"+fn(h.shares,h.shares%1===0?0:6)+"</span></td>";
     var isEC=S.editCostId===h.id;
-    if(isEC){html+="<td class='num'><input id='ec-"+h.id+"' type='number' value='"+S.editCostVal+"' style='width:80px;padding:3px 6px;font-size:11px;text-align:right'></td>";}
-    else{html+="<td class='num'><span class='editable' data-type='cost' data-id='"+h.id+"' data-val='"+h.cost+"'>$"+fn(h.cost,4)+"</span></td>";}
+    if(isEC){html+="<td class='num col-hide-mobile'><input id='ec-"+h.id+"' type='number' value='"+S.editCostVal+"' style='width:80px;padding:3px 6px;font-size:11px;text-align:right'></td>";}
+    else{html+="<td class='num col-hide-mobile'><span class='editable' data-type='cost' data-id='"+h.id+"' data-val='"+h.cost+"'>$"+fn(h.cost,4)+"</span></td>";}
     html+="<td class='num'>$"+fn(h.price,2)+"</td>";
-    html+="<td class='num "+cv(h.chg)+"'>"+(h.chg>=0?"+":"")+fn(h.chg,2)+"</td>";
+    html+="<td class='num col-hide-mobile "+cv(h.chg)+"'>"+(h.chg>=0?"+":"")+fn(h.chg,2)+"</td>";
     html+="<td class='num'>$"+fn(mv,0)+"</td>";
     html+="<td class='num "+cv(ur)+"'>"+(ur>=0?"+":"")+"$"+fn(ur,2)+"</td>";
     html+="<td class='num "+cv(ret)+"'>"+(ret>=0?"+":"")+fp(ret)+"</td>";
-    html+="<td class='num "+(ann!==null?cv(ann):"neu")+"'>"+(ann!==null?(ann>=0?"+":"")+fp(ann):"—")+"</td></tr>";
+    html+="<td class='num col-hide-mobile "+(ann!==null?cv(ann):"neu")+"'>"+(ann!==null?(ann>=0?"+":"")+fp(ann):"—")+"</td></tr>";
   });
   html+="</tbody></table></div></div>";
   html+="</div>"; // end dash-right
@@ -1910,6 +2078,267 @@ function renderInsightPanel(){
 
 
 // ─── MASTER RENDER ───
+
+// ══════════════════════════════════════
+// MOBILE UI FUNCTIONS
+// ══════════════════════════════════════
+var mTabActive = "home";
+
+function mTab(tab, el) {
+  mTabActive = tab;
+  document.querySelectorAll(".m-tab").forEach(function(b){ b.classList.remove("active"); });
+  if(el) el.classList.add("active");
+  var p = calc();
+  renderMobile(p);
+}
+
+function isMobile() {
+  return window.innerWidth <= 600;
+}
+
+function renderMobile(p) {
+  var m = document.getElementById("main");
+  if(mTabActive === "home")     m.innerHTML = rMobileHome(p);
+  else if(mTabActive === "holdings") m.innerHTML = rMobileHoldings(p);
+  else if(mTabActive === "chart")    m.innerHTML = rMobileChart(p);
+  else if(mTabActive === "tx")       m.innerHTML = rMobileTx();
+  else                               m.innerHTML = rMobileMore(p);
+}
+
+function rMobileSyncBar() {
+  var hasGH = S.ghUser && S.ghRepo;
+  var lastSync = S.lastSyncFromCloud ? "上次同步："+S.lastSyncFromCloud : "點右側按鈕從 GitHub 同步資料";
+  if(!hasGH) return "<div class='m-sync-bar'><span class='m-sync-text'>請至「更多」設定 GitHub 同步</span></div>";
+  return "<div class='m-sync-bar'>"
+    +"<span class='m-sync-text'>"+lastSync+"</span>"
+    +"<button class='m-sync-btn' onclick='loadFromGitHubPublic()'>⬇ 同步</button>"
+    +"</div>";
+}
+
+function rMobileHome(p) {
+  var kTotal = p.totalUSD || 0;
+  var kUnreal = p.unrealized || 0;
+  var kToday = p.todayPnl || 0;
+  var kROI = p.invested > 0 ? (kTotal - p.invested) / p.invested : 0;
+  var goal = 1000000;
+  var pct = Math.min(kTotal / goal * 100, 100);
+
+  var html = "";
+  // Sync bar
+  html += rMobileSyncBar();
+
+  // Hero total
+  html += "<div class='m-hero'>";
+  html += "<div class='m-hero-label'>總資產 USD</div>";
+  html += "<div class='m-hero-total"+(kTotal >= p.invested ? "" : "")+"'>$"+fn(kTotal, 0)+"</div>";
+  html += "<div class='m-hero-twd'>≈ NT$"+fn(kTotal*(S.acc.rate||31.5), 0)+"</div>";
+  html += "<div class='m-hero-row'>";
+  html += "<div class='m-kpi-mini'><div class='m-kpi-mini-label'>未實現損益</div><div class='m-kpi-mini-val "+(kUnreal>=0?"pos":"neg")+"'>"+(kUnreal>=0?"+":"")+"$"+fn(kUnreal,0)+"</div></div>";
+  html += "<div class='m-kpi-mini'><div class='m-kpi-mini-label'>今日損益</div><div class='m-kpi-mini-val "+(kToday>=0?"pos":"neg")+"'>"+(kToday>=0?"+":"")+"$"+fn(kToday,0)+"</div></div>";
+  html += "</div>";
+  html += "<div class='m-hero-row'>";
+  html += "<div class='m-kpi-mini'><div class='m-kpi-mini-label'>整體報酬率</div><div class='m-kpi-mini-val "+(kROI>=0?"pos":"neg")+"'>"+(kROI>=0?"+":"")+fp(kROI)+"</div></div>";
+  html += "<div class='m-kpi-mini'><div class='m-kpi-mini-label'>已實現損益</div><div class='m-kpi-mini-val "+(p.realized>=0?"pos":"neg")+"'>"+(p.realized>=0?"+":"")+"$"+fn(p.realized,0)+"</div></div>";
+  html += "</div>";
+  html += "</div>";
+
+  // Goal progress
+  html += "<div class='m-goal'>";
+  html += "<div class='m-goal-row'><span class='m-goal-label'>退休目標 $1,000,000</span><span class='m-goal-pct'>"+pct.toFixed(2)+"%</span></div>";
+  html += "<div class='m-goal-bar'><div class='m-goal-fill' style='width:"+pct.toFixed(2)+"%'></div></div>";
+  html += "<div class='m-goal-note'>已累積 $"+fn(kTotal,0)+" — 還差 $"+fn(goal-kTotal,0)+"</div>";
+  html += "</div>";
+
+  // Account cash summary
+  html += "<div class='m-section-title'>帳戶現金</div>";
+  html += "<div style='margin:0 12px 8px;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:10px 14px'>";
+  var acctCash = p.cash || {};
+  var cashItems = [
+    {label:"Firstrade", val: S.acc.cashFT||0, badge:"bft"},
+    {label:"嘉信", val: S.acc.cashSchwab||0, badge:"bsw"},
+    {label:"國泰", val: S.acc.cashCathay||0, badge:"bgt"},
+  ];
+  cashItems.forEach(function(c){
+    html += "<div style='display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border)'>";
+    html += "<span style='font-size:12px;color:var(--text2)'>"+c.label+"</span>";
+    html += "<span style='font-size:13px;font-weight:600;font-family:ui-monospace,monospace'>$"+fn(c.val,2)+"</span>";
+    html += "</div>";
+  });
+  html += "<div style='display:flex;justify-content:space-between;align-items:center;padding:6px 0'>";
+  html += "<span style='font-size:12px;font-weight:600;color:var(--text)'>合計</span>";
+  html += "<span style='font-size:14px;font-weight:700;font-family:ui-monospace,monospace'>$"+fn((S.acc.cashFT||0)+(S.acc.cashSchwab||0)+(S.acc.cashCathay||0),2)+"</span>";
+  html += "</div></div>";
+
+  return html;
+}
+
+function rMobileHoldings(p) {
+  var active = S.H.filter(function(h){ return h.shares > 0 && h.price > 0; });
+  active.sort(function(a,b){ return (b.shares*b.price) - (a.shares*a.price); });
+
+  var html = rMobileSyncBar();
+  html += "<div class='m-section-title'>持倉（"+active.length+" 支）</div>";
+
+  if(!active.length) {
+    html += "<div style='text-align:center;padding:40px 16px;color:var(--text3);font-size:13px'>尚無持倉</div>";
+    return html;
+  }
+
+  active.forEach(function(h) {
+    var mv = h.shares * h.price;
+    var ur = mv - h.shares * h.cost;
+    var ret = h.cost > 0 ? (h.price - h.cost) / h.cost : 0;
+    var acctLabel = {FT:"Firstrade",Schwab:"嘉信",GT:"國泰"}[h.acct] || h.acct;
+    var acctBadge = {FT:"bft",Schwab:"bsw",GT:"bgt"}[h.acct] || "br";
+
+    html += "<div class='m-holding-card'>";
+    html += "<div class='m-hc-top'>";
+    html += "<div><div class='m-hc-sym'>"+esc(h.sym)+"</div><span class='badge "+acctBadge+"' style='font-size:9px'>"+acctLabel+"</span></div>";
+    html += "<div style='text-align:right'>";
+    html += "<div class='m-hc-price'>$"+fn(h.price,2)+"</div>";
+    html += "<div class='m-hc-chg "+(h.chg>=0?"pos":"neg")+"'>"+(h.chg>=0?"+":"")+fn(h.chg,2)+" 今日</div>";
+    html += "</div></div>";
+
+    html += "<div class='m-hc-row'>";
+    html += "<div class='m-hc-stat'><div class='m-hc-stat-label'>股數</div><div class='m-hc-stat-val'>"+fn(h.shares, h.shares%1===0?0:2)+"</div></div>";
+    html += "<div class='m-hc-stat'><div class='m-hc-stat-label'>市值</div><div class='m-hc-stat-val'>$"+fn(mv,0)+"</div></div>";
+    html += "<div class='m-hc-stat'><div class='m-hc-stat-label'>未實現</div><div class='m-hc-stat-val "+(ur>=0?"pos":"neg")+"'>"+(ur>=0?"+":"")+"$"+fn(ur,0)+"</div></div>";
+    html += "<div class='m-hc-stat'><div class='m-hc-stat-label'>報酬率</div><div class='m-hc-stat-val "+(ret>=0?"pos":"neg")+"'>"+(ret>=0?"+":"")+fp(ret)+"</div></div>";
+    html += "</div></div>";
+  });
+
+  // Show cleared positions count
+  var cleared = S.H.filter(function(h){ return h.shares === 0; });
+  if(cleared.length) {
+    html += "<div style='text-align:center;padding:10px;font-size:11px;color:var(--text3)'>另有 "+cleared.length+" 支已出清</div>";
+  }
+  return html;
+}
+
+function rMobileChart(p) {
+  var html = rMobileSyncBar();
+  html += "<div class='m-chart-wrap'>";
+  html += "<div class='m-chart-title'><span>資產走勢</span><span>以現價估算歷史持倉</span></div>";
+  html += "<div style='padding:10px 12px 8px'>"+rNavChartSvg(p)+"</div>";
+  html += "</div>";
+
+  // Donut
+  var activeH = S.H.filter(function(h){ return h.shares>0&&h.price>0; });
+  if(activeH.length) {
+    html += "<div class='m-chart-wrap' style='margin-top:8px'>";
+    html += "<div class='m-chart-title'><span>持倉佔比</span></div>";
+    html += "<div style='padding:10px 12px 8px'>"+rDonutSvg(activeH, p)+"</div>";
+    html += "</div>";
+  }
+  return html;
+}
+
+function rNavChartSvg(p) {
+  // Reuse the same logic as rNavChart but return just the SVG+legend
+  var tmp = rNavChart(p);
+  // Extract inner content
+  var inner = tmp.replace(/^.*?<div style='padding[^>]*>/,"").replace(/<\/div>\s*<\/div>\s*$/,"");
+  return inner || "<div style='padding:20px;text-align:center;color:var(--text3);font-size:12px'>資料不足，請先在電腦新增交易紀錄</div>";
+}
+
+function rDonutSvg(activeH, p) {
+  var donutColors=["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#06b6d4","#f97316","#84cc16"];
+  var items = activeH.map(function(h,i){ return {label:h.sym, value:h.shares*h.price, color:donutColors[i%donutColors.length]}; })
+    .sort(function(a,b){ return b.value-a.value; });
+  var svgEl = "<svg viewBox='0 0 200 120' width='100%' style='max-height:120px'>";
+  svgEl += buildDonut(items, 60, 60, 48, 2.5);
+  svgEl += "<circle cx='60' cy='60' r='28' fill='var(--bg)'/>";
+  svgEl += "<text x='60' y='56' text-anchor='middle' style='font-size:8px;fill:var(--text3);font-family:inherit'>市值</text>";
+  svgEl += "<text x='60' y='68' text-anchor='middle' style='font-size:10px;font-weight:600;fill:var(--text);font-family:ui-monospace,monospace'>$"+fn(p.mkt,0)+"</text>";
+  items.slice(0,5).forEach(function(item,i){
+    var lx=128, ly=16+i*20;
+    var pct=(item.value/(p.mkt||1)*100).toFixed(1);
+    svgEl += "<rect x='"+lx+"' y='"+(ly-7)+"' width='7' height='7' rx='1.5' fill='"+item.color+"'/>";
+    svgEl += "<text x='"+(lx+11)+"' y='"+ly+"' style='font-size:9px;fill:var(--text2);font-family:inherit'>"+esc(item.label)+"</text>";
+    svgEl += "<text x='199' y='"+ly+"' text-anchor='end' style='font-size:9px;fill:var(--text2);font-family:ui-monospace,monospace'>"+pct+"%</text>";
+  });
+  svgEl += "</svg>";
+  return svgEl;
+}
+
+function rMobileTx() {
+  // Show last 20 transactions, read-only
+  var txs = S.T.slice().sort(function(a,b){ return b.date.localeCompare(a.date); }).slice(0,30);
+  var html = rMobileSyncBar();
+  html += "<div class='m-section-title'>近期交易（最近 30 筆）</div>";
+  if(!txs.length){
+    html += "<div style='text-align:center;padding:40px;color:var(--text3);font-size:13px'>尚無交易紀錄</div>";
+    return html;
+  }
+  txs.forEach(function(t){
+    var typeBadge = {買入:"bb",賣出:"bs",配息:"bd",入金:"bi"}[t.type]||"br";
+    html += "<div style='margin:0 12px 6px;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:10px 12px;display:flex;align-items:center;gap:10px'>";
+    html += "<div style='flex:1'>";
+    html += "<div style='display:flex;align-items:center;gap:6px;margin-bottom:3px'>";
+    html += "<span class='badge "+typeBadge+"'>"+t.type+"</span>";
+    if(t.sym) html += "<strong style='font-size:13px'>"+esc(t.sym)+"</strong>";
+    html += "</div>";
+    html += "<div style='font-size:10px;color:var(--text3)'>"+t.date+"　"+(t.shares?t.shares+"股 @ $"+fn(t.price,2):"")+"</div>";
+    html += "</div>";
+    html += "<div style='text-align:right'>";
+    html += "<div style='font-size:13px;font-weight:600;font-family:ui-monospace,monospace;color:"+(t.amt>0?"var(--green)":t.amt<0?"var(--red)":"var(--text)")+";'>"+(t.amt>0?"+":"")+"$"+fn(t.amt,2)+"</div>";
+    html += "</div></div>";
+  });
+  html += "<div style='text-align:center;padding:12px;font-size:11px;color:var(--text3)'>共 "+S.T.length+" 筆交易，請至電腦查看完整紀錄</div>";
+  return html;
+}
+
+function rMobileMore(p) {
+  var html = "<div style='padding:16px'>";
+
+  // Sync section
+  html += "<div style='background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:12px'>";
+  html += "<div style='font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px'>雲端同步</div>";
+  if(S.ghUser && S.ghRepo) {
+    html += "<div style='font-size:12px;color:var(--text2);margin-bottom:8px'>Repo：<strong>"+esc(S.ghUser)+"/"+esc(S.ghRepo)+"</strong></div>";
+    html += "<div style='font-size:11px;color:var(--text3);margin-bottom:10px'>手機為唯讀模式，資料從 GitHub 讀取，不會在手機修改。</div>";
+    html += "<button onclick='loadFromGitHubPublic()' style='width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit'>⬇ 立即同步資料</button>";
+    if(S.lastSyncFromCloud) html += "<div style='font-size:10px;color:var(--text3);text-align:center;margin-top:6px'>上次同步："+S.lastSyncFromCloud+"</div>";
+  } else {
+    html += "<div style='font-size:12px;color:var(--text3);margin-bottom:8px'>尚未設定 GitHub 同步。請在電腦上的「設定」頁填入 GitHub Token、使用者名稱和 Repo 名稱，並確保 Repo 為 Public。</div>";
+    // Allow setting ghUser and ghRepo on mobile (read-only config, no token needed)
+    html += "<div style='margin-bottom:8px'><div style='font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.1em'>GitHub 使用者名稱</div>";
+    html += "<input id='m-gh-user' value='"+esc(S.ghUser)+"' placeholder='your-username' style='width:100%;padding:8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px'></div>";
+    html += "<div style='margin-bottom:10px'><div style='font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.1em'>Repo 名稱</div>";
+    html += "<input id='m-gh-repo' value='"+esc(S.ghRepo)+"' placeholder='repo-name' style='width:100%;padding:8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px'></div>";
+    html += "<button onclick='mSaveGH()' style='width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit'>儲存並同步</button>";
+  }
+  html += "</div>";
+
+  // PWA install hint
+  html += "<div style='background:var(--blue-bg);border:0.5px solid var(--blue);border-radius:var(--radius-lg);padding:12px 14px;margin-bottom:12px'>";
+  html += "<div style='font-size:11px;font-weight:500;color:var(--blue);margin-bottom:6px'>📲 加入主畫面</div>";
+  html += "<div style='font-size:11px;color:var(--blue);line-height:1.7'>Safari → 分享按鈕 → 加入主畫面，即可全螢幕使用，體驗接近 App。</div>";
+  html += "</div>";
+
+  // Stats
+  html += "<div style='background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px'>";
+  html += "<div style='font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px'>資料概況</div>";
+  var items = [["持倉筆數", S.H.length+" 支"],["交易筆數", S.T.length+" 筆"],["出入金筆數", S.E.length+" 筆"],["資料更新", today()]];
+  items.forEach(function(item){
+    html += "<div style='display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:12px'>";
+    html += "<span style='color:var(--text2)'>"+item[0]+"</span><span style='font-weight:500'>"+item[1]+"</span></div>";
+  });
+  html += "</div></div>";
+  return html;
+}
+
+function mSaveGH() {
+  var u = document.getElementById("m-gh-user");
+  var r = document.getElementById("m-gh-repo");
+  if(!u||!r) return;
+  S.ghUser = u.value.trim();
+  S.ghRepo = r.value.trim();
+  localStorage.setItem("ft_ghUser", S.ghUser);
+  localStorage.setItem("ft_ghRepo", S.ghRepo);
+  loadFromGitHubPublic();
+}
+
 function render(){
   try{
     var ri=document.getElementById("ir");
@@ -1923,13 +2352,17 @@ function render(){
     if(efa&&document.activeElement!==efa)efa.value=adj.FT||0;
     if(esa&&document.activeElement!==esa)esa.value=adj.Schwab||0;
     if(eca&&document.activeElement!==eca)eca.value=adj.GT||0;
-    document.querySelectorAll(".tab").forEach(function(b){b.classList.toggle("active",b.dataset.tab===S.tab);});
     var p=calc(),m=document.getElementById("main");
-    if(S.tab==="dash")m.innerHTML=rDash(p);
-    else if(S.tab==="holdings")m.innerHTML=rHoldings();
-    else if(S.tab==="tx")m.innerHTML=rTx();
-    else if(S.tab==="fx")m.innerHTML=rFX();
-    else m.innerHTML=rSettings();
+    if(isMobile()){
+      renderMobile(p);
+    } else {
+      document.querySelectorAll(".tab").forEach(function(b){b.classList.toggle("active",b.dataset.tab===S.tab);});
+      if(S.tab==="dash")m.innerHTML=rDash(p);
+      else if(S.tab==="holdings")m.innerHTML=rHoldings();
+      else if(S.tab==="tx")m.innerHTML=rTx();
+      else if(S.tab==="fx")m.innerHTML=rFX();
+      else m.innerHTML=rSettings();
+    }
     
     if(S.editPriceId){var el=document.getElementById("ep-"+S.editPriceId);if(el){el.focus();el.select();}}
   if(S.editCostId){

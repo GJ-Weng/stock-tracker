@@ -1001,71 +1001,49 @@ function rBadge(t){var m={"買入":"bi","賣出":"bd","入金":"bb","現金利�
 function rUBtn(text,fn,loading){return "<button class='ubtn"+(loading?" loading":"")+"' onclick='"+fn+"()'>"+text+"</button>";}
 
 // ─── NAV CHART ───
-function calcNavSnapshots(){
-  // Build monthly NAV snapshots from transaction history + current prices
+function calcNavSnapshots(p){
   var sorted=S.T.slice().sort(function(a,b){return a.date.localeCompare(b.date);});
   if(!sorted.length)return[];
-
-  // Determine month range
-  var firstDate=sorted[0].date.slice(0,7); // YYYY-MM
-  var nowDate=today().slice(0,7);
-  var months=[];
-  var cur=new Date(firstDate+"-01");
-  var end=new Date(nowDate+"-01");
-  while(cur<=end){
-    months.push(cur.toISOString().slice(0,7));
-    cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);
-  }
-
-  // Build a holdings map evolving month by month
-  var holdMap={};  // sym -> {shares, cost}
-  var cashUSD=0;
-  var txIdx=0;
-  var snapshots=[];
-
+  var firstDate=sorted[0].date.slice(0,7);
+  var nowYM=today().slice(0,7);
+  var months=[],cur=new Date(firstDate+"-01"),end=new Date(nowYM+"-01");
+  while(cur<=end){months.push(cur.toISOString().slice(0,7));cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);}
+  var holdMap={},cashUSD=0,txIdx=0,snapshots=[];
   months.forEach(function(ym){
-    var monthEnd=ym+"-31"; // safe upper bound
-    // Apply all transactions up to end of this month
+    var isNow=(ym===nowYM);
+    var monthEnd=ym+"-31";
     while(txIdx<sorted.length&&sorted[txIdx].date<=monthEnd){
-      var t=sorted[txIdx];
-      var sym=t.sym;
-      var amt=t.amt||0;
+      var t=sorted[txIdx],sym=t.sym,amt=t.amt||0;
       if(t.type==="買入"&&sym&&t.shares>0&&t.price>0){
         if(!holdMap[sym])holdMap[sym]={shares:0,cost:0};
         var ns=holdMap[sym].shares+t.shares;
         holdMap[sym].cost=ns>0?(holdMap[sym].shares*holdMap[sym].cost+t.shares*t.price)/ns:0;
-        holdMap[sym].shares=ns;
-        cashUSD+=amt; // negative
+        holdMap[sym].shares=ns;cashUSD+=amt;
       }else if(t.type==="賣出"&&sym&&t.shares>0){
-        if(holdMap[sym]){
-          holdMap[sym].shares=Math.max(0,holdMap[sym].shares-t.shares);
-          cashUSD+=amt; // positive
-        }
-      }else if(t.type!=="入金"){
-        cashUSD+=amt;
-      }
+        if(holdMap[sym]){holdMap[sym].shares=Math.max(0,holdMap[sym].shares-t.shares);cashUSD+=amt;}
+      }else if(t.type!=="入金"){cashUSD+=amt;}
       txIdx++;
     }
-    // Add FX deposits up to this month
     var fxDeposit=0;
     S.E.forEach(function(e){if((e.date||"")<=monthEnd)fxDeposit+=e.usd||0;});
-
-    // Estimate portfolio value: use current prices (best available approximation)
-    var mktVal=0;
-    Object.keys(holdMap).forEach(function(sym){
-      var h=S.H.find(function(x){return x.sym===sym;});
-      var price=h?h.price:0;
-      mktVal+=holdMap[sym].shares*price;
-    });
-    // cash = FX deposits + transaction cash flows
-    var cashEst=fxDeposit+cashUSD;
-    snapshots.push({ym:ym,total:mktVal+Math.max(0,cashEst),invested:fxDeposit});
+    var total;
+    if(isNow&&p&&p.totalUSD){
+      total=p.totalUSD;
+    }else{
+      var mktVal=0;
+      Object.keys(holdMap).forEach(function(sym){
+        var h=S.H.find(function(x){return x.sym===sym;});
+        mktVal+=holdMap[sym].shares*(h?h.price:0);
+      });
+      total=mktVal+Math.max(0,fxDeposit+cashUSD);
+    }
+    snapshots.push({ym:ym,total:total,invested:fxDeposit});
   });
   return snapshots;
 }
 
 function rNavChart(p){
-  var snaps=calcNavSnapshots();
+  var snaps=calcNavSnapshots(p);
   if(snaps.length<2)return"";
 
   var W=560,H=130,padL=52,padR=12,padT=14,padB=28;

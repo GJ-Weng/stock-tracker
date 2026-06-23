@@ -415,10 +415,13 @@ const gid=()=>Date.now()+"-"+Math.random().toString(36).slice(2,6);
 // Fingerprint a transaction for dedup matching across re-imports.
 // Rounds amt/price to cents to avoid float drift causing false negatives.
 function txFingerprint(t){
-  var amt=Math.round((t.amt||0)*100)/100;
+  // Loose match: date + type + symbol + shares + price only.
+  // amt is deliberately excluded — manual entries and broker CSVs often
+  // compute amt slightly differently (rounding, fee inclusion), which
+  // would otherwise cause false negatives and let true duplicates slip through.
   var price=Math.round((t.price||0)*100)/100;
   var shares=Math.round((t.shares||0)*1000)/1000;
-  return [t.date,t.type,(t.sym||"").toUpperCase(),shares,price,amt].join("|");
+  return [t.date,t.type,(t.sym||"").toUpperCase(),shares,price].join("|");
 }
 const fn=(n,d=2)=>(n||0).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
 const fp=n=>((n||0)*100).toFixed(2)+"%";

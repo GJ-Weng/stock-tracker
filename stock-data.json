@@ -15,6 +15,19 @@
       "acct": "Schwab"
     },
     {
+      "id": "1781609509742-i0vm",
+      "sym": "KBSX",
+      "shares": 9979,
+      "cost": 1.227236,
+      "price": 1.2,
+      "chg": 0.06,
+      "div": 0,
+      "realized": 0,
+      "note": "",
+      "fd": "2026-02-03",
+      "acct": "GT"
+    },
+    {
       "id": "1782194711595-of5t",
       "sym": "AMZN",
       "shares": 0,
@@ -56,8 +69,8 @@
     {
       "id": "1782194711595-j3gp",
       "sym": "ONDS",
-      "shares": 1200,
-      "cost": 10.358333,
+      "shares": 1300,
+      "cost": 10.246154,
       "price": 8.82,
       "chg": -0.07,
       "div": 0,
@@ -78,19 +91,6 @@
       "note": "",
       "fd": "2026-01-29",
       "acct": "FT"
-    },
-    {
-      "id": "1781609509742-i0vm",
-      "sym": "KBSX",
-      "shares": 9979,
-      "cost": 1.227236,
-      "price": 1.2,
-      "chg": 0.06,
-      "div": 0,
-      "realized": 0,
-      "note": "",
-      "fd": "2026-02-03",
-      "acct": "GT"
     },
     {
       "id": "1782194711595-17hx",
@@ -199,8 +199,8 @@
     {
       "id": "1782194711595-0ivm",
       "sym": "NOK",
-      "shares": 200,
-      "cost": 15.35,
+      "shares": 300,
+      "cost": 14.9,
       "price": 13.8,
       "chg": -0.63,
       "div": 0,
@@ -2347,6 +2347,32 @@
       "amt": -0.25,
       "wire": 0,
       "desc": "XFER MARGIN TO CASH"
+    },
+    {
+      "id": "1782224187969-84l5",
+      "source": "FT",
+      "date": "2026-06-22",
+      "type": "買入",
+      "sym": "ONDS",
+      "shares": 100,
+      "price": 8.9,
+      "fee": 0,
+      "amt": -890,
+      "wire": 0,
+      "desc": "ONDAS INC                      COMMON STOCK                   UNSOLICITED"
+    },
+    {
+      "id": "1782224187969-rpsc",
+      "source": "FT",
+      "date": "2026-06-22",
+      "type": "買入",
+      "sym": "NOK",
+      "shares": 100,
+      "price": 14,
+      "fee": 0,
+      "amt": -1400,
+      "wire": 0,
+      "desc": "***NOKIA CORPORATION           SPONSORED ADR REPSTG 1 SER A   UNSOLICITED"
     }
   ],
   "E": [
@@ -3023,8 +3049,8 @@
     }
   ],
   "acc": {
-    "cash": 6828.37,
-    "cashFT": 2729.23,
+    "cash": 4538.37,
+    "cashFT": 439.23,
     "cashSchwab": 3992.44,
     "cashCathay": 106.7,
     "cashAdj": {

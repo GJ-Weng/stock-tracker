@@ -16,18 +16,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#fff;--bg2:#f5f5f5;--bg3:#ececec;--bg4:#e0e0e0;
-  --text:#111;--text2:#555;--text3:#999;
-  --border:#e2e2e2;--border2:#ccc;
-  --green:#097A4A;--green-bg:#C5F0DC;--green-text:#054028;
-  --red:#C0291A;--red-bg:#FDDDD9;--red-text:#7a1810;
-  --blue:#1252A3;--blue-bg:#C8E0F8;--blue-text:#0a3572;
-  --yellow:#7A4500;--yellow-bg:#FDDDB8;--yellow-text:#4a2800;
-  --purple-bg:#EAE8FD;--purple-text:#2D2080;
-  --radius:6px;--radius-lg:10px;--radius-xl:14px;
-  --shadow:0 1px 4px rgba(0,0,0,.07)
-}
-@media(prefers-color-scheme:dark){:root{
+  /* Fixed dark theme — does not depend on system prefers-color-scheme,
+     so the app looks the same in every environment (Safari, preview panes, etc). */
   --bg:#0f1621;--bg2:#161e2c;--bg3:#1d2840;--bg4:#253350;
   --text:#f2f2f2;--text2:#8fa3bc;--text3:#4e6180;
   --border:#1c2b3f;--border2:#283d58;
@@ -36,7 +26,9 @@
   --blue:#4d9ef5;--blue-bg:#112a52;--blue-text:#8ec5fa;
   --yellow:#f5a623;--yellow-bg:#3d1f00;--yellow-text:#fdd08a;
   --purple-bg:#1e1560;--purple-text:#b5aaff;
-}}
+  --radius:6px;--radius-lg:10px;--radius-xl:14px;
+  --shadow:0 1px 4px rgba(0,0,0,.4)
+}
 body{font-family:'Noto Sans JP',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg2);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
 input,select{font-family:inherit;font-size:12px;padding:6px 9px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none;width:100%}
 input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(24,95,165,.12)}
@@ -420,6 +412,14 @@ tr:hover td{background:var(--bg3)}
 // ─── UTILS ───
 const d2s=s=>isNaN(s)||!s?"":new Date((s-25569)*86400000).toISOString().slice(0,10);
 const gid=()=>Date.now()+"-"+Math.random().toString(36).slice(2,6);
+// Fingerprint a transaction for dedup matching across re-imports.
+// Rounds amt/price to cents to avoid float drift causing false negatives.
+function txFingerprint(t){
+  var amt=Math.round((t.amt||0)*100)/100;
+  var price=Math.round((t.price||0)*100)/100;
+  var shares=Math.round((t.shares||0)*1000)/1000;
+  return [t.date,t.type,(t.sym||"").toUpperCase(),shares,price,amt].join("|");
+}
 const fn=(n,d=2)=>(n||0).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
 const fp=n=>((n||0)*100).toFixed(2)+"%";
 const cv=v=>v>0?"pos":v<0?"neg":"neu";
@@ -846,12 +846,24 @@ function rSchwabPanel(){
   var html="<div class='sb' id='schwab-panel'><h3>📋 嘉信預覽（"+allIncluded.length+" 筆）</h3>";
   // Date filter row
   html+="<div style='display:flex;align-items:flex-end;gap:8px;margin-bottom:12px;padding:10px 12px;background:var(--bg2);border-radius:var(--radius);border:0.5px solid var(--border)'>";
-  html+="<div style='flex:1'><div class='fl'>只匯入此日期之後（排除 TD 舊資料）</div>";
+  html+="<div style='flex:1'><div class='fl'>只匯入此日期之後（選填，現在重複匯入會自動跳過已存在的交易）</div>";
   html+="<input type='date' id='schwab-from-date' value='"+esc(fromDate)+"' onchange='schwabImp.fromDate=this.value;render()' style='width:100%'></div>";
   if(minDate)html+="<div style='font-size:11px;color:var(--text3)'>CSV 範圍<br>"+minDate+"<br>→ "+maxDate+"</div>";
   html+="<button class='btn-sm' onclick='schwabImp.fromDate=\"\";render()'>全部</button>";
   html+="</div>";
-  html+="<div class='ib' style='margin-bottom:10px'>顯示 <strong>"+included.length+"</strong> 筆"+(fromDate?" ("+fromDate+" 之後)":"")+"，略過 "+skipped.length+" 筆</div>";
+  // Preview how many are genuinely new vs already-imported duplicates
+  var _existFP={};
+  S.T.filter(function(t){return t.source==="Schwab";}).forEach(function(t){_existFP[txFingerprint(t)]=true;});
+  var _newCount=0,_dupCount=0;
+  included.forEach(function(r){
+    var type=classifySchwab(r.action,r.desc,r.sym,r.qty);
+    var fp=txFingerprint({date:r.date,type:type,sym:r.sym,shares:Math.abs(r.qty),price:r.price,amt:r.amount});
+    if(_existFP[fp])_dupCount++;else _newCount++;
+  });
+  html+="<div class='ib' style='margin-bottom:10px'>顯示 <strong>"+included.length+"</strong> 筆"+(fromDate?" ("+fromDate+" 之後)":"")+"，略過 "+skipped.length+" 筆不支援的類型<br>"
+    +"<span style='color:var(--green)'>✓ "+_newCount+" 筆為新交易</span>　"
+    +(_dupCount?"<span style='color:var(--text3)'>· "+_dupCount+" 筆已存在（自動跳過，不會重複新增）</span>":"<span style='color:var(--text3)'>· 無重複</span>")
+    +"</div>";
   if(skipped.length)html+="<div class='wb' style='margin-bottom:10px'>⚠️ 略過 "+skipped.length+" 筆（股票分割、轉出紀錄等）</div>";
   html+="<div class='sx' style='max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px'>";
   html+="<table><thead><tr><th>日期</th><th>類別</th><th>代號</th><th class='num'>股數</th><th class='num'>成交價</th><th class='num'>金額</th></tr></thead><tbody>";
@@ -866,7 +878,7 @@ function rSchwabPanel(){
   });
   html+="</tbody></table></div>";
   html+="<div style='display:flex;gap:8px'>";
-  html+="<button class='btn btn-blue' onclick='schwabConfirmImport()'>"+"✅ 確認匯入 "+included.length+" 筆"+(fromDate?" ("+fromDate+"起)":"")+"</button>";
+  html+="<button class='btn btn-blue' onclick='schwabConfirmImport()'>"+"✅ 確認匯入（新增 "+_newCount+" 筆）"+(fromDate?" ("+fromDate+"起)":"")+"</button>";
   html+="<button class='btn' onclick='schwabImp={rows:[],step:0};render()'>取消</button>";
   html+="</div></div>";
   return html;
@@ -888,54 +900,63 @@ function schwabSetCash(){
 }
 function schwabConfirmImport(){
   var fromDate=schwabImp.fromDate||"";
-  var allRows=fromDate?schwabImp.rows.filter(function(r){return r.date>=fromDate;}):schwabImp.rows;
-  allRows.sort(function(a,b){return a.date.localeCompare(b.date);});
-  // Keep other accounts' data, only replace Schwab entries
-  S.T=S.T.filter(function(t){return t.source&&t.source!=="Schwab";});
-  S.H=S.H.filter(function(h){return h.acct&&h.acct!=="Schwab";});
+  var csvRows=fromDate?schwabImp.rows.filter(function(r){return r.date>=fromDate;}):schwabImp.rows;
+  csvRows.sort(function(a,b){return a.date.localeCompare(b.date);});
 
-  // Step 1: Build S.T with all transactions
-  allRows.forEach(function(r){
+  // ── Incremental merge: keep existing Schwab transactions, only add new ones ──
+  var existing=S.T.filter(function(t){return t.source==="Schwab";});
+  var existingFP={};
+  existing.forEach(function(t){existingFP[txFingerprint(t)]=true;});
+
+  var added=0,skipped=0;
+  csvRows.forEach(function(r){
     var type=classifySchwab(r.action,r.desc,r.sym,r.qty);
     var t={id:gid(),date:r.date,type:type,sym:r.sym,shares:Math.abs(r.qty),
       price:r.price,fee:Math.abs(r.fee),amt:r.amount,wire:0,desc:r.desc,source:"Schwab"};
+    var fp=txFingerprint(t);
+    if(existingFP[fp]){skipped++;return;}  // already imported — skip
+    existingFP[fp]=true;
     S.T.push(t);
+    added++;
   });
 
-  // Step 2: Build holdings directly (handles sells with no buy history from TD)
+  // ── Rebuild Schwab holdings from the FULL transaction history (existing + new) ──
+  // This guarantees holdings reflect all-time data even if CSV window only covers recent years.
+  var allSchwabTx=S.T.filter(function(t){return t.source==="Schwab";}).sort(function(a,b){return a.date.localeCompare(b.date);});
   var hMap={};
-  allRows.forEach(function(r){
-    var sym=r.sym;
-    var type=classifySchwab(r.action,r.desc,r.sym,r.qty);
-    var qty=Math.abs(r.qty||0);
-    if(!sym&&type!=="入金"&&type!=="現金利息"&&type!=="預扣稅")return;
-    if(type==="買入"&&qty>0&&sym){
-      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:r.date,div:0,realized:0,noCost:false};
+  allSchwabTx.forEach(function(tx){
+    var sym=tx.sym,qty=tx.shares||0,price=tx.price||0,fee=tx.fee||0,amt=tx.amt||0;
+    if(!sym&&tx.type!=="入金"&&tx.type!=="現金利息"&&tx.type!=="預扣稅")return;
+    if(tx.type==="買入"&&qty>0&&sym){
+      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:tx.date,div:0,realized:0,noCost:false};
       var ns=hMap[sym].shares+qty;
-      if(r.price){hMap[sym].cost=ns>0?(hMap[sym].shares*hMap[sym].cost+qty*r.price)/ns:0;}
+      if(price){hMap[sym].cost=ns>0?(hMap[sym].shares*hMap[sym].cost+qty*price)/ns:0;}
       else{hMap[sym].noCost=true;}
       hMap[sym].shares=ns;
-      if(!hMap[sym].fd||r.date<hMap[sym].fd)hMap[sym].fd=r.date;
-    }else if(type==="賣出"&&qty>0&&sym){
-      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:r.date,div:0,realized:0,noCost:false};
-      hMap[sym].realized=(hMap[sym].realized||0)+((r.price-(hMap[sym].cost||0))*qty-Math.abs(r.fee||0));
+      if(!hMap[sym].fd||tx.date<hMap[sym].fd)hMap[sym].fd=tx.date;
+    }else if(tx.type==="賣出"&&qty>0&&sym){
+      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:tx.date,div:0,realized:0,noCost:false};
+      hMap[sym].realized=(hMap[sym].realized||0)+((price-(hMap[sym].cost||0))*qty-Math.abs(fee||0));
       hMap[sym].shares=Math.max(0,hMap[sym].shares-qty);
-    }else if(type==="配息"&&sym){
-      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:r.date,div:0,realized:0,noCost:false};
-      hMap[sym].div=(hMap[sym].div||0)+(r.amount||0);
+    }else if(tx.type==="配息"&&sym){
+      if(!hMap[sym])hMap[sym]={shares:0,cost:0,fd:tx.date,div:0,realized:0,noCost:false};
+      hMap[sym].div=(hMap[sym].div||0)+(amt||0);
     }
   });
-  // Append Schwab holdings to existing non-Schwab holdings (don't replace)
+  // Preserve existing price/chg/note for symbols that already existed
+  var oldSchwabH={};
+  S.H.filter(function(h){return h.acct==="Schwab";}).forEach(function(h){oldSchwabH[h.sym]=h;});
   var schwabH=Object.keys(hMap).map(function(sym){
-    var h=hMap[sym];
-    return{id:gid(),sym:sym,shares:h.shares,cost:parseFloat((h.cost||0).toFixed(6)),
-      price:0,chg:0,div:parseFloat((h.div||0).toFixed(2)),realized:parseFloat((h.realized||0).toFixed(2)),
-      note:h.noCost?"⚠ 請補填均成本（TD遷移）":"",fd:h.fd,acct:"Schwab"};
+    var h=hMap[sym],ex=oldSchwabH[sym];
+    return{id:ex?ex.id:gid(),sym:sym,shares:h.shares,cost:parseFloat((h.cost||0).toFixed(6)),
+      price:ex?ex.price:0,chg:ex?ex.chg:0,div:parseFloat((h.div||0).toFixed(2)),realized:parseFloat((h.realized||0).toFixed(2)),
+      note:h.noCost?"⚠ 請補填均成本（CSV 視窗外的舊買入）":(ex?ex.note:""),fd:h.fd,acct:"Schwab"};
   });
-  S.H=S.H.concat(schwabH);
+  S.H=S.H.filter(function(h){return h.acct!=="Schwab";}).concat(schwabH);
 
   sv("T");sv("H");
   schwabImp={rows:[],step:2};  // step 2 = ask for cash
+  toast("✅ 新增 "+added+" 筆"+(skipped?"，略過 "+skipped+" 筆重複":""));
   render();
   // Auto update prices after import
   setTimeout(function(){updatePrices();},500);
@@ -1056,15 +1077,23 @@ function fsvBuildRows(){
 function fsvConfirmImport(){
   var rows=fsvBuildRows();
   rows.sort(function(a,b){return a.date.localeCompare(b.date);});
-  // Keep other accounts' data, only replace FT entries
-  S.T=S.T.filter(function(t){return t.source&&t.source!=="FT";});
-  S.H=S.H.filter(function(h){return h.acct&&h.acct!=="FT";});
-  var added=0;
+
+  // ── Incremental merge: keep existing FT transactions, only add new ones ──
+  var existing=S.T.filter(function(t){return t.source==="FT";});
+  var existingFP={};
+  existing.forEach(function(t){existingFP[txFingerprint(t)]=true;});
+
+  var added=0,skipped=0;
   rows.forEach(function(r){
     var t=Object.assign({id:gid(),source:"FT"},r);
-    S.T.push(t);added++;
+    var fp=txFingerprint(t);
+    if(existingFP[fp]){skipped++;return;}  // already imported — skip
+    existingFP[fp]=true;
+    S.T.push(t);
+    added++;
   });
-  // Rebuild FT holdings from transactions (reliable, handles sells correctly)
+
+  // Rebuild FT holdings from the FULL transaction history (existing + new)
   var ftMap={};
   S.T.filter(function(t){return t.source==="FT";}).sort(function(a,b){return a.date.localeCompare(b.date);}).forEach(function(tx){
     var sym=tx.sym,shares=tx.shares,price=tx.price,fee=tx.fee||0,amt=tx.amt||0;
@@ -1095,7 +1124,7 @@ function fsvConfirmImport(){
   sv("T");sv("H");
   var cash=recalcCash();
   S.imp={rows:[],symMap:{},step:0};
-  toast("✅ 匯入完成：新增 "+added+" 筆，現金 $"+fn(cash,2));
+  toast("✅ 新增 "+added+" 筆"+(skipped?"，略過 "+skipped+" 筆重複":"")+"，現金 $"+fn(cash,2));
   S.tab="dash";render();
   clearTimeout(S._syncTimer);
   syncToGitHub();

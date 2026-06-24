@@ -369,9 +369,21 @@ tr:hover td{background:var(--bg3)}
       <div id="cash-panel" style="display:none;position:absolute;right:0;top:36px;background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:14px 16px;z-index:200;min-width:280px;box-shadow:0 4px 20px rgba(0,0,0,.1)">
         <div style="font-size:10px;color:var(--text3);letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px">帳戶現金（交易自動計算）</div>
         <div style="font-size:10px;color:var(--text3);margin-bottom:6px;display:grid;grid-template-columns:80px 90px 80px;gap:4px;text-align:center"><span></span><span>自動計算</span><span>手動調整</span></div>
-        <div style="display:grid;grid-template-columns:80px 90px 80px;gap:4px;align-items:center;margin-bottom:6px"><span style="font-size:11px;color:var(--text2)">Firstrade</span><input type="number" id="ic-ft" readonly style="opacity:0.5;cursor:default;font-size:11px"><input type="number" id="ic-ft-adj" step="0.01" placeholder="±0" style="font-size:11px" onchange="onCashAdj('FT',this.value)" value="0"></div>
-        <div style="display:grid;grid-template-columns:80px 90px 80px;gap:4px;align-items:center;margin-bottom:6px"><span style="font-size:11px;color:var(--text2)">嘉信</span><input type="number" id="ic-sw" readonly style="opacity:0.5;cursor:default;font-size:11px"><input type="number" id="ic-sw-adj" step="0.01" placeholder="±0" style="font-size:11px" onchange="onCashAdj('Schwab',this.value)" value="0"></div>
-        <div style="display:grid;grid-template-columns:80px 90px 80px;gap:4px;align-items:center"><span style="font-size:11px;color:var(--text2)">國泰複委托</span><input type="number" id="ic-ct" readonly style="opacity:0.5;cursor:default;font-size:11px"><input type="number" id="ic-ct-adj" step="0.01" placeholder="±0" style="font-size:11px" onchange="onCashAdj('GT',this.value)" value="0"></div>
+        <div style="margin-bottom:8px;padding-bottom:8px;border-bottom:0.5px solid var(--border)">
+          <div style="display:grid;grid-template-columns:80px 90px 80px;gap:4px;align-items:center"><span style="font-size:11px;color:var(--text2)">Firstrade</span><input type="number" id="ic-ft" readonly style="opacity:0.5;cursor:default;font-size:11px"><input type="number" id="ic-ft-adj" step="0.01" placeholder="±0" style="font-size:11px" onchange="onCashAdj('FT',this.value)" value="0"></div>
+          <input type="text" id="ic-ft-adj-note" placeholder="調整備註（選填，例：補上漏記的利息）" style="width:100%;margin-top:4px;font-size:10px;padding:4px 7px" onchange="onCashAdjNote('FT',this.value)">
+          <div id="ic-ft-adj-ts" style="font-size:9px;color:var(--text3);margin-top:2px;min-height:11px"></div>
+        </div>
+        <div style="margin-bottom:8px;padding-bottom:8px;border-bottom:0.5px solid var(--border)">
+          <div style="display:grid;grid-template-columns:80px 90px 80px;gap:4px;align-items:center"><span style="font-size:11px;color:var(--text2)">嘉信</span><input type="number" id="ic-sw" readonly style="opacity:0.5;cursor:default;font-size:11px"><input type="number" id="ic-sw-adj" step="0.01" placeholder="±0" style="font-size:11px" onchange="onCashAdj('Schwab',this.value)" value="0"></div>
+          <input type="text" id="ic-sw-adj-note" placeholder="調整備註（選填）" style="width:100%;margin-top:4px;font-size:10px;padding:4px 7px" onchange="onCashAdjNote('Schwab',this.value)">
+          <div id="ic-sw-adj-ts" style="font-size:9px;color:var(--text3);margin-top:2px;min-height:11px"></div>
+        </div>
+        <div>
+          <div style="display:grid;grid-template-columns:80px 90px 80px;gap:4px;align-items:center"><span style="font-size:11px;color:var(--text2)">國泰複委托</span><input type="number" id="ic-ct" readonly style="opacity:0.5;cursor:default;font-size:11px"><input type="number" id="ic-ct-adj" step="0.01" placeholder="±0" style="font-size:11px" onchange="onCashAdj('GT',this.value)" value="0"></div>
+          <input type="text" id="ic-ct-adj-note" placeholder="調整備註（選填）" style="width:100%;margin-top:4px;font-size:10px;padding:4px 7px" onchange="onCashAdjNote('GT',this.value)">
+          <div id="ic-ct-adj-ts" style="font-size:9px;color:var(--text3);margin-top:2px;min-height:11px"></div>
+        </div>
       </div>
     </div>
     <button class="btn-blue" onclick="doExport()">↓ 匯出</button>
@@ -415,13 +427,10 @@ const gid=()=>Date.now()+"-"+Math.random().toString(36).slice(2,6);
 // Fingerprint a transaction for dedup matching across re-imports.
 // Rounds amt/price to cents to avoid float drift causing false negatives.
 function txFingerprint(t){
-  // Loose match: date + type + symbol + shares + price only.
-  // amt is deliberately excluded — manual entries and broker CSVs often
-  // compute amt slightly differently (rounding, fee inclusion), which
-  // would otherwise cause false negatives and let true duplicates slip through.
+  var amt=Math.round((t.amt||0)*100)/100;
   var price=Math.round((t.price||0)*100)/100;
   var shares=Math.round((t.shares||0)*1000)/1000;
-  return [t.date,t.type,(t.sym||"").toUpperCase(),shares,price].join("|");
+  return [t.date,t.type,(t.sym||"").toUpperCase(),shares,price,amt].join("|");
 }
 const fn=(n,d=2)=>(n||0).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
 const fp=n=>((n||0)*100).toFixed(2)+"%";
@@ -468,16 +477,37 @@ var S={holdingsView:"all",dashView:"all",editCostId:null,editCostVal:"",showZero
   showForm:null,filterType:"全部",txSearch:"",txAcct:"全部",txDateFrom:"",txDateTo:"",txBatch:false,txSelected:{},
   sortCol:"",sortDir:-1,showExtraCols:false,fxMode:"twd",editTxId:null,editFxId:null,editPriceId:null,editPriceVal:"",
   updating:false,syncing:false,lastUpdate:"",updateErrors:[],
+  mTabActive:"home", // 手機版目前分頁（原為獨立全域變數，統一收進 S 集中管理，降低維護成本）
   imp:{rows:[],symMap:{},step:0}
 };
+// ─── PERF: NAV-SNAPSHOT CACHE INVALIDATION TOKEN ───
+// calcNavSnapshots() 是計算熱點（多層巢狀迴圈），只有在 S.T / S.H / S.E 實際變動時才需要重算。
+// 沿用既有「異動後必呼叫 sv(k)」的慣例：sv("T"/"H"/"E") 時自動讓 _dataVer+1，calcNavSnapshots() 用它判斷快取是否失效。
+var _dataVer=0;
 function sv(k){
   try{localStorage.setItem("ft_"+k,JSON.stringify(S[k]));}
   catch(e){toast("❌ 儲存失敗（空間不足），請先備份 JSON",4000);console.error("localStorage sv failed",k,e);return;}
+  if(k==="T"||k==="H"||k==="E")_dataVer++;
   S._localTs=Date.now();
   clearTimeout(S._syncTimer);
   S._syncTimer=setTimeout(syncToGitHub,2000);
 }
 function ld(k){try{var v=localStorage.getItem("ft_"+k);return v?JSON.parse(v):null;}catch(e){return null;}}
+// ─── ADJ META（備註＋時間戳）───
+// cashAdj / realizedAdj 過去只是裸數字，缺乏「為什麼調整」「何時調整」的稽核軌跡（見原始稽核 3.4）。
+// 新增 cashAdjMeta / realizedAdjMeta：{FT:{note,ts}, Schwab:{note,ts}, GT:{note,ts}}，與既有數值欄位分離，
+// 不影響 calc()/recalcCash() 既有的加總邏輯，純粹補強可追溯性。集中成一個函式，所有遷移點都呼叫它即可。
+function ensureAdjMeta(){
+  if(!S.acc)return;
+  if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
+  if(!S.acc.realizedAdj)S.acc.realizedAdj={FT:0,Schwab:0,GT:0};
+  if(!S.acc.cashAdjMeta)S.acc.cashAdjMeta={};
+  if(!S.acc.realizedAdjMeta)S.acc.realizedAdjMeta={};
+  ["FT","Schwab","GT"].forEach(function(k){
+    if(!S.acc.cashAdjMeta[k])S.acc.cashAdjMeta[k]={note:"",ts:""};
+    if(!S.acc.realizedAdjMeta[k])S.acc.realizedAdjMeta[k]={note:"",ts:""};
+  });
+}
 
 // ─── CALC ───
 function avgFx(){
@@ -519,10 +549,11 @@ function loadFromGitHubPublic(){
     if(data.T)S.T=data.T;
     if(data.E)S.E=data.E;
     if(data.acc)S.acc=data.acc;
-    if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
-    if(!S.acc.realizedAdj)S.acc.realizedAdj={FT:0,Schwab:0,GT:0};
+    if(data.events)S.events=data.events;
+    ensureAdjMeta();
     recalcCash();
-    ["H","T","E","acc"].forEach(function(k){
+    _dataVer++; // 繞過 sv() 直接寫入 LocalStorage，需手動讓快取失效
+    ["H","T","E","acc","events"].forEach(function(k){
       try{localStorage.setItem("ft_"+k,JSON.stringify(S[k]));}catch(e){}
     });
     S.lastSyncFromCloud=new Date().toLocaleTimeString();
@@ -555,10 +586,11 @@ function loadFromGitHub(force){
     var json=decodeURIComponent(escape(atob(b64)));
     var data=JSON.parse(json);
     if(data.H)S.H=data.H;if(data.T)S.T=data.T;if(data.E)S.E=data.E;if(data.acc)S.acc=data.acc;
-    if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
-  if(!S.acc.realizedAdj)S.acc.realizedAdj={FT:0,Schwab:0,GT:0};
+    if(data.events)S.events=data.events;
+    ensureAdjMeta();
     recalcCash();
-    ["H","T","E","acc"].forEach(function(k){localStorage.setItem("ft_"+k,JSON.stringify(S[k]));});
+    _dataVer++; // 繞過 sv() 直接寫入 LocalStorage，需手動讓快取失效
+    ["H","T","E","acc","events"].forEach(function(k){localStorage.setItem("ft_"+k,JSON.stringify(S[k]));});
     recalcCash();
     return true;
   }).catch(function(e){console.error("GH load",e);return false;});
@@ -566,7 +598,7 @@ function loadFromGitHub(force){
 function syncToGitHub(){
   if(!S.ghToken||!S.ghUser||!S.ghRepo)return;
   S.syncing=true;setSyncStatus("syncing");
-  var data=JSON.stringify({v:1,H:S.H,T:S.T,E:S.E,acc:S.acc},null,2);
+  var data=JSON.stringify({v:1,H:S.H,T:S.T,E:S.E,acc:S.acc,events:S.events},null,2);
   var content=btoa(unescape(encodeURIComponent(data)));
   var body={message:"sync "+new Date().toISOString().slice(0,16),content:content};
   if(S.ghSHA)body.sha=S.ghSHA;
@@ -645,7 +677,8 @@ function applyTx(tx){
     i=S.H.findIndex(function(h){return h.sym===sym&&h.acct===acct;});
     if(i>=0){
       var ns=S.H[i].shares+shares,nc=(S.H[i].shares*S.H[i].cost+shares*price)/ns;
-      S.H=S.H.map(function(h,j){return j===i?Object.assign({},h,{shares:ns,cost:parseFloat(nc.toFixed(6))}):h;});
+      // 精確度修正：不在中間步驟用 toFixed(6) 截斷，直接保留完整浮點數累積，畫面顯示時才四捨五入（見 fn()）
+      S.H=S.H.map(function(h,j){return j===i?Object.assign({},h,{shares:ns,cost:nc}):h;});
     }else{
       S.H.push({id:gid(),sym:sym,shares:shares,cost:price,price:price,chg:0,div:0,realized:0,note:"",fd:date||today(),acct:acct});
     }
@@ -653,8 +686,8 @@ function applyTx(tx){
     var acctS=tx.source||"FT";
     i=S.H.findIndex(function(h){return h.sym===sym&&(h.acct===acctS||!h.acct);});
     if(i<0)i=S.H.findIndex(function(h){return h.sym===sym;});
-    if(i<0){return true;}  // no holding = ignore sell silently
-    if(shares>S.H[i].shares+0.0001){return true;}  // over-sell = ignore silently
+    if(i<0){alert("❌ 交易未新增：找不到「"+sym+"」的持倉，無法執行賣出。\n請確認股票代號與帳戶是否正確，或先用「買入」建立持倉。");return false;}  // no holding = block & alert
+    if(shares>S.H[i].shares+0.0001){alert("❌ 交易未新增：賣出股數（"+shares+"）超過「"+sym+"」目前持有股數（"+S.H[i].shares+"），會導致現金與持倉帳目對不起來。\n請修正股數，或先用「從交易重建」確認實際持倉。");return false;}  // over-sell = block & alert
     var gain=(price-S.H[i].cost)*shares-fee;
     S.H=S.H.map(function(h,j){return j===i?Object.assign({},h,{shares:Math.max(0,h.shares-shares),realized:parseFloat(((h.realized||0)+gain).toFixed(2))}):h;});
 
@@ -734,7 +767,7 @@ function rebuildFromTx(){
   });
   S.H=Object.values(map).map(function(h){
     var ex=S.H.find(function(e){return e.sym===h.sym&&(!h.acct||e.acct===h.acct);});
-    return{id:ex?ex.id:gid(),sym:h.sym,shares:h.shares,cost:parseFloat(h.cost.toFixed(6)),
+    return{id:ex?ex.id:gid(),sym:h.sym,shares:h.shares,cost:h.cost,
       price:ex?ex.price:0,chg:ex?ex.chg:0,div:parseFloat(h.div.toFixed(2)),
       realized:parseFloat(h.realized.toFixed(2)),note:ex?ex.note:"",fd:h.fd,acct:h.acct||ex&&ex.acct||"FT"};
   });
@@ -748,7 +781,12 @@ function rebuildFromTx(){
 // ─── SCHWAB CSV PARSER ───────────────────────────────────────────────────────
 function parseSchwabAmt(s){
   if(!s||!s.trim())return 0;
-  return parseFloat(s.trim().replace(/[$,]/g,""))||0;
+  var t=s.trim();
+  // 防呆：會計慣例的括號負數，例如 "(123.45)" 代表 -123.45（而非單純的正數，避免靜默吃掉負號造成現金對不起來）
+  var isParenNeg=/^\(.*\)$/.test(t);
+  if(isParenNeg)t=t.slice(1,-1);
+  var v=parseFloat(t.replace(/[$,]/g,""))||0;
+  return isParenNeg?-Math.abs(v):v;
 }
 function parseSchwabDate(s){
   if(!s||!s.trim())return"";
@@ -889,12 +927,12 @@ function rSchwabPanel(){
 function schwabSetCash(){
   // Manual Schwab cash override → stored as cashAdj.Schwab so recalcCash() still owns the logic
   var v=parseFloat(document.getElementById("schwab-cash").value)||0;
-  if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
-  if(!S.acc.realizedAdj)S.acc.realizedAdj={FT:0,Schwab:0,GT:0};
+  ensureAdjMeta();
   // adj = desired cash - what transactions already compute
   var txSchwab=0;
   S.T.filter(function(t){return t.source==="Schwab"&&t.type!=="入金";}).forEach(function(t){txSchwab+=t.amt||0;});
   S.acc.cashAdj.Schwab=parseFloat((v-txSchwab).toFixed(2));
+  S.acc.cashAdjMeta.Schwab={note:"嘉信 CSV 匯入時設定現金餘額",ts:new Date().toISOString()};
   recalcCash();sv("acc");
   schwabImp={rows:[],step:0};
   clearTimeout(S._syncTimer);syncToGitHub();
@@ -951,7 +989,7 @@ function schwabConfirmImport(){
   S.H.filter(function(h){return h.acct==="Schwab";}).forEach(function(h){oldSchwabH[h.sym]=h;});
   var schwabH=Object.keys(hMap).map(function(sym){
     var h=hMap[sym],ex=oldSchwabH[sym];
-    return{id:ex?ex.id:gid(),sym:sym,shares:h.shares,cost:parseFloat((h.cost||0).toFixed(6)),
+    return{id:ex?ex.id:gid(),sym:sym,shares:h.shares,cost:h.cost||0,
       price:ex?ex.price:0,chg:ex?ex.chg:0,div:parseFloat((h.div||0).toFixed(2)),realized:parseFloat((h.realized||0).toFixed(2)),
       note:h.noCost?"⚠ 請補填均成本（CSV 視窗外的舊買入）":(ex?ex.note:""),fd:h.fd,acct:"Schwab"};
   });
@@ -1117,7 +1155,7 @@ function fsvConfirmImport(){
   });
   var ftHoldings=Object.keys(ftMap).map(function(sym){
     var h=ftMap[sym],ex=S.H.find(function(e){return e.sym===sym&&e.acct==="FT";});
-    return{id:ex?ex.id:gid(),sym:sym,shares:h.shares,cost:parseFloat(h.cost.toFixed(6)),
+    return{id:ex?ex.id:gid(),sym:sym,shares:h.shares,cost:h.cost,
       price:ex?ex.price:0,chg:ex?ex.chg:0,div:parseFloat(h.div.toFixed(2)),
       realized:parseFloat(h.realized.toFixed(2)),note:ex?ex.note:"",fd:h.fd,acct:"FT"};
   });
@@ -1150,7 +1188,7 @@ function doExport(){
 }
 function exportJSON(){
   var a=document.createElement("a");
-  a.href="data:application/json,"+encodeURIComponent(JSON.stringify({v:1,H:S.H,T:S.T,E:S.E,acc:S.acc},null,2));
+  a.href="data:application/json,"+encodeURIComponent(JSON.stringify({v:1,H:S.H,T:S.T,E:S.E,acc:S.acc,events:S.events},null,2));
   a.download="stock-tracker_backup_"+today()+".json";a.click();
   toast("✅ 已匯出備份");
 }
@@ -1159,10 +1197,9 @@ function importJSON(input){
   r.onload=function(e){
     try{
       var d=JSON.parse(e.target.result);
-      if(d.H)S.H=d.H;if(d.T)S.T=d.T;if(d.E)S.E=d.E;if(d.acc)S.acc=d.acc;
-      if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
-  if(!S.acc.realizedAdj)S.acc.realizedAdj={FT:0,Schwab:0,GT:0};
-      ["H","T","E","acc"].forEach(sv);
+      if(d.H)S.H=d.H;if(d.T)S.T=d.T;if(d.E)S.E=d.E;if(d.acc)S.acc=d.acc;if(d.events)S.events=d.events;
+      ensureAdjMeta();
+      ["H","T","E","acc","events"].forEach(sv);
       recalcCash();sv("acc");
       toast("✅ 資料還原成功");render();
     }catch(ex){toast("❌ JSON 格式錯誤");}
@@ -1175,6 +1212,7 @@ function resetData(){
   S.T=JSON.parse(JSON.stringify(INIT_T));
   S.E=JSON.parse(JSON.stringify(INIT_E));
   S.acc={cash:0,cashFT:0,cashSchwab:0,cashCathay:0,cashAdj:{FT:0,Schwab:0,GT:0},rate:31.5};
+  ensureAdjMeta();
   ["H","T","E","acc"].forEach(sv);
   S.tab="dash";S.showForm=null;S.editTxId=null;S.editPriceId=null;
   document.getElementById("ir").value=S.acc.rate;
@@ -1184,6 +1222,7 @@ function resetData(){
 function clearAll(){
   if(!confirm("確定清空所有持倉和交易紀錄？出入金紀錄會保留。此操作無法復原。"))return;
   S.H=[];S.T=[];S.acc={cash:0,cashFT:0,cashSchwab:0,cashCathay:0,cashAdj:{FT:0,Schwab:0,GT:0},rate:S.acc.rate};
+  ensureAdjMeta();
   ["H","T","acc"].forEach(sv);
   S.tab="settings";S.showForm=null;S.editTxId=null;S.editPriceId=null;
   document.getElementById("ir").value=S.acc.rate;
@@ -1202,9 +1241,13 @@ function rBadge(t){var m={"買入":"bi","賣出":"bd","入金":"bb","現金利�
 function rUBtn(text,fn,loading){return "<button class='ubtn"+(loading?" loading":"")+"' onclick='"+fn+"()'>"+text+"</button>";}
 
 // ─── NAV CHART ───
+// PERF CACHE: 此函式內有「月份 × 交易」與「月份 × 出入金」的巢狀迴圈，是長期使用後最重的計算熱點。
+// 只要 S.T / S.H / S.E 沒有實際變動（_dataVer 未變），直接回傳上次算好的快取結果。
+var _navSnapCache=null,_navSnapCacheVer=-1;
 function calcNavSnapshots(p){
+  if(_navSnapCache&&_navSnapCacheVer===_dataVer)return _navSnapCache;
   var sorted=S.T.slice().sort(function(a,b){return a.date.localeCompare(b.date);});
-  if(!sorted.length)return[];
+  if(!sorted.length){_navSnapCache=[];_navSnapCacheVer=_dataVer;return _navSnapCache;}
   var firstDate=sorted[0].date.slice(0,7);
   var nowYM=today().slice(0,7);
   var months=[],cur=new Date(firstDate+"-01"),end=new Date(nowYM+"-01");
@@ -1241,6 +1284,8 @@ function calcNavSnapshots(p){
     }
     snapshots.push({ym:ym,total:total,invested:fxDeposit});
   });
+  _navSnapCache=snapshots;
+  _navSnapCacheVer=_dataVer;
   return snapshots;
 }
 
@@ -1644,7 +1689,7 @@ function rTx(){
   // Type filter + search + buttons
   html+="<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px'>";
   html+="<div class='filter-bar'>"+fTypes.map(function(ft){return "<button class='chip"+(S.filterType===ft?" active":"")+"'onclick=\"setFilter('"+ft+"')\">"+ ft+"</button>";}).join("");
-  html+="<input class='si' placeholder='搜尋代號…' value='"+esc(S.txSearch)+"' oninput='S.txSearch=this.value;render()'>";
+  html+="<input id='tx-search' class='si' placeholder='搜尋代號…' value='"+esc(S.txSearch)+"' oninput='debounceTxSearch(this.value)'>";
   html+="<input type='date' value='"+esc(S.txDateFrom)+"' title='開始日期' style='font-size:11px;padding:4px 7px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);width:130px' oninput='S.txDateFrom=this.value;render()'>";
   html+="<input type='date' value='"+esc(S.txDateTo)+"' title='結束日期' style='font-size:11px;padding:4px 7px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);width:130px' oninput='S.txDateTo=this.value;render()'>";
   if(S.txDateFrom||S.txDateTo)html+="<button class='btn-sm' onclick=\"S.txDateFrom='';S.txDateTo='';render()\">✕ 清除日期</button>";
@@ -1701,14 +1746,13 @@ function rTx(){
     html+="<td class='num'>"+(t.fee?fn(t.fee,2):"—")+"</td>";
     html+="<td class='num "+cv(t.amt)+"'>"+(t.amt>=0?"+":"")+"$"+fn(t.amt,2)+"</td>";
     html+="<td class='num'>"+(t.wire?"NT$"+fn(t.wire,0):"—")+"</td>";
-    html+="<td class='num'>"+(t.wire?"NT$"+fn(t.wire,0):"—")+"</td>";
     if(S.txBatch){
       html+="<td style='text-align:center'><input type='checkbox' "+(S.txSelected[t.id]?"checked":"")+" onchange='S.txSelected[\""+t.id+"\"]=(this.checked?1:0);if(!this.checked)delete S.txSelected[\""+t.id+"\"];txUpdateBatchUI()'></td></tr>";
     }else{
       html+="<td><div style='display:flex;gap:4px'>";
-      html+="<td><div style='display:flex;gap:4px'>";
       html+="<button class='btn-sm' onclick='startEditTx(&quot;"+t.id+"&quot;)'>編輯</button>";
       html+="<button class='btn-red' onclick='delTx(&quot;"+t.id+"&quot;)'>刪除</button>";
+      html+="</div></td></tr>";
     }
   });
   html+="</tbody></table></div></div>";
@@ -1848,6 +1892,17 @@ function rSettings(){
   html+="<button class='btn' onclick='ghLoad()'>⬇ 從雲端載入</button>";
   html+="<button class='btn' onclick='syncToGitHub()'>⬆ 立即同步</button>";
   html+="</div><div class='ib' style='margin-top:10px'>💡 Token 申請：GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Contents: Read and Write</div></div>";
+
+  // ── 市場大事日程（結構化，可編輯，隨 GitHub 同步） ──
+  html+="<div class='sb'><h3>🗓 市場大事日程</h3>";
+  html+="<div style='font-size:12px;color:var(--text2);margin-bottom:8px'>FOMC／CPI／PCE 等日程改為可在此編輯的 JSON 陣列，儲存後會隨 GitHub 同步備份，不再需要每年改程式碼重新部署。</div>";
+  html+="<div style='font-size:11px;color:var(--text3);margin-bottom:8px'>格式：<code style='font-size:10px'>[{\"date\":\"2026-12-09\",\"label\":\"FOMC 利率決議\",\"type\":\"fed\"}, ...]</code>　type 可用 fed／cpi／pce（決定色點顏色）</div>";
+  html+="<textarea id='events-editor' style='width:100%;min-height:160px;font-family:monospace;font-size:11px;padding:8px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);resize:vertical'>"+esc(JSON.stringify(S.events||[],null,2))+"</textarea>";
+  html+="<div style='display:flex;gap:8px;margin-top:8px'>";
+  html+="<button class='btn btn-blue' onclick='saveMarketEvents()'>儲存日程</button>";
+  html+="<button class='btn' onclick='restoreDefaultEvents()'>↺ 還原 2026 預設日程</button>";
+  html+="</div><div id='events-editor-msg' style='font-size:11px;margin-top:6px;min-height:14px'></div></div>";
+
   html+=rImportPanel();
 
 
@@ -1857,9 +1912,13 @@ function rSettings(){
   html+="<div style='display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px'>";
   [["FT","Firstrade"],["Schwab","嘉信"],["GT","國泰複委托"]].forEach(function(p){
     var val=((S.acc.realizedAdj||{})[p[0]])||0;
+    var meta=((S.acc.realizedAdjMeta||{})[p[0]])||{note:"",ts:""};
     html+="<div><div class='fl'>"+p[1]+"</div><div class='kr'>";
     html+="<input type='number' step='0.01' id='radj-"+p[0]+"' value='"+val+"' placeholder='0.00'>";
-    html+="<button class='btn btn-blue' onclick=\"saveRealizedAdj('"+p[0]+"',document.getElementById('radj-"+p[0]+"').value)\">存</button></div></div>";
+    html+="<button class='btn btn-blue' onclick=\"saveRealizedAdj('"+p[0]+"',document.getElementById('radj-"+p[0]+"').value,document.getElementById('radj-note-"+p[0]+"').value)\">存</button></div>";
+    html+="<input type='text' id='radj-note-"+p[0]+"' value='"+esc(meta.note||"")+"' placeholder='調整備註（選填，例：合併舊帳戶歷史損益）' style='width:100%;margin-top:5px;font-size:11px'>";
+    html+="<div style='font-size:9px;color:var(--text3);margin-top:3px;min-height:12px'>"+(meta.ts?"上次調整："+new Date(meta.ts).toLocaleString():"")+"</div>";
+    html+="</div>";
   });
   html+="</div></div>";
   html+="<div class='sb'><h3>🗑 清空單一帳戶</h3>";
@@ -2023,11 +2082,12 @@ function buildInsightPanel(p){
 
 
   // ── 4. Market Calendar (next 30 days) ──
-  var _lastEvent=MARKET_EVENTS[MARKET_EVENTS.length-1];
+  var _evList=S.events||DEFAULT_MARKET_EVENTS;
+  var _lastEvent=_evList[_evList.length-1];
   var _evtExpired=_lastEvent&&daysFromNow(_lastEvent.date)<-60;
-  html+="<div class='ph'>🗓 市場大事<span style='font-size:9px;color:"+(_evtExpired?"var(--yellow)":"var(--text3)")+";font-weight:400;margin-left:auto'>"+(_evtExpired?"⚠ 日程已過期，請更新":"日程來源：Fed/BLS 2026年初公告")+"</span></div>";
+  html+="<div class='ph'>🗓 市場大事<span style='font-size:9px;color:"+(_evtExpired?"var(--yellow)":"var(--text3)")+";font-weight:400;margin-left:auto'>"+(_evtExpired?"⚠ 日程已過期，請於「設定」頁更新":"日程來源：可於「設定」頁編輯")+"</span></div>";
   html+="<div style='padding:8px 14px;border-bottom:0.5px solid var(--border)'>";
-  var upcoming=MARKET_EVENTS.filter(function(e){
+  var upcoming=_evList.filter(function(e){
     var days=daysFromNow(e.date);
     return days!==null&&days>=-1&&days<=30;
   }).sort(function(a,b){return a.date.localeCompare(b.date);});
@@ -2080,10 +2140,11 @@ function buildInsightPanel(p){
 
 // ─── MARKET CALENDAR & EARNINGS ───
 
-// 2026 key market dates (hardcoded)
-// 每年1月更新一次（Fed + BLS 年初公布全年日程）
+// 2026 key market dates — 這份硬編碼清單現在只作為「預設值 / 還原用備援」。
+// 實際顯示與編輯都改用 S.events（可在「設定」頁直接編輯文字區塊，並隨 GitHub 雙向同步），
+// 不再需要每年改原始碼重新部署，徹底解決跨年度的維護負擔。
 function daysFromNow(dateStr){if(!dateStr)return null;var diff=new Date(dateStr)-new Date(today());return Math.round(diff/86400000);}
-var MARKET_EVENTS=[
+var DEFAULT_MARKET_EVENTS=[
   // ── FOMC 利率決議（結果公布日，各會議第2天）──
   {date:"2026-06-17",label:"FOMC 利率決議",type:"fed"},
   {date:"2026-07-29",label:"FOMC 利率決議",type:"fed"},
@@ -2107,6 +2168,35 @@ var MARKET_EVENTS=[
   {date:"2026-11-25",label:"PCE 物價指數（10月）",type:"pce"},
   {date:"2026-12-23",label:"PCE 物價指數（11月）",type:"pce"},
 ];
+function saveMarketEvents(){
+  var el=document.getElementById("events-editor");
+  var msgEl=document.getElementById("events-editor-msg");
+  if(!el)return;
+  try{
+    var arr=JSON.parse(el.value);
+    if(!Array.isArray(arr))throw new Error("內容必須是一個 JSON 陣列 [ ... ]");
+    arr.forEach(function(e,i){
+      if(!e||typeof e!=="object")throw new Error("第"+(i+1)+"筆不是有效的物件");
+      if(!e.date||!/^\d{4}-\d{2}-\d{2}$/.test(e.date))throw new Error("第"+(i+1)+"筆 date 格式錯誤，需為 YYYY-MM-DD");
+      if(!e.label)throw new Error("第"+(i+1)+"筆缺少 label");
+    });
+    arr.sort(function(a,b){return a.date.localeCompare(b.date);});
+    S.events=arr;
+    sv("events");
+    if(msgEl){msgEl.style.color="var(--green)";msgEl.textContent="✅ 已儲存 "+arr.length+" 筆日程，將隨 GitHub 同步";}
+    toast("✅ 市場大事日程已更新（"+arr.length+" 筆）");
+    render();
+  }catch(ex){
+    if(msgEl){msgEl.style.color="var(--red)";msgEl.textContent="❌ 格式錯誤："+ex.message;}
+  }
+}
+function restoreDefaultEvents(){
+  if(!confirm("確定還原為內建的 2026 預設日程？目前編輯的內容將被覆蓋（建議先複製備份）。"))return;
+  S.events=JSON.parse(JSON.stringify(DEFAULT_MARKET_EVENTS));
+  sv("events");
+  toast("✅ 已還原 2026 預設日程");
+  render();
+}
 
 
 function renderInsightPanel(){
@@ -2121,10 +2211,11 @@ function renderInsightPanel(){
 // ══════════════════════════════════════
 // MOBILE UI FUNCTIONS
 // ══════════════════════════════════════
-var mTabActive = "home";
+// mTabActive 原為獨立全域變數，現統一收進 S.mTabActive 管理（見 STATE 區塊），
+// 避免桌面 S.tab 與手機分頁狀態各自為政、難以追蹤。
 
 function mTab(tab, el) {
-  mTabActive = tab;
+  S.mTabActive = tab;
   document.querySelectorAll(".m-tab").forEach(function(b){ b.classList.remove("active"); });
   if(el) el.classList.add("active");
   var p = calc();
@@ -2137,10 +2228,10 @@ function isMobile() {
 
 function renderMobile(p) {
   var m = document.getElementById("main");
-  if(mTabActive === "home")     m.innerHTML = rMobileHome(p);
-  else if(mTabActive === "holdings") m.innerHTML = rMobileHoldings(p);
-  else if(mTabActive === "chart")    m.innerHTML = rMobileChart(p);
-  else if(mTabActive === "tx")       m.innerHTML = rMobileTx();
+  if(S.mTabActive === "home")     m.innerHTML = rMobileHome(p);
+  else if(S.mTabActive === "holdings") m.innerHTML = rMobileHoldings(p);
+  else if(S.mTabActive === "chart")    m.innerHTML = rMobileChart(p);
+  else if(S.mTabActive === "tx")       m.innerHTML = rMobileTx();
   else                               m.innerHTML = rMobileMore(p);
 }
 
@@ -2212,14 +2303,28 @@ function rMobileHome(p) {
 }
 
 function rMobileHoldings(p) {
-  var active = S.H.filter(function(h){ return h.shares > 0 && h.price > 0; });
+  // 帳戶篩選：沿用桌面版的 S.holdingsView，達到桌面/手機功能對等（原稽核 2.3 缺口修正）
+  var accts=["all","FT","Schwab","GT"];
+  var acctLabels={"all":"整合","FT":"Firstrade","Schwab":"嘉信","GT":"國泰"};
+  var usedAccts=["all"];
+  S.H.forEach(function(h){if(h.acct&&usedAccts.indexOf(h.acct)<0)usedAccts.push(h.acct);});
+
+  var active = S.H.filter(function(h){ return h.shares > 0 && h.price > 0 && (S.holdingsView==="all"||h.acct===S.holdingsView); });
   active.sort(function(a,b){ return (b.shares*b.price) - (a.shares*a.price); });
 
   var html = rMobileSyncBar();
+  if(usedAccts.length>1){
+    html += "<div style='display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 10px'>";
+    usedAccts.forEach(function(a){
+      var isActive=S.holdingsView===a;
+      html += "<button class='chip"+(isActive?" active":"")+"' onclick=\"setHoldingsView('"+a+"')\">"+acctLabels[a]+"</button>";
+    });
+    html += "</div>";
+  }
   html += "<div class='m-section-title'>持倉（"+active.length+" 支）</div>";
 
   if(!active.length) {
-    html += "<div style='text-align:center;padding:40px 16px;color:var(--text3);font-size:13px'>尚無持倉</div>";
+    html += "<div style='text-align:center;padding:40px 16px;color:var(--text3);font-size:13px'>"+(S.holdingsView==="all"?"尚無持倉":"此帳戶尚無持倉")+"</div>";
     return html;
   }
 
@@ -2246,8 +2351,8 @@ function rMobileHoldings(p) {
     html += "</div></div>";
   });
 
-  // Show cleared positions count
-  var cleared = S.H.filter(function(h){ return h.shares === 0; });
+  // Show cleared positions count（同樣依目前帳戶篩選計算，避免顯示不一致）
+  var cleared = S.H.filter(function(h){ return h.shares === 0 && (S.holdingsView==="all"||h.acct===S.holdingsView); });
   if(cleared.length) {
     html += "<div style='text-align:center;padding:10px;font-size:11px;color:var(--text3)'>另有 "+cleared.length+" 支已出清</div>";
   }
@@ -2391,6 +2496,17 @@ function render(){
     if(efa&&document.activeElement!==efa)efa.value=adj.FT||0;
     if(esa&&document.activeElement!==esa)esa.value=adj.Schwab||0;
     if(eca&&document.activeElement!==eca)eca.value=adj.GT||0;
+    // 同步現金調整備註＋時間戳顯示
+    ensureAdjMeta();
+    ["FT","Schwab","GT"].forEach(function(k){
+      var idMap={FT:"ft",Schwab:"sw",GT:"ct"};
+      var sfx=idMap[k];
+      var noteEl=document.getElementById("ic-"+sfx+"-adj-note");
+      var tsEl=document.getElementById("ic-"+sfx+"-adj-ts");
+      var meta=S.acc.cashAdjMeta[k]||{note:"",ts:""};
+      if(noteEl&&document.activeElement!==noteEl)noteEl.value=meta.note||"";
+      if(tsEl)tsEl.textContent=meta.ts?"上次調整："+new Date(meta.ts).toLocaleString():"";
+    });
     var p=calc(),m=document.getElementById("main");
     if(isMobile()){
       renderMobile(p);
@@ -2459,14 +2575,14 @@ function submitQuickTrade(){
   // Update holding
   if(qt.type==="買入"){
     var ns=h.shares+shares,nc=(h.shares*h.cost+shares*price)/ns;
-    S.H=S.H.map(function(h2){return h2.id===qt.id?Object.assign({},h2,{shares:ns,cost:parseFloat(nc.toFixed(6))}):h2;});
+    S.H=S.H.map(function(h2){return h2.id===qt.id?Object.assign({},h2,{shares:ns,cost:nc}):h2;});
   }else{
     var gain=(price-h.cost)*shares-fee;
     S.H=S.H.map(function(h2){return h2.id===qt.id?Object.assign({},h2,{shares:Math.max(0,h2.shares-shares),realized:parseFloat(((h2.realized||0)+gain).toFixed(2))}):h2;});
   }
   S.T.push(t);
   sv("H");sv("T");
-  if(!h.acct||h.acct==="FT")recalcCash();
+  recalcCash();sv("acc");
   S.quickTrade=null;
   toast("✅ "+(qt.type==="買入"?"買入":"賣出")+" "+h.sym+" "+shares+"股 @ $"+price);
   render();
@@ -2475,6 +2591,18 @@ function setHoldingsView(v){S.holdingsView=v;render();}
 function setTab(t){S.tab=t;S.showForm=null;S.editTxId=null;S.editPriceId=null;render();}
 function toggleForm(f){S.showForm=S.showForm===f?null:f;S.editTxId=null;render();}
 function setFilter(f){S.filterType=f;render();}
+// PERF: 交易搜尋框 debounce（300ms）— 避免每敲一個字就觸發一次全量 innerHTML 重渲染。
+// 停止輸入 300ms 後才真正寫入 S.txSearch 並 render()，並把游標還原到輸入框結尾，維持輸入體感。
+var _txSearchTimer=null;
+function debounceTxSearch(v){
+  clearTimeout(_txSearchTimer);
+  _txSearchTimer=setTimeout(function(){
+    S.txSearch=v;
+    render();
+    var el=document.getElementById("tx-search");
+    if(el){el.focus();var len=el.value.length;try{el.setSelectionRange(len,len);}catch(e){}}
+  },300);
+}
 function txUpdateBatchUI(){
   // Only update header counts without re-rendering the whole page
   var selCount=Object.keys(S.txSelected).length;
@@ -2512,13 +2640,15 @@ function clearAcct(acct){
   if(!confirm("確定清空「"+name+"」的所有持倉和交易紀錄？\n出入金(S.E)紀錄會保留。\n此操作無法復原。"))return;
   S.H=S.H.filter(function(h){return h.acct!==acct;});
   S.T=S.T.filter(function(t){return (t.source||"FT")!==acct;});
-  if(!S.acc.realizedAdj)S.acc.realizedAdj={FT:0,Schwab:0,GT:0};
+  ensureAdjMeta();
   sv("H");sv("T");recalcCash();sv("acc");
   toast("✅ 已清空 "+name+" 持倉與交易");render();
 }
-function saveRealizedAdj(acct,val){
-  if(!S.acc.realizedAdj)S.acc.realizedAdj={FT:0,Schwab:0,GT:0};
+function saveRealizedAdj(acct,val,note){
+  ensureAdjMeta();
   S.acc.realizedAdj[acct]=parseFloat(val)||0;
+  S.acc.realizedAdjMeta[acct].note=note||"";
+  S.acc.realizedAdjMeta[acct].ts=new Date().toISOString();
   sv("acc");toast("✅ 已儲存 "+acct+" 手動已實現損益");render();
 }
 function batchSetAcct(){
@@ -2566,10 +2696,16 @@ function onAcc(k,v){
   if(k==="rate"){S.acc.rate=parseFloat(v)||31.5;sv("acc");render();}
 }
 function onCashAdj(acct,v){
-  if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
-  if(!S.acc.realizedAdj)S.acc.realizedAdj={FT:0,Schwab:0,GT:0};
+  ensureAdjMeta();
   S.acc.cashAdj[acct]=parseFloat(v)||0;
+  S.acc.cashAdjMeta[acct].ts=new Date().toISOString();
   sv("acc");recalcCash();render();
+}
+function onCashAdjNote(acct,note){
+  ensureAdjMeta();
+  S.acc.cashAdjMeta[acct].note=note||"";
+  S.acc.cashAdjMeta[acct].ts=new Date().toISOString();
+  sv("acc");render();
 }
 function sortH(col){S.sortDir=S.sortCol===col?S.sortDir*-1:-1;S.sortCol=col;render();}
 function startEditPrice(id,v){S.editPriceId=id;S.editPriceVal=String(v);render();}
@@ -2608,7 +2744,7 @@ function addHolding(){
   var i=S.H.findIndex(function(h){return h.sym===sym&&h.acct===acct;});
   if(i>=0&&shares>0&&cost>0){
     var ns=S.H[i].shares+shares,nc=(S.H[i].shares*S.H[i].cost+shares*cost)/ns;
-    S.H=S.H.map(function(h,j){return j===i?Object.assign({},h,{shares:ns,cost:parseFloat(nc.toFixed(6)),price:price||h.price,realized:(h.realized||0)+(parseFloat(document.getElementById("fh-real").value)||0),note:document.getElementById("fh-note").value||h.note,fd:h.fd||fd}):h;});
+    S.H=S.H.map(function(h,j){return j===i?Object.assign({},h,{shares:ns,cost:nc,price:price||h.price,realized:(h.realized||0)+(parseFloat(document.getElementById("fh-real").value)||0),note:document.getElementById("fh-note").value||h.note,fd:h.fd||fd}):h;});
     toast("✅ 已合併 "+sym+"（"+ns+" 股，均成本 $"+nc.toFixed(4)+"）");
   }else{
     S.H.push({id:gid(),sym:sym,shares:shares,cost:cost,price:price||cost,chg:parseFloat(document.getElementById("fh-chg").value)||0,div:0,realized:parseFloat(document.getElementById("fh-real").value)||0,note:document.getElementById("fh-note").value,fd:fd,acct:acct});
@@ -2766,6 +2902,8 @@ if(!S.acc.cashAdj)S.acc.cashAdj={FT:0,Schwab:0,GT:0};
   if(!S.acc.realizedAdj)S.acc.realizedAdj={FT:0,Schwab:0,GT:0};
 // cashSchwab is in S.acc (from localStorage or GitHub)
 // cashFT is always recalculated from transactions
+S.events=ld("events")||JSON.parse(JSON.stringify(DEFAULT_MARKET_EVENTS));
+ensureAdjMeta();
 if(S.T.length>0)recalcCash();
 S.ghToken=localStorage.getItem("ft_ghToken")||"";
 S.ghUser=localStorage.getItem("ft_ghUser")||"";
@@ -2776,6 +2914,20 @@ document.getElementById("ir").value=S.acc.rate;
 var _cft=document.getElementById("ic-ft");var _csw=document.getElementById("ic-sw");var _cct=document.getElementById("ic-ct");if(_cft)_cft.value=S.acc.cashFT||0;if(_csw)_csw.value=S.acc.cashSchwab||0;if(_cct)_cct.value=S.acc.cashCathay||0;
 render();
 document.addEventListener("click",function(e){var p=document.getElementById("cash-panel");if(p&&!p.contains(e.target)&&!e.target.closest("[onclick*='cash-panel']"))p.classList.remove("open");});
+
+// RESPONSIVE: 視窗寬度跨越桌面/手機門檻（600px）時即時重渲染，修正先前「resize 不會自動切版」的同步死角。
+// 用短暫 debounce（120ms）避免使用者拖曳視窗邊框時連續觸發大量全量渲染，同時仍維持近乎即時的切換體感。
+var _lastIsMobile=isMobile(),_resizeTimer=null;
+window.addEventListener("resize",function(){
+  clearTimeout(_resizeTimer);
+  _resizeTimer=setTimeout(function(){
+    var nowMobile=isMobile();
+    if(nowMobile!==_lastIsMobile){
+      _lastIsMobile=nowMobile;
+      render();
+    }
+  },120);
+});
 
 if(S.ghToken&&S.ghUser&&S.ghRepo){
   loadFromGitHub().then(function(ok){

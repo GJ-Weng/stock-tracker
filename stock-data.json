@@ -3063,6 +3063,131 @@
       "FT": 0,
       "Schwab": 1037.18,
       "GT": 0
+    },
+    "cashAdjMeta": {
+      "FT": {
+        "note": "",
+        "ts": ""
+      },
+      "Schwab": {
+        "note": "",
+        "ts": ""
+      },
+      "GT": {
+        "note": "",
+        "ts": ""
+      }
+    },
+    "realizedAdjMeta": {
+      "FT": {
+        "note": "",
+        "ts": ""
+      },
+      "Schwab": {
+        "note": "",
+        "ts": ""
+      },
+      "GT": {
+        "note": "",
+        "ts": ""
+      }
     }
-  }
+  },
+  "events": [
+    {
+      "date": "2026-06-17",
+      "label": "FOMC 利率決議",
+      "type": "fed"
+    },
+    {
+      "date": "2026-07-29",
+      "label": "FOMC 利率決議",
+      "type": "fed"
+    },
+    {
+      "date": "2026-09-16",
+      "label": "FOMC 利率決議 ★含點陣圖",
+      "type": "fed"
+    },
+    {
+      "date": "2026-10-28",
+      "label": "FOMC 利率決議",
+      "type": "fed"
+    },
+    {
+      "date": "2026-12-09",
+      "label": "FOMC 利率決議 ★含點陣圖",
+      "type": "fed"
+    },
+    {
+      "date": "2026-06-11",
+      "label": "CPI 通膨數據（5月）",
+      "type": "cpi"
+    },
+    {
+      "date": "2026-07-14",
+      "label": "CPI 通膨數據（6月）",
+      "type": "cpi"
+    },
+    {
+      "date": "2026-08-12",
+      "label": "CPI 通膨數據（7月）",
+      "type": "cpi"
+    },
+    {
+      "date": "2026-09-11",
+      "label": "CPI 通膨數據（8月）",
+      "type": "cpi"
+    },
+    {
+      "date": "2026-10-13",
+      "label": "CPI 通膨數據（9月）",
+      "type": "cpi"
+    },
+    {
+      "date": "2026-11-12",
+      "label": "CPI 通膨數據（10月）",
+      "type": "cpi"
+    },
+    {
+      "date": "2026-12-11",
+      "label": "CPI 通膨數據（11月）",
+      "type": "cpi"
+    },
+    {
+      "date": "2026-06-26",
+      "label": "PCE 物價指數（5月）",
+      "type": "pce"
+    },
+    {
+      "date": "2026-07-31",
+      "label": "PCE 物價指數（6月）",
+      "type": "pce"
+    },
+    {
+      "date": "2026-08-28",
+      "label": "PCE 物價指數（7月）",
+      "type": "pce"
+    },
+    {
+      "date": "2026-09-25",
+      "label": "PCE 物價指數（8月）",
+      "type": "pce"
+    },
+    {
+      "date": "2026-10-30",
+      "label": "PCE 物價指數（9月）",
+      "type": "pce"
+    },
+    {
+      "date": "2026-11-25",
+      "label": "PCE 物價指數（10月）",
+      "type": "pce"
+    },
+    {
+      "date": "2026-12-23",
+      "label": "PCE 物價指數（11月）",
+      "type": "pce"
+    }
+  ]
 }
